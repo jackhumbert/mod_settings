@@ -1,0 +1,9 @@
+[submodule "deps/spdlog"]
+	path = deps/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "deps/detours"]
+	path = deps/detours
+	url = https://github.com/microsoft/Detours.git
+[submodule "deps/red4ext.sdk"]
+	path = deps/red4ext.sdk
+	url = git@github.com:jackhumbert/RED4ext.SDK.git

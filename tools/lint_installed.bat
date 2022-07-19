@@ -1,0 +1,1 @@
+tools\redscript-cli.exe lint -s "C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\r6\scripts" -b "C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\r6\cache\final.redscripts.bk"
