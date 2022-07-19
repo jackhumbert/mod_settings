@@ -1,0 +1,1 @@
+xcopy /s /d /y build\* "C:\Users\Jack\Documents\cyberpunk\flight_control\prereqs\"

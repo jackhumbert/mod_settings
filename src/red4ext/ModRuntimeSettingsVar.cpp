@@ -25,6 +25,11 @@ ModRuntimeSettingsVar::ModRuntimeSettingsVar(ScriptProperty *prop) : ModRuntimeS
   if (descriptionStr) {
     description = RED4ext::CNamePool::Add(descriptionStr->c_str());
   }
+
+  auto orderStr = prop->runtimeProperties.Get("ModSettings.order");
+  if (orderStr) {
+    RED4ext::CRTTISystem::Get()->GetType("Uint32")->FromString(&order, *orderStr);
+  }
 }
 
 void ModRuntimeSettingsVar::LoadValues(ScriptProperty *prop) {

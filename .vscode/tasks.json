@@ -141,6 +141,29 @@
         },
         "group": "build",
         "problemMatcher": []
+      },,
+      {
+        "label": "Install To Let There Be Flight",
+        "type": "shell",
+        "command": "tools\\install_ltbf.bat",
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": []
       },
       {
         "label": "Lint/Build/Install",
