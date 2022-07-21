@@ -100,7 +100,7 @@ void GetModsScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
 
   if (aOut) {
     auto h = ModSettings::GetInstance();
-    //*aOut = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator);
+    *aOut = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator);
 
     auto size = h->variablesByMod.size;
     for (uint32_t index = 0; index != size; ++index) {
@@ -118,12 +118,11 @@ void GetCategoriesScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *
   if (aOut) {
     auto h = ModSettings::GetInstance();
     auto categories = h->categoriesByMod.Get(mod);
+    *aOut = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator());
     if (categories) {
       for (const auto &cat : *categories) {
         aOut->EmplaceBack(cat);
       }
-    } else {
-      //*aOut = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator());
     }
   }
 }
