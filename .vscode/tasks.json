@@ -141,7 +141,7 @@
         },
         "group": "build",
         "problemMatcher": []
-      },,
+      },
       {
         "label": "Install To Let There Be Flight",
         "type": "shell",

@@ -33,7 +33,7 @@ mono_crash.*
 # [Oo]bj/
 # [Ll]og/
 # [Ll]ogs/
-
+make/
 src/red4ext/x64/
 src/red4ext/build/
 packed/

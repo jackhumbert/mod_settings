@@ -1,6 +1,11 @@
 {
 	"folders": [
 		{
+			"name": "src",
+			"path": "src"
+		},
+		{
+			"name": "mod_settings",
 			"path": "."
 		}
 	],

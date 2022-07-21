@@ -10,6 +10,7 @@ ModRuntimeSettingsVar::ModRuntimeSettingsVar() : RED4ext::user::RuntimeSettingsV
 }
 
 ModRuntimeSettingsVar::ModRuntimeSettingsVar(ScriptProperty *prop) : ModRuntimeSettingsVar() {
+  updatePolicy = RED4ext::user::EConfigVarUpdatePolicy::ConfirmationRequired;
   name = prop->name;
   auto className = prop->parent->name;
   groupPath = RED4ext::CNamePool::Add("/mods/" + *className.ToString() + *"/" + *name.ToString());
@@ -60,6 +61,7 @@ void ModRuntimeSettingsVar::LoadValues(ScriptProperty *prop) {
 void __fastcall ModRuntimeSettingsVar::UpdateValue(void *value) { 
   auto ms = ModSettings::GetInstance();
   ms->changeMade = true;
+  ms->NotifyListeners();
 }
 
 // Bool

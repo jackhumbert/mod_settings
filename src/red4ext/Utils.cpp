@@ -1,27 +1,27 @@
 #include "stdafx.hpp"
 #include "Utils.hpp"
 
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-
-void Utils::CreateLogger()
-{
-    auto rootDir = GetRootDir();
-    auto red4extDir = rootDir / L"red4ext";
-    auto logsDir = red4extDir / L"logs";
-    auto logFile = logsDir / "mod_settings.log";
-
-    auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile.string(), true);
-
-    spdlog::sinks_init_list sinks = {console, file};
-
-    auto logger = std::make_shared<spdlog::logger>("", sinks);
-    spdlog::set_default_logger(logger);
-
-    logger->flush_on(spdlog::level::trace);
-    spdlog::set_level(spdlog::level::trace);
-}
+//#include <spdlog/sinks/basic_file_sink.h>
+//#include <spdlog/sinks/stdout_color_sinks.h>
+//
+//void Utils::CreateLogger()
+//{
+//    auto rootDir = GetRootDir();
+//    auto red4extDir = rootDir / L"red4ext";
+//    auto logsDir = red4extDir / L"logs";
+//    auto logFile = logsDir / "mod_settings.log";
+//
+//    auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+//    auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile.string(), true);
+//
+//    spdlog::sinks_init_list sinks = {console, file};
+//
+//    auto logger = std::make_shared<spdlog::logger>("", sinks);
+//    spdlog::set_default_logger(logger);
+//
+//    logger->flush_on(spdlog::level::trace);
+//    spdlog::set_level(spdlog::level::trace);
+//}
 
 std::filesystem::path Utils::GetRootDir()
 {

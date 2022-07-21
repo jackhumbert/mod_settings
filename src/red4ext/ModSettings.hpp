@@ -16,6 +16,8 @@ struct ModSettings : RED4ext::IScriptable {
   static void RegisterTypes();
   static void PostRegisterTypes();
 
+  void NotifyListeners();
+
   INIReader reader;
   RED4ext::DynArray<ModSettingsVariable *> variables;
   RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>> variablesByMod;
@@ -23,4 +25,6 @@ struct ModSettings : RED4ext::IScriptable {
   RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<RED4ext::CName>> categoriesByMod;
   RED4ext::SharedMutex variables_lock;
   bool changeMade = false;
+  RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>> listeners;
+  RED4ext::SharedMutex listeners_lock;
 };

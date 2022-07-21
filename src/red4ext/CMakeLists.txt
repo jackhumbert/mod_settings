@@ -1,0 +1,14 @@
+add_library(${CMAKE_PROJECT_NAME} SHARED "")
+
+file(GLOB_RECURSE PROJECT_HEADER_FILES *.hpp)
+file(GLOB_RECURSE PROJECT_SRC_FILES *.cpp)
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${PROJECT_HEADER_FILES} ${PROJECT_SRC_FILES})
+
+target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${PROJECT_HEADER_FILES} ${PROJECT_SRC_FILES})
+
+target_precompile_headers(${CMAKE_PROJECT_NAME} PRIVATE stdafx.hpp)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE RED4ext::SDK)
+
+#target_output_directory(${CMAKE_PROJECT_NAME} plugins)

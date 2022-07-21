@@ -2,6 +2,7 @@
 #include "ModRuntimeSettingsVar.hpp"
 
 void ModSettingsVariable::UpdateValues() {
+  std::shared_lock<RED4ext::SharedMutex> _(listeners_lock);
   for (auto &listener : listeners) {
     if (!listener.Expired()) {
       auto instance = reinterpret_cast<RED4ext::IScriptable*>(listener.instance);

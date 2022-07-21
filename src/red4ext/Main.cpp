@@ -2,7 +2,6 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/RED4ext.hpp>
-#include <spdlog/spdlog.h>
 #include <RED4ext/Scripting/Natives/Generated/EInputKey.hpp>
 #include "Utils.hpp"
 #include <stdio.h>
@@ -95,9 +94,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // application. DO NOT try to access the game's memory at this point, it
     // is not initalized yet.
 
-    Utils::CreateLogger();
-    spdlog::info("Starting up");
-
+    aSdk->logger->Info(aHandle, "Starting up");
     RED4ext::RTTIRegistrator::Add(ModSettings::RegisterTypes, ModSettings::PostRegisterTypes);
 
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessScriptTypesAddr), &ProcessScriptTypes,
@@ -109,9 +106,8 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // Free memory, detach hooks.
     // The game's memory is already freed, to not try to do anything with it.
 
-    spdlog::info("Shutting down");
+    aSdk->logger->Info(aHandle, "Shutting down");
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessScriptTypesAddr));
-    spdlog::shutdown();
     break;
   }
   }
