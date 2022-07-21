@@ -10,7 +10,7 @@
 #include <iostream>
 
 const std::filesystem::path configPath =
-    Utils::GetRootDir() / "red4ext" / "plugins" / "mod_settings" / "userSettings.ini";
+    Utils::GetRootDir() / "red4ext" / "plugins" / "mod_settings" / "user.ini";
 
 RED4ext::TTypedClass<ModSettings> modSettings("ModSettings");
 
