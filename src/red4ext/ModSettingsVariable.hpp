@@ -12,7 +12,7 @@ struct ModSettingsVariable {
   RED4ext::CName className = RED4ext::CName();
   RED4ext::CName category = RED4ext::CName();
   ModRuntimeSettingsVar *settingsVar;
-  RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>> listeners;
+  RED4ext::DynArray<RED4ext::IScriptable*> listeners;
   RED4ext::SharedMutex listeners_lock;
 
   void UpdateValues();

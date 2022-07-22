@@ -73,7 +73,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     //super.OnInitialize();
   }
 
-  protected cb func OnModSettingsChange() -> Bool {
+  public func OnModSettingsChange() -> Void {
     this.CheckButtons();
     this.PopulateSettingsData();
     this.PopulateCategorySettingsOptions(-1);
@@ -132,7 +132,8 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
 
   public final func CheckButtons() -> Void {
     // if !this.m_isDlcSettings && (this.m_settings.NeedsConfirmation() || this.m_settings.NeedsRestartToApply() || this.m_settings.NeedsLoadLastCheckpoint()) {
-    if ModSettings.GetInstance().changeMade {
+    let ms = ModSettings.GetInstance();
+    if ms.changeMade {
       this.EnableApplyButton();
       this.EnableResetButton();
     } else {

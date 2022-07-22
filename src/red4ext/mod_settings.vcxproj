@@ -101,19 +101,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="ModConfigVar.cpp" />
     <ClCompile Include="ModRuntimeSettingsVar.cpp" />
     <ClCompile Include="ModSettings.cpp" />
     <ClCompile Include="ModSettingsVariable.cpp" />
+    <ClCompile Include="Scripting\RTTIRegistrar.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="INIReader.h" />
+    <ClInclude Include="ModConfigVar.hpp" />
     <ClInclude Include="ModRuntimeSettingsVar.hpp" />
     <ClInclude Include="ModSettings.hpp" />
     <ClInclude Include="ModSettingsVariable.hpp" />
     <ClInclude Include="ScriptDefinitions\ScriptDefinitions.hpp" />
     <ClInclude Include="ScriptDefinitions\ScriptHost.hpp" />
+    <ClInclude Include="Scripting\Common.hpp" />
+    <ClInclude Include="Scripting\RTTIClass.hpp" />
+    <ClInclude Include="Scripting\RTTIEnum.hpp" />
+    <ClInclude Include="Scripting\RTTIExpansion.hpp" />
+    <ClInclude Include="Scripting\RTTIRegistrar.hpp" />
     <ClInclude Include="stdafx.hpp" />
     <ClInclude Include="Utils.hpp" />
   </ItemGroup>

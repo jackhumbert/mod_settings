@@ -4,8 +4,7 @@
 void ModSettingsVariable::UpdateValues() {
   std::shared_lock<RED4ext::SharedMutex> _(listeners_lock);
   for (auto &listener : listeners) {
-    if (!listener.Expired()) {
-      auto instance = reinterpret_cast<RED4ext::IScriptable*>(listener.instance);
+    if (!listener->ref.Expired()) {
       auto classType = RED4ext::CRTTISystem::Get()->GetClass(className);
       auto valuePtr = settingsVar->GetValuePtr();
       for (auto i = 0; i < classType->propertiesWithDefaults.size; i++) {
@@ -17,7 +16,7 @@ void ModSettingsVariable::UpdateValues() {
       }
       auto prop = classType->propertiesByName.Get(settingsVar->name);
       if (prop) {
-        (*prop)->SetValue(instance, valuePtr);
+        (*prop)->SetValue(listener, valuePtr);
       }
     }
   }

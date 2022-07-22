@@ -4,6 +4,9 @@
 #include "ModSettingsVariable.hpp"
 #include "INIReader.h"
 
+extern const RED4ext::Sdk *sdk;
+extern const RED4ext::PluginHandle *pluginHandle;
+
 struct ModSettings : RED4ext::IScriptable {
   RED4ext::CClass *GetNativeType();
 
@@ -18,13 +21,13 @@ struct ModSettings : RED4ext::IScriptable {
 
   void NotifyListeners();
 
+  bool changeMade = false;
   INIReader reader;
   RED4ext::DynArray<ModSettingsVariable *> variables;
   RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>> variablesByMod;
   RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>> variablesByClass;
   RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<RED4ext::CName>> categoriesByMod;
   RED4ext::SharedMutex variables_lock;
-  bool changeMade = false;
-  RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>> listeners;
+  RED4ext::DynArray<RED4ext::IScriptable*> listeners;
   RED4ext::SharedMutex listeners_lock;
 };

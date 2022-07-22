@@ -13,7 +13,12 @@
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
 #include "ScriptDefinitions/ScriptHost.hpp"
 #include "stdafx.hpp"
-#include <RED4ext/RED4ext.hpp>
+
+#include "Scripting/RTTIClass.hpp"
+#include "ModConfigVar.hpp"
+
+const RED4ext::Sdk *sdk;
+const RED4ext::PluginHandle *pluginHandle;
 
 struct ScriptRTTIContainer {
   RED4ext::CRTTISystem *rtti;
@@ -94,11 +99,16 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // application. DO NOT try to access the game's memory at this point, it
     // is not initalized yet.
 
+    sdk = aSdk;
+    pluginHandle = &aHandle;
+
     aSdk->logger->Info(aHandle, "Starting up");
     RED4ext::RTTIRegistrator::Add(ModSettings::RegisterTypes, ModSettings::PostRegisterTypes);
 
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessScriptTypesAddr), &ProcessScriptTypes,
                                   reinterpret_cast<void **>(&ProcessScriptTypes_Original)));
+
+    Engine::RTTIRegistrar::RegisterPending();
 
     break;
   }
