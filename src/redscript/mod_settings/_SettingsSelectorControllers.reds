@@ -243,6 +243,7 @@ public class ModStngsSelectorControllerBool extends SettingsSelectorController {
   private func AcceptValue(forward: Bool) -> Void {
     let boolValue: ref<ModConfigVarBool> = this.m_SettingsEntry as ModConfigVarBool;
     boolValue.Toggle();
+    this.Refresh();
   }
 }
 
@@ -289,6 +290,7 @@ public class ModStngsSelectorControllerFloat extends SettingsSelectorControllerR
       this.ChangeValue(forward);
     };
     value.SetValue(this.m_newValue);
+    this.Refresh();
   }
 
   public func Refresh() -> Void {

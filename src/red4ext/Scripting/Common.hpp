@@ -425,8 +425,13 @@ inline RED4ext::ScriptingFunction_t<void*> WrapScriptableFunction()
             else
                 ret = std::apply(s_func, std::tuple_cat(std::make_tuple(reinterpret_cast<C*>(aContext)), args));
 
-            if (aRet && aRetType)
+            if (aRet) {
+              if (aRetType) {
                 aRetType->Assign(aRet, &ret);
+              } else {
+                *aRet = ret;
+              }
+            }
         }
     };
 

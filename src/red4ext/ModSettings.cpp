@@ -269,8 +269,8 @@ void RejectChangesScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *
 
 void ModSettings::NotifyListeners() {
   std::shared_lock<RED4ext::SharedMutex> _(listeners_lock);
-  for (auto listener : listeners) {
-    if (!listener->ref.Expired()) {
+  for (auto &listener : listeners) {
+    if (listener && !listener->ref.Expired()) {
       //RED4ext::StackArgs_t args = RED4ext::StackArgs_t();
       auto onChange = listener->GetType()->GetFunction("OnModSettingsChange");
       if (onChange) {

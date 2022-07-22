@@ -13,7 +13,7 @@ struct ModRuntimeSettingsVar : public RED4ext::user::RuntimeSettingsVar {
   virtual void __fastcall UpdateValue(void *value) override;
 
   // custom
-  void LoadValues(ScriptProperty *prop);
+  virtual void LoadValues(ScriptProperty *prop);
   virtual void __fastcall GetValueToWrite(char *value) = 0;
   virtual RED4ext::ScriptInstance *__fastcall GetValuePtr() = 0;
   virtual void __fastcall UpdateDefault(void *value) = 0;
@@ -41,10 +41,10 @@ struct ModRuntimeSettingsVarBool : public ModRuntimeSettingsVar {
   virtual RED4ext::ScriptInstance *__fastcall GetValuePtr() override;
   virtual void __fastcall UpdateDefault(void *value) override;
 
-  uint8_t valueValidated = 0;
-  uint8_t defaultValue = 0;
-  uint8_t valueInput = 0;
-  uint8_t valueWrittenToFile = 0;
+  bool valueValidated = 0;
+  bool defaultValue = 0;
+  bool valueInput = 0;
+  bool valueWrittenToFile = 0;
   uint32_t unk4C = 0;
 };
 
@@ -75,34 +75,32 @@ struct ModRuntimeSettingsVarInt32 : public ModRuntimeSettingsVar {
   uint32_t unk64 = 0;
 };
 
-struct ModRuntimeSettingsVarFloat : public ModRuntimeSettingsVarInt32 {
-  ModRuntimeSettingsVarFloat(ScriptProperty *prop) : ModRuntimeSettingsVarInt32(prop) {
-    type = RED4ext::user::EConfigVarType::Float;
-    //LoadValues(prop);
-  }
+struct ModRuntimeSettingsVarFloat : public ModRuntimeSettingsVar {
+  ModRuntimeSettingsVarFloat(ScriptProperty *prop);
 
-  //virtual bool __fastcall WasModifiedSinceLastSave() override;
-  //virtual bool __fastcall HasChange() override;
-  //virtual bool __fastcall IsDefault() override;
-  //virtual bool __fastcall RestoreDefault(char a1) override;
-  //virtual void __fastcall UpdateValue(void *value) override;
-  //virtual void __fastcall ApplyChange() override;
-  //virtual void __fastcall RevertChange() override;
-  //virtual void __fastcall ChangeWasWritten() override;
-  //virtual void __fastcall UpdateAll(void *value) override;
+  virtual bool __fastcall WasModifiedSinceLastSave() override;
+  virtual bool __fastcall HasChange() override;
+  virtual bool __fastcall IsDefault() override;
+  virtual bool __fastcall RestoreDefault(char a1) override;
+  virtual void __fastcall UpdateValue(void *value) override;
+  virtual void __fastcall ApplyChange() override;
+  virtual void __fastcall RevertChange() override;
+  virtual void __fastcall ChangeWasWritten() override;
+  virtual void __fastcall UpdateAll(void *value) override;
 
-  //virtual void __fastcall GetValueToWrite(char *value) override;
-  //virtual RED4ext::ScriptInstance *__fastcall GetValuePtr() override;
-  //virtual void __fastcall UpdateDefault(void *value) override;
+  virtual void LoadValues(ScriptProperty *prop) override;
+  virtual void __fastcall GetValueToWrite(char *value) override;
+  virtual RED4ext::ScriptInstance *__fastcall GetValuePtr() override;
+  virtual void __fastcall UpdateDefault(void *value) override;
 
-  //float valueValidated = 0;
-  //float defaultValue = 0;
-  //float valueInput = 0;
-  //float valueWrittenToFile = 0;
-  int32_t minValue = 0;
-  int32_t maxValue = (int32_t)1.0f;
-  int32_t stepValue = (int32_t)0.05f;
-  //uint32_t unk64 = 0;
+  float valueValidated = 0;
+  float defaultValue = 0;
+  float valueInput = 0;
+  float valueWrittenToFile = 0;
+  float minValue = 0;
+  float maxValue = 1.0f;
+  float stepValue = 0.05f;
+  uint32_t unk64 = 0;
 };
 
 struct ModRuntimeSettingsVarEnum : public ModRuntimeSettingsVar {

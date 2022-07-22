@@ -29,14 +29,14 @@ ModRuntimeSettingsVar::ModRuntimeSettingsVar(ScriptProperty *prop) : ModRuntimeS
 
   auto orderStr = prop->runtimeProperties.Get("ModSettings.order");
   if (orderStr) {
-    RED4ext::CRTTISystem::Get()->GetType("Uint32")->FromString(&order, *orderStr);
+    RED4ext::CRTTISystem::Get()->GetType("Int32")->FromString(&order, *orderStr);
   }
 }
 
 void ModRuntimeSettingsVar::LoadValues(ScriptProperty *prop) {
   auto typeName = prop->type->name;
   auto propType = RED4ext::CRTTISystem::Get()->GetType(typeName);
-  uint64_t defaultValue = 0;
+  uint32_t defaultValue = 0;
   void *defaultValue_p = &defaultValue;
 
   if (prop->defaultValues.size) {
@@ -44,7 +44,7 @@ void ModRuntimeSettingsVar::LoadValues(ScriptProperty *prop) {
   }
   UpdateDefault(defaultValue_p);
 
-  uint64_t value = defaultValue;
+  uint32_t value = defaultValue;
   void *value_p = &value;
 
   RED4ext::CString settingFromFile;
@@ -132,7 +132,7 @@ bool __fastcall ModRuntimeSettingsVarBool::RestoreDefault(char a1) {
 }
 
 void __fastcall ModRuntimeSettingsVarBool::UpdateValue(void *value) {   
-  valueInput = *(uint8_t *)value;
+  valueInput = *(bool *)value;
   ModRuntimeSettingsVar::UpdateValue(value);
 }
 
@@ -143,108 +143,156 @@ void __fastcall ModRuntimeSettingsVarBool::RevertChange() { valueInput = valueVa
 void __fastcall ModRuntimeSettingsVarBool::ChangeWasWritten() { valueWrittenToFile = valueValidated; }
 
 void __fastcall ModRuntimeSettingsVarBool::UpdateAll(void *value) {
-  valueWrittenToFile = *(uint8_t *)value;
-  valueInput = *(uint8_t *)value;
-  valueValidated = *(uint8_t *)value;
+  valueWrittenToFile = *(bool *)value;
+  valueInput = *(bool *)value;
+  valueValidated = *(bool *)value;
 }
 
 void __fastcall ModRuntimeSettingsVarBool::GetValueToWrite(char *value) { sprintf(value, "%d", valueValidated); }
 
 RED4ext::ScriptInstance *__fastcall ModRuntimeSettingsVarBool::GetValuePtr() { return (RED4ext::ScriptInstance *)&valueValidated; }
 
-void __fastcall ModRuntimeSettingsVarBool::UpdateDefault(void *value) { defaultValue = *(uint8_t *)value; }
+void __fastcall ModRuntimeSettingsVarBool::UpdateDefault(void *value) { defaultValue = *(bool *)value; }
 
 
 // Float
 
-//bool __fastcall ModRuntimeSettingsVarFloat::WasModifiedSinceLastSave() {
-//  return importPolicy != RED4ext::user::EConfigVarImportPolicy::Ignore && valueWrittenToFile != valueValidated;
-//}
-//
-//bool __fastcall ModRuntimeSettingsVarFloat::HasChange() { return valueInput != valueValidated; }
-//
-//bool __fastcall ModRuntimeSettingsVarFloat::IsDefault() {
-//  float value;
-//  if (HasChange()) {
-//    value = valueInput;
-//  } else {
-//    value = valueValidated;
-//  }
-//  return value == defaultValue;
-//}
-//
-//bool __fastcall ModRuntimeSettingsVarFloat::RestoreDefault(char a1) {
-//  auto wasDefault = IsDefault();
-//  if (wasDefault)
-//    return !wasDefault;
-//  unk44 = a1;
-//  if (((a1 - 2) & 0xFD) != 0) {
-//    if (((a1 - 1) & 0xFD) != 0) {
-//      if (!a1) {
-//        UpdateValue(&defaultValue);
-//        // UserSettings = GetUserSettings();
-//        // AddSettingsDataToSettings(UserSettings, a1);
-//      }
-//      return !wasDefault;
-//    }
-//  UpdateImmediately:
-//    UpdateValue(&defaultValue);
-//    // v9 = GetUserSettings();
-//    // sub_7FF62769C390(v9, a1);
-//    return !wasDefault;
-//  }
-//  switch (updatePolicy) {
-//  case RED4ext::user::EConfigVarUpdatePolicy::Disabled:
-//    return !wasDefault;
-//  case RED4ext::user::EConfigVarUpdatePolicy::Immediately:
-//    goto UpdateImmediately;
-//  case RED4ext::user::EConfigVarUpdatePolicy::ConfirmationRequired:
-//    UpdateValue(&defaultValue);
-//    // v8 = GetUserSettings();
-//    // SettingsConfirmChange_0(v8, a1);
-//    break;
-//  case RED4ext::user::EConfigVarUpdatePolicy::RestartRequired:
-//    UpdateValue(&defaultValue);
-//    // v7 = GetUserSettings();
-//    // SettingsRestartRequired_0(v7, a1);
-//    break;
-//  case RED4ext::user::EConfigVarUpdatePolicy::LoadLastCheckpointRequired:
-//    UpdateValue(&defaultValue);
-//    // v6 = GetUserSettings();
-//    // SettingsLoadLastCheckpoint_0(v6, a1);
-//    break;
-//  default:
-//    // LogError_f("E:\\R6.Release\\dev\\src\\common\\redConfig\\include\\inGameConfigVar.hpp", 44, line,
-//    //            "Unknown in-game config var update policy (%d)", (unsigned __int8)a1->updatePolicy);
-//    //__debugbreak();
-//    break;
-//  }
-//  return !wasDefault;
-//}
-//
-//void __fastcall ModRuntimeSettingsVarFloat::UpdateValue(void *value) { valueInput = *(float *)value; }
-//
-//void __fastcall ModRuntimeSettingsVarFloat::ApplyChange() { valueValidated = valueInput; }
-//
-//void __fastcall ModRuntimeSettingsVarFloat::RevertChange() { valueInput = valueValidated; }
-//
-//void __fastcall ModRuntimeSettingsVarFloat::ChangeWasWritten() { valueWrittenToFile = valueValidated; }
-//
-//void __fastcall ModRuntimeSettingsVarFloat::UpdateAll(void *value) {
-//  valueWrittenToFile = *(float *)value;
-//  valueInput = *(float *)value;
-//  valueValidated = *(float *)value;
-//}
-//
-//void __fastcall ModRuntimeSettingsVarFloat::GetValueToWrite(char *value) {
-//  sprintf(value, "%f", valueValidated);
-//}
-//
-//RED4ext::ScriptInstance *__fastcall ModRuntimeSettingsVarFloat::GetValuePtr() {
-//  return (RED4ext::ScriptInstance *)&valueValidated;
-//}
-//
-//void __fastcall ModRuntimeSettingsVarFloat::UpdateDefault(void *value) { defaultValue = *(float *)value; }
+ModRuntimeSettingsVarFloat::ModRuntimeSettingsVarFloat(ScriptProperty *prop) : ModRuntimeSettingsVar(prop) {
+  type = RED4ext::user::EConfigVarType::Float;
+  auto propType = RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
+
+  auto stepStr = prop->runtimeProperties.Get("ModSettings.step");
+  if (stepStr) {
+    propType->FromString(&stepValue, *stepStr);
+  }
+
+  auto minStr = prop->runtimeProperties.Get("ModSettings.min");
+  if (minStr) {
+    propType->FromString(&minValue, *minStr);
+  }
+
+  auto maxStr = prop->runtimeProperties.Get("ModSettings.max");
+  if (maxStr) {
+    propType->FromString(&maxValue, *maxStr);
+  }
+  LoadValues(prop);
+}
+
+
+
+void ModRuntimeSettingsVarFloat::LoadValues(ScriptProperty *prop) {
+  auto typeName = prop->type->name;
+  auto propType = RED4ext::CRTTISystem::Get()->GetType(typeName);
+  float defaultValue = 0;
+  void *defaultValue_p = &defaultValue;
+
+  if (prop->defaultValues.size) {
+    propType->FromString(defaultValue_p, prop->defaultValues[0]);
+  }
+  UpdateDefault(defaultValue_p);
+
+  float value = defaultValue;
+  void *value_p = &value;
+
+  RED4ext::CString settingFromFile;
+  if (ModSettings::GetSettingString(prop->parent->name, name, &settingFromFile)) {
+    propType->FromString(value_p, settingFromFile);
+  }
+  UpdateAll(value_p);
+
+  if (prop->defaultValues.size) {
+    propType->ToString(value_p, prop->defaultValues[0]);
+  }
+}
+
+bool __fastcall ModRuntimeSettingsVarFloat::WasModifiedSinceLastSave() {
+  return importPolicy != RED4ext::user::EConfigVarImportPolicy::Ignore && valueWrittenToFile != valueValidated;
+}
+
+bool __fastcall ModRuntimeSettingsVarFloat::HasChange() { return valueInput != valueValidated; }
+
+bool __fastcall ModRuntimeSettingsVarFloat::IsDefault() {
+  float value;
+  if (HasChange()) {
+    value = valueInput;
+  } else {
+    value = valueValidated;
+  }
+  return value == defaultValue;
+}
+
+bool __fastcall ModRuntimeSettingsVarFloat::RestoreDefault(char a1) {
+  auto wasDefault = IsDefault();
+  if (wasDefault)
+    return !wasDefault;
+  unk44 = a1;
+  if (((a1 - 2) & 0xFD) != 0) {
+    if (((a1 - 1) & 0xFD) != 0) {
+      if (!a1) {
+        UpdateValue(&defaultValue);
+        // UserSettings = GetUserSettings();
+        // AddSettingsDataToSettings(UserSettings, a1);
+      }
+      return !wasDefault;
+    }
+  UpdateImmediately:
+    UpdateValue(&defaultValue);
+    // v9 = GetUserSettings();
+    // sub_7FF62769C390(v9, a1);
+    return !wasDefault;
+  }
+  switch (updatePolicy) {
+  case RED4ext::user::EConfigVarUpdatePolicy::Disabled:
+    return !wasDefault;
+  case RED4ext::user::EConfigVarUpdatePolicy::Immediately:
+    goto UpdateImmediately;
+  case RED4ext::user::EConfigVarUpdatePolicy::ConfirmationRequired:
+    UpdateValue(&defaultValue);
+    // v8 = GetUserSettings();
+    // SettingsConfirmChange_0(v8, a1);
+    break;
+  case RED4ext::user::EConfigVarUpdatePolicy::RestartRequired:
+    UpdateValue(&defaultValue);
+    // v7 = GetUserSettings();
+    // SettingsRestartRequired_0(v7, a1);
+    break;
+  case RED4ext::user::EConfigVarUpdatePolicy::LoadLastCheckpointRequired:
+    UpdateValue(&defaultValue);
+    // v6 = GetUserSettings();
+    // SettingsLoadLastCheckpoint_0(v6, a1);
+    break;
+  default:
+    // LogError_f("E:\\R6.Release\\dev\\src\\common\\redConfig\\include\\inGameConfigVar.hpp", 44, line,
+    //            "Unknown in-game config var update policy (%d)", (unsigned __int8)a1->updatePolicy);
+    //__debugbreak();
+    break;
+  }
+  return !wasDefault;
+}
+
+void __fastcall ModRuntimeSettingsVarFloat::UpdateValue(void *value) { valueInput = *(float *)value; }
+
+void __fastcall ModRuntimeSettingsVarFloat::ApplyChange() { valueValidated = valueInput; }
+
+void __fastcall ModRuntimeSettingsVarFloat::RevertChange() { valueInput = valueValidated; }
+
+void __fastcall ModRuntimeSettingsVarFloat::ChangeWasWritten() { valueWrittenToFile = valueValidated; }
+
+void __fastcall ModRuntimeSettingsVarFloat::UpdateAll(void *value) {
+  valueWrittenToFile = *(float *)value;
+  valueInput = *(float *)value;
+  valueValidated = *(float *)value;
+}
+
+void __fastcall ModRuntimeSettingsVarFloat::GetValueToWrite(char *value) {
+  sprintf(value, "%f", valueValidated);
+}
+
+RED4ext::ScriptInstance *__fastcall ModRuntimeSettingsVarFloat::GetValuePtr() {
+  return (RED4ext::ScriptInstance *)&valueValidated;
+}
+
+void __fastcall ModRuntimeSettingsVarFloat::UpdateDefault(void *value) { defaultValue = *(float *)value; }
 
 // Int
 
