@@ -482,40 +482,34 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
 
   protected cb func OnSettingHoverOver(evt: ref<inkPointerEvent>) -> Bool {
     let descriptionName: CName;
+    let description: String;
     let params: ref<inkTextParams>;
     let updatePolicy: ConfigVarUpdatePolicy;
     let currentItem: wref<SettingsSelectorController> = evt.GetCurrentTarget().GetController() as SettingsSelectorController;
     if IsDefined(currentItem) {
       descriptionName = currentItem.GetDescription();
+      description = GetLocalizedTextByKey(descriptionName);
+      if StrLen(description) == 0 {
+          if !Equals(descriptionName, n"None") {
+            description = ToString(descriptionName);
+          } else {
+            description = "";
+          }
+      };
       updatePolicy = currentItem.GetVarUpdatePolicy();
       if Equals(updatePolicy, ConfigVarUpdatePolicy.ConfirmationRequired) {
         params = new inkTextParams();
-        // params.AddLocalizedName("description", descriptionName);
-          if !Equals(descriptionName, n"None") {
-            params.AddString("description", ToString(descriptionName));
-          } else {
-            params.AddString("description", "");
-          }
+        params.AddString("description", description);
         params.AddLocalizedString("additional_text", "LocKey#76947");
         inkTextRef.SetLocalizedTextScript(this.m_descriptionText, "LocKey#76949", params);
       } else {
         if Equals(updatePolicy, ConfigVarUpdatePolicy.RestartRequired) {
           params = new inkTextParams();
-          // params.AddLocalizedName("description", descriptionName);
-          if !Equals(descriptionName, n"None") {
-            params.AddString("description", ToString(descriptionName));
-          } else {
-            params.AddString("description", "");
-          }
+          params.AddString("description", description);
           params.AddLocalizedString("additional_text", "LocKey#76948");
           inkTextRef.SetLocalizedTextScript(this.m_descriptionText, "LocKey#76949", params);
         } else {
-          // inkTextRef.SetLocalizedTextScript(this.m_descriptionText, descriptionName);
-          if !Equals(descriptionName, n"None") {
-            inkTextRef.SetText(this.m_descriptionText, ToString(descriptionName), params);
-          } else {
-            inkTextRef.SetText(this.m_descriptionText, "", params);
-          }
+          inkTextRef.SetText(this.m_descriptionText, description, params);
         };
       };
       inkWidgetRef.SetVisible(this.m_descriptionText, true);
