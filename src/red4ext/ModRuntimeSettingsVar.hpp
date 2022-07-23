@@ -111,7 +111,7 @@ struct ModRuntimeSettingsVarEnum : public ModRuntimeSettingsVar {
     values = RED4ext::DynArray<int32_t>(new RED4ext::Memory::DefaultAllocator());
     displayValues = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator());
 
-    auto e = (RED4ext::CEnum *)RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
+    auto e = RED4ext::CRTTISystem::Get()->GetEnumByScriptName(prop->type->name);
     if (e) {
       for (const auto &value : e->hashList) {
           displayValues.EmplaceBack(value);
@@ -119,9 +119,9 @@ struct ModRuntimeSettingsVarEnum : public ModRuntimeSettingsVar {
       for (const auto &value : e->valueList) {
           values.EmplaceBack((int32_t)value);
       }
-    }
 
-    bitfield.listHasDisplayValues = true;
+      bitfield.listHasDisplayValues = true;
+    }
   }
 
   virtual bool __fastcall WasModifiedSinceLastSave() override;

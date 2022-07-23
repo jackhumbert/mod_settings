@@ -270,7 +270,10 @@ bool __fastcall ModRuntimeSettingsVarFloat::RestoreDefault(char a1) {
   return !wasDefault;
 }
 
-void __fastcall ModRuntimeSettingsVarFloat::UpdateValue(void *value) { valueInput = *(float *)value; }
+void __fastcall ModRuntimeSettingsVarFloat::UpdateValue(void *value) { 
+  valueInput = *(float *)value; 
+  ModRuntimeSettingsVar::UpdateValue(value);
+}
 
 void __fastcall ModRuntimeSettingsVarFloat::ApplyChange() { valueValidated = valueInput; }
 

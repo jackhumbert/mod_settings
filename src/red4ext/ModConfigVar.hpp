@@ -108,7 +108,7 @@ public:
   }
 
   int32_t GetDefaultValue() {
-    return GetValueFor(reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->defaultValue);
+    return GetValueFor(reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->defaultValue);
   }
 
   RED4ext::DynArray<int32_t> GetValues() {

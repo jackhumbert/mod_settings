@@ -42,52 +42,70 @@ struct ScriptData {
   void *unk138;
 };
 
-bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, void *scriptLogger);
-constexpr uintptr_t ProcessScriptTypesAddr = 0x272560 + 0xC00;
-decltype(&ProcessScriptTypes) ProcessScriptTypes_Original;
+//ScriptData *scriptData = NULL;
 
-bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, void *scriptLogger) {
-  ModSettings::ReadFromFile();
-  for (const auto &scriptClass : scriptData->classes) {
-    for (const auto &prop : scriptClass->properties) {
-      if (prop->runtimeProperties.size) {
-        auto mod = prop->runtimeProperties.Get("ModSettings.mod");
-        if (mod) {
-          auto variable =
-              (ModSettingsVariable *)RED4ext::CRTTISystem::Get()->GetClass("ModSettings")->AllocInstance(true);
-          variable->mod = RED4ext::CNamePool::Add(mod->c_str());
-          variable->typeName = prop->type->name;
-          variable->className = scriptClass->name;
+void __fastcall ProcessModSettings(ScriptData * scriptData) {
+  if (scriptData) {
+    ModSettings::ReadFromFile();
+    for (const auto &scriptClass : scriptData->classes) {
+      for (const auto &prop : scriptClass->properties) {
+        if (prop->runtimeProperties.size) {
+          auto mod = prop->runtimeProperties.Get("ModSettings.mod");
+          if (mod) {
+            auto variable =
+                (ModSettingsVariable *)RED4ext::CRTTISystem::Get()->GetClass("ModSettings")->AllocInstance(true);
+            variable->mod = RED4ext::CNamePool::Add(mod->c_str());
+            variable->typeName = prop->type->name;
+            variable->className = scriptClass->name;
 
-          auto category = prop->runtimeProperties.Get("ModSettings.category");
-          if (category) {
-            variable->category = RED4ext::CNamePool::Add(category->c_str());
-          } else {
-            variable->category = "None";
-          }
+            auto category = prop->runtimeProperties.Get("ModSettings.category");
+            if (category) {
+              variable->category = RED4ext::CNamePool::Add(category->c_str());
+            } else {
+              variable->category = "None";
+            }
 
-          ModRuntimeSettingsVar *settingsVar = NULL;
-          auto propType = RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
+            ModRuntimeSettingsVar *settingsVar = NULL;
+            auto propType = RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
 
-          if (prop->type->name == "Bool") {
-            settingsVar = new ModRuntimeSettingsVarBool(prop);
-          } else if (prop->type->name == "Float") {
-            settingsVar = new ModRuntimeSettingsVarFloat(prop);
-          } else if (prop->type->name == "Int32" || prop->type->name == "Uint32") {
-            settingsVar = new ModRuntimeSettingsVarInt32(prop);
-          } else if (propType->GetType() == RED4ext::ERTTIType::Enum) {
-            settingsVar = new ModRuntimeSettingsVarEnum(prop);
-          }
+            if (prop->type->name == "Bool") {
+              settingsVar = new ModRuntimeSettingsVarBool(prop);
+            } else if (prop->type->name == "Float") {
+              settingsVar = new ModRuntimeSettingsVarFloat(prop);
+            } else if (prop->type->name == "Int32" || prop->type->name == "Uint32") {
+              settingsVar = new ModRuntimeSettingsVarInt32(prop);
+            } else if (propType->GetType() == RED4ext::ERTTIType::Enum) {
+              settingsVar = new ModRuntimeSettingsVarEnum(prop);
+            }
 
-          if (settingsVar) {
-            variable->settingsVar = settingsVar;
-            ModSettings::AddVariable(variable);
+            if (settingsVar) {
+              variable->settingsVar = settingsVar;
+              ModSettings::AddVariable(variable);
+            }
           }
         }
       }
     }
   }
-  auto og = ProcessScriptTypes_Original(version, scriptData, scriptLogger);
+}
+
+//bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *_scriptData, void *scriptLogger);
+//constexpr uintptr_t ProcessScriptTypesAddr = 0x272560 + 0xC00;
+//decltype(&ProcessScriptTypes) ProcessScriptTypes_Original;
+//
+//bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *_scriptData, void *scriptLogger) {
+//  auto og = ProcessScriptTypes_Original(version, _scriptData, scriptLogger);
+//  scriptData = _scriptData;
+//  return og;
+//}
+
+void *__fastcall ReleaseScriptData(ScriptData *scriptData);
+constexpr uintptr_t ReleaseScriptDataAddr = 0x26F3B0 + 0xC00;
+decltype(&ReleaseScriptData) ReleaseScriptData_Original;
+
+void *__fastcall ReleaseScriptData(ScriptData *scriptData) {
+  ProcessModSettings(scriptData);
+  auto og = ReleaseScriptData_Original(scriptData);
   return og;
 }
 
@@ -105,8 +123,9 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     aSdk->logger->Info(aHandle, "Starting up");
     RED4ext::RTTIRegistrator::Add(ModSettings::RegisterTypes, ModSettings::PostRegisterTypes);
 
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessScriptTypesAddr), &ProcessScriptTypes,
-                                  reinterpret_cast<void **>(&ProcessScriptTypes_Original)));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ReleaseScriptDataAddr), &ReleaseScriptData,
+                                  reinterpret_cast<void **>(&ReleaseScriptData_Original)))
+      ;
 
     Engine::RTTIRegistrar::RegisterPending();
 
@@ -117,7 +136,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // The game's memory is already freed, to not try to do anything with it.
 
     aSdk->logger->Info(aHandle, "Shutting down");
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessScriptTypesAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ReleaseScriptDataAddr));
     break;
   }
   }

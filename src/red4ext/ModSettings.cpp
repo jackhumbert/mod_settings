@@ -243,12 +243,12 @@ void RestoreDefaultsScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   auto ms = ModSettings::GetInstance();
   auto vars = ms->variablesByMod.Get(mod);
   if (vars) {
-    for (const auto &variable : *vars) {
+    for (auto &variable : *vars) {
       variable->settingsVar->RestoreDefault(0);
     }
     ms->changeMade = false;
-    for (const auto &variable : *vars) {
-      ms->changeMade |= variable->settingsVar->WasModifiedSinceLastSave();
+    for (auto &variable : *vars) {
+      ms->changeMade |= variable->settingsVar->HasChange();
     }
     ms->NotifyListeners();
   }
