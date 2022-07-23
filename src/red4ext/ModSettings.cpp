@@ -45,7 +45,7 @@ void ModSettings::AddVariable(ModSettingsVariable *variable) {
   std::shared_lock<RED4ext::SharedMutex> _(self->variables_lock);
   variable->listeners = RED4ext::DynArray<RED4ext::IScriptable*>(new RED4ext::Memory::DefaultAllocator());
   variable->listeners.Reserve(1000);
-
+  variable->UpdateValues();
   self->variables.EmplaceBack(variable);
 
   auto modVars = self->variablesByMod.Get(variable->mod);
