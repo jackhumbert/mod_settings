@@ -20,12 +20,6 @@
 const RED4ext::Sdk *sdk;
 const RED4ext::PluginHandle *pluginHandle;
 
-struct ScriptRTTIContainer {
-  RED4ext::CRTTISystem *rtti;
-  void *scriptContainerVft;
-  ScriptHost *host;
-};
-
 struct ScriptData {
   RED4ext::HashMap<uint64_t, uint64_t> unk00;
   RED4ext::HashMap<uint64_t, uint64_t> unk30;
@@ -89,16 +83,6 @@ void __fastcall ProcessModSettings(ScriptData * scriptData) {
   }
 }
 
-//bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *_scriptData, void *scriptLogger);
-//constexpr uintptr_t ProcessScriptTypesAddr = 0x272560 + 0xC00;
-//decltype(&ProcessScriptTypes) ProcessScriptTypes_Original;
-//
-//bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *_scriptData, void *scriptLogger) {
-//  auto og = ProcessScriptTypes_Original(version, _scriptData, scriptLogger);
-//  scriptData = _scriptData;
-//  return og;
-//}
-
 void *__fastcall ReleaseScriptData(ScriptData *scriptData);
 constexpr uintptr_t ReleaseScriptDataAddr = 0x26F3B0 + 0xC00;
 decltype(&ReleaseScriptData) ReleaseScriptData_Original;
@@ -147,7 +131,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"Mod Settings";
   aInfo->author = L"Jack Humbert";
-  aInfo->version = RED4EXT_SEMVER(0, 0, 1);
+  aInfo->version = RED4EXT_SEMVER(0, 0, 2);
   aInfo->runtime = RED4EXT_RUNTIME_LATEST;
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }
