@@ -1,5 +1,7 @@
 # Mod Settings
 
+![Cyberpunk2077_bNHd9cRBA2](https://user-images.githubusercontent.com/141431/180589492-3a2d9c95-bb75-4288-aef9-c4b7fc08c41d.jpg)
+
 ## Installation
 
 [Get the latest release here](https://github.com/jackhumbert/mod_settings/releases) - `packed-v*.zip` in the release contains all of the requirements listed below at their most up-to-date versions (at the time of release). Simply extract it and copy the contents in your game's installation folder.
@@ -8,7 +10,7 @@ If you want to install the mod outside of a release (not recommended), the `buil
 
 ## Configuration
 
-Configuration is done through redscript classes. Some examples are provided.
+Configuration is done through redscript classes. [See one example here](https://github.com/jackhumbert/in_world_navigation/blob/main/src/redscript/in_world_navigation/InWorldNavigation.reds).
 
 ## Requirements
 
