@@ -2,7 +2,7 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Common.hpp>
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
-#include <RED4ext/Scripting/Natives/Generated/user/RuntimeSettingsVar.hpp>
+#include <RED4ext/Scripting/Natives/userRuntimeSettingsVar.hpp>
 
 struct ModRuntimeSettingsVar;
 
