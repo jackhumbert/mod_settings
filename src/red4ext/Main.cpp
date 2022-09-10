@@ -68,7 +68,7 @@ void __fastcall ProcessModSettings(ScriptData * scriptData) {
               settingsVar = new ModRuntimeSettingsVarFloat(prop);
             } else if (prop->type->name == "Int32" || prop->type->name == "Uint32") {
               settingsVar = new ModRuntimeSettingsVarInt32(prop);
-            } else if (propType->GetType() == RED4ext::ERTTIType::Enum) {
+            } else if (propType && propType->GetType() == RED4ext::ERTTIType::Enum) {
               settingsVar = new ModRuntimeSettingsVarEnum(prop);
             }
 
