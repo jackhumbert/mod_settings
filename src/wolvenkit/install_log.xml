@@ -1,11 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<InstalLog Project="NativeSettings" Build_date="7/13/2022 8:52:26 PM">
+<InstalLog Project="ModSettings" Build_date="9/11/2022 2:57:12 PM">
   <Files>
     <Directory Path="C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\archive">
       <Directory Path="C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\archive\pc">
         <Directory Path="C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\archive\pc\mod">
-          <file>C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\archive\pc\mod\NativeSettings.archive</file>
-          <file>C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\archive\pc\mod\NativeSettings.archive.xl</file>
+          <file>C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\archive\pc\mod\ModSettings.archive</file>
+          <file>C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\archive\pc\mod\ModSettings.xl</file>
+        </Directory>
+      </Directory>
+    </Directory>
+    <Directory Path="C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\mods">
+      <Directory Path="C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\mods\ModSettings">
+        <file>C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\mods\ModSettings\info.json</file>
+        <Directory Path="C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\mods\ModSettings\archives">
+          <file>C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\mods\ModSettings\archives\ModSettings.archive</file>
         </Directory>
       </Directory>
     </Directory>
