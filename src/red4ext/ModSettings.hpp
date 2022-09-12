@@ -5,7 +5,7 @@
 #include "INIReader.h"
 
 extern const RED4ext::Sdk *sdk;
-extern const RED4ext::PluginHandle *pluginHandle;
+extern RED4ext::PluginHandle pluginHandle;
 
 struct ModSettings : RED4ext::IScriptable {
   RED4ext::CClass *GetNativeType();

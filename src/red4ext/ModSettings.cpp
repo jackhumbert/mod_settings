@@ -200,10 +200,10 @@ void ModSettings::WriteToFile() {
     }
     configFile.close();
     //std::string configPathStr(configPath.string());
-    sdk->logger->InfoF(*pluginHandle, "User settings written to file: %s", configPath.string());
+    sdk->logger->InfoF(pluginHandle, "User settings written to file: %s", configPath.string());
   } else {
     //spdlog::error("Could not write to file: {}", configPath.string());
-    sdk->logger->InfoF(*pluginHandle, "Could not write to file: %s", configPath.string());
+    sdk->logger->InfoF(pluginHandle, "Could not write to file: %s", configPath.string());
   }
 }
 

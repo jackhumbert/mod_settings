@@ -18,7 +18,7 @@
 #include "ModConfigVar.hpp"
 
 const RED4ext::Sdk *sdk;
-const RED4ext::PluginHandle *pluginHandle;
+RED4ext::PluginHandle pluginHandle;
 
 struct ScriptData {
   RED4ext::HashMap<uint64_t, uint64_t> unk00;
@@ -103,7 +103,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     sdk = aSdk;
-    pluginHandle = &aHandle;
+    pluginHandle = aHandle;
 
     aSdk->logger->Info(aHandle, "Starting up");
     RED4ext::RTTIRegistrator::Add(ModSettings::RegisterTypes, ModSettings::PostRegisterTypes);
