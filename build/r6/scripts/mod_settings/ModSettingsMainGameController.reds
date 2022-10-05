@@ -354,7 +354,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     //       this.m_resetSettingsRequest = false;
     //       if this.m_closeSettingsRequest {
     //         this.m_closeSettingsRequest = false;
-            this.RequestClose();
+            // this.RequestClose();
     //       };
     //     };
     //   };
@@ -375,8 +375,8 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     //       } else {
     //         this.GetSystemRequestsHandler().RequestSaveUserSettings();
     //         if this.m_closeSettingsRequest {
-              this.m_closeSettingsRequest = false;
-              this.RequestClose();
+              // this.m_closeSettingsRequest = false;
+              // this.RequestClose();
     //         };
     //       };
     //     };
