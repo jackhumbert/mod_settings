@@ -24,8 +24,10 @@ ModSettings *ModSettings::GetInstance() {
   if (!handle.instance) {
     //spdlog::info("[RED4ext] New ModSettings Instance");
     auto instance = reinterpret_cast<ModSettings *>(modSettings.AllocInstance());
-    instance->listeners = RED4ext::DynArray<RED4ext::IScriptable*>(new RED4ext::Memory::DefaultAllocator());
+    instance->listeners = RED4ext::DynArray<RED4ext::IScriptable *>(new RED4ext::Memory::DefaultAllocator());
     instance->variables = RED4ext::DynArray<ModSettingsVariable *>(new RED4ext::Memory::DefaultAllocator());
+    instance->mods = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator());
+    instance->classes = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator());
     instance->variablesByClass = RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>>(
         new RED4ext::Memory::DefaultAllocator);
     instance->variablesByMod = RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>>(
@@ -55,6 +57,7 @@ void ModSettings::AddVariable(ModSettingsVariable *variable) {
     auto ra = RED4ext::DynArray<ModSettingsVariable *>(new RED4ext::Memory::DefaultAllocator);
     ra.EmplaceBack(variable);
     self->variablesByMod.Insert(variable->mod, ra);
+    self->mods.EmplaceBack(variable->mod);
   }
 
   auto classVars = self->variablesByClass.Get(variable->className);
@@ -64,6 +67,7 @@ void ModSettings::AddVariable(ModSettingsVariable *variable) {
     auto ra = RED4ext::DynArray<ModSettingsVariable *>(new RED4ext::Memory::DefaultAllocator);
     ra.EmplaceBack(variable);
     self->variablesByClass.Insert(variable->className, ra);
+    self->classes.EmplaceBack(variable->className);
   }
 
   if (variable->category != "None") {
@@ -181,9 +185,9 @@ void ModSettings::WriteToFile() {
   auto self = ModSettings::GetInstance();
   std::ofstream configFile(configPath);
   if (configFile.is_open()) {
-    for (const auto &node : self->variablesByClass) {
-      configFile << "[" << node.key.ToString() << "]\n";
-      for (const auto &variable : node.value) {
+    for (const auto &cls : self->classes) {
+      configFile << "[" << cls.ToString() << "]\n";
+      for (const auto &variable : *self->variablesByClass.Get(cls)) {
         variable->settingsVar->ApplyChange();
         if (variable->settingsVar->WasModifiedSinceLastSave()) {
           variable->UpdateValues();
@@ -199,11 +203,9 @@ void ModSettings::WriteToFile() {
       configFile << "\n";
     }
     configFile.close();
-    //std::string configPathStr(configPath.string());
-    sdk->logger->InfoF(pluginHandle, "User settings written to file: %s", configPath.string());
+    sdk->logger->InfoF(pluginHandle, "User settings written to file: %s", configPath.string().c_str());
   } else {
-    //spdlog::error("Could not write to file: {}", configPath.string());
-    sdk->logger->InfoF(pluginHandle, "Could not write to file: %s", configPath.string());
+    sdk->logger->InfoF(pluginHandle, "Could not write to file: %s", configPath.string().c_str());
   }
 }
 

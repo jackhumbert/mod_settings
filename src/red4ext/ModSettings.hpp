@@ -24,6 +24,8 @@ struct ModSettings : RED4ext::IScriptable {
   bool changeMade = false;
   INIReader reader;
   RED4ext::DynArray<ModSettingsVariable *> variables;
+  RED4ext::DynArray<RED4ext::CName> mods;
+  RED4ext::DynArray<RED4ext::CName> classes;
   RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>> variablesByMod;
   RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>> variablesByClass;
   RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<RED4ext::CName>> categoriesByMod;
