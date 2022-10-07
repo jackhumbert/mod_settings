@@ -10,7 +10,7 @@ If you want to install the mod outside of a release (not recommended), the `buil
 
 ## Configuration
 
-Configuration is done through redscript classes. [See one example here](https://github.com/jackhumbert/in_world_navigation/blob/main/src/redscript/in_world_navigation/InWorldNavigation.reds).
+Configuration is done through redscript classes. [See one example here](https://github.com/jackhumbert/in_world_navigation/blob/main/src/redscript/in_world_navigation/InWorldNavigation.reds). Variable & class names are limited to 1024 characters.
 
 ## Requirements
 
