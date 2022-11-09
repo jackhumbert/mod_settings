@@ -23,7 +23,7 @@ RED4ext::Handle<ModSettings> handle;
 ModSettings *ModSettings::GetInstance() {
   if (!handle.instance) {
     //spdlog::info("[RED4ext] New ModSettings Instance");
-    auto instance = reinterpret_cast<ModSettings *>(modSettings.AllocInstance());
+    auto instance = reinterpret_cast<ModSettings *>(modSettings.CreateInstance());
     instance->listeners = RED4ext::DynArray<RED4ext::IScriptable *>(new RED4ext::Memory::DefaultAllocator());
     instance->variables = RED4ext::DynArray<ModSettingsVariable *>(new RED4ext::Memory::DefaultAllocator());
     instance->mods = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator());
@@ -153,22 +153,22 @@ void GetVarsScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
       case RED4ext::user::EConfigVarType::Bool:
         configVar = (RED4ext::user::SettingsVar *)RED4ext::CRTTISystem::Get()
                         ->GetClass("ModConfigVarBool")
-                        ->AllocInstance();
+                        ->CreateInstance();
         break;
       case RED4ext::user::EConfigVarType::Float:
         configVar = (RED4ext::user::SettingsVar *)RED4ext::CRTTISystem::Get()
                         ->GetClass("ModConfigVarFloat")
-                        ->AllocInstance();
+                        ->CreateInstance();
         break;
       case RED4ext::user::EConfigVarType::Int:
         configVar = (RED4ext::user::SettingsVar *)RED4ext::CRTTISystem::Get()
                         ->GetClass("ModConfigVarInt32")
-                        ->AllocInstance();
+                        ->CreateInstance();
         break;
       case RED4ext::user::EConfigVarType::IntList:
         configVar = (RED4ext::user::SettingsVar *)RED4ext::CRTTISystem::Get()
                         ->GetClass("ModConfigVarEnum")
-                        ->AllocInstance();
+                        ->CreateInstance();
         break;
       }
       if (configVar) {

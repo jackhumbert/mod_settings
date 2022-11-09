@@ -47,7 +47,7 @@ void __fastcall ProcessModSettings(ScriptData * scriptData) {
           auto mod = prop->runtimeProperties.Get("ModSettings.mod");
           if (mod) {
             auto variable =
-                (ModSettingsVariable *)RED4ext::CRTTISystem::Get()->GetClass("ModSettings")->AllocInstance(true);
+                (ModSettingsVariable *)RED4ext::CRTTISystem::Get()->GetClass("ModSettings")->CreateInstance(true);
             variable->mod = RED4ext::CNamePool::Add(mod->c_str());
             variable->typeName = prop->type->name;
             variable->className = scriptClass->name;
@@ -81,11 +81,13 @@ void __fastcall ProcessModSettings(ScriptData * scriptData) {
       }
     }
   }
-}
+} 
 
+// 1.6  RVA: 0x273D50
+// 1.61 RVA: 0x274300
 // 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B D9 E8 99 0B 00 00 48 8D 8B 38 01 00 00 FF 15
 void *__fastcall ReleaseScriptData(ScriptData *scriptData);
-constexpr uintptr_t ReleaseScriptDataAddr = 0x273D50;
+constexpr uintptr_t ReleaseScriptDataAddr = 0x274300;
 decltype(&ReleaseScriptData) ReleaseScriptData_Original;
 
 void *__fastcall ReleaseScriptData(ScriptData *scriptData) {
@@ -105,7 +107,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     sdk = aSdk;
     pluginHandle = aHandle;
 
-    aSdk->logger->Info(aHandle, "Starting up Mod Settings v0.0.6");
+    aSdk->logger->Info(aHandle, "Starting up Mod Settings v0.0.7");
     RED4ext::RTTIRegistrator::Add(ModSettings::RegisterTypes, ModSettings::PostRegisterTypes);
 
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ReleaseScriptDataAddr), &ReleaseScriptData,
@@ -132,7 +134,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"Mod Settings";
   aInfo->author = L"Jack Humbert";
-  aInfo->version = RED4EXT_SEMVER(0, 0, 6);
+  aInfo->version = RED4EXT_SEMVER(0, 0, 7);
   aInfo->runtime = RED4EXT_RUNTIME_LATEST;
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }
