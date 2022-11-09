@@ -9,8 +9,7 @@ void ModSettingsVariable::UpdateValues() {
       if (classType->defaults.keys[i] == settingsVar->name) {
         sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", className.ToString() , settingsVar->name.ToString());
         auto propType = classType->defaults.values[i]->type;
-        //auto propType = reinterpret_cast<RED4ext::CBaseRTTIType *>(addr & 0xFFFFFFFFFFFFFFF8);
-        propType->Assign(&classType->defaults.values[i], valuePtr);
+        classType->defaults.values[i]->Fill(propType, valuePtr);
       }
     }
     std::shared_lock<RED4ext::SharedMutex> _(listeners_lock);

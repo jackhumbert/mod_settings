@@ -108,7 +108,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     sdk = aSdk;
     pluginHandle = aHandle;
 
-    aSdk->logger->Info(aHandle, "Starting up Mod Settings v0.0.7");
+    aSdk->logger->Info(aHandle, "Starting up Mod Settings v0.0.8");
     RED4ext::RTTIRegistrator::Add(ModSettings::RegisterTypes, ModSettings::PostRegisterTypes);
 
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ReleaseScriptDataAddr), &ReleaseScriptData,
@@ -135,7 +135,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"Mod Settings";
   aInfo->author = L"Jack Humbert";
-  aInfo->version = RED4EXT_SEMVER(0, 0, 7);
+  aInfo->version = RED4EXT_SEMVER(0, 0, 8);
   aInfo->runtime = RED4EXT_RUNTIME_LATEST;
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }
