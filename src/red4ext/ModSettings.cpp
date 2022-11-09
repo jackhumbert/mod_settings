@@ -41,6 +41,17 @@ ModSettings *ModSettings::GetInstance() {
   return (ModSettings *)handle.instance;
 }
 
+void ModSettings::ClearVariables() {
+  auto self = ModSettings::GetInstance();
+
+  self->variables.Clear();
+  self->mods.Clear();
+  self->variablesByMod.Clear();
+  self->classes.Clear();
+  self->variablesByClass.Clear();
+  self->categoriesByMod.Clear();
+}
+
 void ModSettings::AddVariable(ModSettingsVariable *variable) {
   auto self = ModSettings::GetInstance();
   

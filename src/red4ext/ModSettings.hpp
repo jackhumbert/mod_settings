@@ -12,6 +12,7 @@ struct ModSettings : RED4ext::IScriptable {
 
   static ModSettings *GetInstance();
   static bool GetSettingString(RED4ext::CName, RED4ext::CName, RED4ext::CString *);
+  static void ClearVariables();
   static void AddVariable(ModSettingsVariable *);
   static void WriteToFile();
   static void ReadFromFile();

@@ -41,6 +41,7 @@ struct ScriptData {
 void __fastcall ProcessModSettings(ScriptData * scriptData) {
   if (scriptData) {
     ModSettings::ReadFromFile();
+    ModSettings::ClearVariables();
     for (const auto &scriptClass : scriptData->classes) {
       for (const auto &prop : scriptClass->properties) {
         if (prop->runtimeProperties.size) {
