@@ -8,7 +8,7 @@ void ModSettingsVariable::UpdateValues() {
     for (auto i = 0; i < classType->defaults.keys.size; i++) {
       if (classType->defaults.keys[i] == settingsVar->name) {
         sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", className.ToString() , settingsVar->name.ToString());
-        auto propType = classType->defaults.values[i]->type;
+        auto propType = classType->defaults.values[i]->GetType();
         classType->defaults.values[i]->Fill(propType, valuePtr);
       }
     }
