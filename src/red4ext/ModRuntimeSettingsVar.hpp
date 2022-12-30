@@ -113,9 +113,19 @@ struct ModRuntimeSettingsVarEnum : public ModRuntimeSettingsVar {
 
     auto e = RED4ext::CRTTISystem::Get()->GetEnumByScriptName(prop->type->name);
     if (e) {
+      const auto displayValuesPrefix = RED4ext::FNV1a64("ModSettings.displayValues.");
+
       for (const auto &value : e->hashList) {
-          displayValues.EmplaceBack(value);
+          const auto displayValueAttr = RED4ext::FNV1a64(value.ToString(), displayValuesPrefix);
+          const auto displayValue = prop->runtimeProperties.Get(displayValueAttr);
+          if (displayValue) {
+            RED4ext::CNamePool::Add(displayValue->c_str());
+            displayValues.EmplaceBack(displayValue->c_str());
+          } else {
+            displayValues.EmplaceBack(value);
+          }
       }
+
       for (const auto &value : e->valueList) {
           values.EmplaceBack((int32_t)value);
       }
