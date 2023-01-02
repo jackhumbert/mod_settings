@@ -12,6 +12,33 @@ If you want to install the mod outside of a release (not recommended), the `buil
 
 Configuration is done through redscript classes. [See one example here](https://github.com/jackhumbert/in_world_navigation/blob/main/src/redscript/in_world_navigation/InWorldNavigation.reds). Variable & class names are limited to 1024 characters.
 
+## Advanced Configuration for Enums
+
+```swift
+enum ModSetting {
+  OptionA = 0,
+  OptionB = 1,
+  OptionC = 2
+}
+
+class ModSettings {
+  @runtimeProperty("ModSettings.mod", "Mod")
+  @runtimeProperty("ModSettings.displayName", "UI-ModSetting-Label")
+  @runtimeProperty("ModSettings.displayValues.OptionA", "UI-ModSetting-OptionA")
+  @runtimeProperty("ModSettings.displayValues.OptionB", "Fixed Option B")
+  public let setting: ModSetting = ModSetting.OptionA;
+}
+```
+
+This example will produce the following results for enum values:
+
+| Enum Value | Display Value |
+| --- | --- |
+| `OptionA` | Localized text `GetLocalizedText("UI-ModSetting-OptionA")`  |
+| `OptionB` | Fixed text `"Fixed Option B"`  |
+| `OptionC` | Value name `"OptionC"`  |
+
+
 ## Requirements
 
 * [RED4ext](https://github.com/WopsS/RED4ext)
