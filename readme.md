@@ -1,6 +1,6 @@
 # Mod Settings
 
-![Cyberpunk2077_bNHd9cRBA2](https://user-images.githubusercontent.com/141431/180589492-3a2d9c95-bb75-4288-aef9-c4b7fc08c41d.jpg)
+![Wt2Z4fgfQT](https://user-images.githubusercontent.com/141431/223482953-f7860657-62dd-4cc9-90ea-e099edfa1691.jpg)
 
 ## Installation
 
