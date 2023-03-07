@@ -1,0 +1,62 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Script File
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+//   History: 
+//------------------------------------------------
+
+#include "C:\Users\Jack\Documents\SweetScape\010 Scripts\Repository\CP77_CR2W_Unkarkify.1sc"
+
+TFindResults r, changed;
+
+changed = FindAll("ModStngs");
+if (changed.count) {
+
+r = FindAll("ModStngsMainGameController");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "SettingsMainGameController");
+
+r = FindAll("ModStngsSelectorControllerBool");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "SettingsSelectorControllerBool");
+
+r = FindAll("ModStngsSelectorControllerInt");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "SettingsSelectorControllerInt");
+
+r = FindAll("ModStngsSelectorControllerFloat");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "SettingsSelectorControllerFloat");
+
+r = FindAll("ModStngsSelectorControllerListInt");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "SettingsSelectorControllerListInt");
+
+} else {
+
+r = FindAll("SettingsMainGameController");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "ModStngsMainGameController");
+
+r = FindAll("SettingsSelectorControllerBool");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "ModStngsSelectorControllerBool");
+
+r = FindAll("SettingsSelectorControllerInt");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "ModStngsSelectorControllerInt");
+
+r = FindAll("SettingsSelectorControllerFloat");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "ModStngsSelectorControllerFloat");
+
+r = FindAll("SettingsSelectorControllerListInt");
+for( i = 0; i < r.count; i++ )
+    WriteString(r.start[i], "ModStngsSelectorControllerListInt");
+}
+
+#include "C:\Users\Jack\Documents\SweetScape\010 Scripts\Repository\CP77_CR2W_Rebuild.1sc"
