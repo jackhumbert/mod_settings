@@ -9,12 +9,15 @@
 //   History: 
 //------------------------------------------------
 
+Printf("Unkarking\n");
+
 #include "C:\Users\Jack\Documents\SweetScape\010 Scripts\Repository\CP77_CR2W_Unkarkify.1sc"
 
 TFindResults r, changed;
 
 changed = FindAll("ModStngs");
 if (changed.count) {
+Printf("Removing ModStngs\n");
 
 r = FindAll("ModStngsMainGameController");
 for( i = 0; i < r.count; i++ )
@@ -38,6 +41,7 @@ for( i = 0; i < r.count; i++ )
 
 } else {
 
+Printf("Adding ModStngs\n");
 r = FindAll("SettingsMainGameController");
 for( i = 0; i < r.count; i++ )
     WriteString(r.start[i], "ModStngsMainGameController");
@@ -59,4 +63,9 @@ for( i = 0; i < r.count; i++ )
     WriteString(r.start[i], "ModStngsSelectorControllerListInt");
 }
 
+Printf("Re-karking\n");
 #include "C:\Users\Jack\Documents\SweetScape\010 Scripts\Repository\CP77_CR2W_Rebuild.1sc"
+
+Printf("Saving\n");
+FileSave();
+Printf("Completed!\n");

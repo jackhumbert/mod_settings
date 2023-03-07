@@ -44,6 +44,10 @@ This example will produce the following results for enum values:
 * [RED4ext](https://github.com/WopsS/RED4ext)
 * [Redscript](https://github.com/jac3km4/redscript)
 
+## Development
+
+Running `tools/ModStngs.1sc` on `mod_settings_main.inkwidget` will toggle between using a custom class (`ModStngs` replacing `Settings` in `SettingsMainGameController` and `SettingsSelectorController*`) so the file can be opened & edited in Wolvenkit. If you keep the file open in Wolvenkit, you won't need to convert back, and only run the script after you've saved it in Wolvenkit, before packing.
+
 ## Bugs
 
 If you come across something that doesn't work quite right, or interferes with another mod, [search for or create an issue!](https://github.com/jackhumbert/mod_settings/issues) I have a lot of things on a private TODO list still, but can start to move things to Github issues.

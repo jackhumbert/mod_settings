@@ -451,6 +451,14 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     this.m_resetSettingsRequest = true;
     this.CheckSettings();
   }
+  
+  protected func ScrollToMod(ratio: Float) {
+    let mod_flex = this.GetWidget(n"mod_settings/mod_flex");
+    let mod_scroller = mod_flex.GetController() as inkScrollController;
+    if IsDefined(mod_scroller) {
+      mod_scroller.SetScrollPosition(ratio);
+    }
+  }
 
   protected cb func OnButtonRelease(evt: ref<inkPointerEvent>) -> Bool {
     let currentToggledIndex: Int32;
@@ -459,16 +467,20 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
       currentToggledIndex = this.m_selectorCtrl.GetToggledIndex();
       if currentToggledIndex < 1 {
         this.m_selectorCtrl.SetToggledIndex(listSize - 1);
+        this.ScrollToMod(1.0);
       } else {
         this.m_selectorCtrl.SetToggledIndex(currentToggledIndex - 1);
+        this.ScrollToMod(Cast<Float>(currentToggledIndex - 1) / Cast<Float>(listSize - 1));
       };
     } else {
       if evt.IsAction(n"next_menu") {
         currentToggledIndex = this.m_selectorCtrl.GetToggledIndex();
         if currentToggledIndex >= this.m_selectorCtrl.Size() - 1 {
           this.m_selectorCtrl.SetToggledIndex(0);
+          this.ScrollToMod(0.0);
         } else {
           this.m_selectorCtrl.SetToggledIndex(currentToggledIndex + 1);
+          this.ScrollToMod(Cast<Float>(currentToggledIndex + 1) / Cast<Float>(listSize - 1));
         };
       } else {
         if evt.IsAction(n"restore_default_settings") {
