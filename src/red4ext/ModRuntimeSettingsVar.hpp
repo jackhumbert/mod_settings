@@ -30,7 +30,7 @@ struct ModRuntimeSettingsVarBool : public ModRuntimeSettingsVar {
   virtual bool __fastcall WasModifiedSinceLastSave() override;
   virtual bool __fastcall HasChange() override;
   virtual bool __fastcall IsDefault() override;
-  virtual bool __fastcall RestoreDefault(char a1) override;
+  virtual bool __fastcall RestoreDefault(uint8_t a1) override;
   virtual void __fastcall UpdateValue(void *value) override;
   virtual void __fastcall ApplyChange() override;
   virtual void __fastcall RevertChange() override;
@@ -54,7 +54,7 @@ struct ModRuntimeSettingsVarInt32 : public ModRuntimeSettingsVar {
   virtual bool __fastcall WasModifiedSinceLastSave() override;
   virtual bool __fastcall HasChange() override;
   virtual bool __fastcall IsDefault() override;
-  virtual bool __fastcall RestoreDefault(char a1) override;
+  virtual bool __fastcall RestoreDefault(uint8_t a1) override;
   virtual void __fastcall UpdateValue(void *value) override;
   virtual void __fastcall ApplyChange() override;
   virtual void __fastcall RevertChange() override;
@@ -81,7 +81,7 @@ struct ModRuntimeSettingsVarFloat : public ModRuntimeSettingsVar {
   virtual bool __fastcall WasModifiedSinceLastSave() override;
   virtual bool __fastcall HasChange() override;
   virtual bool __fastcall IsDefault() override;
-  virtual bool __fastcall RestoreDefault(char a1) override;
+  virtual bool __fastcall RestoreDefault(uint8_t a1) override;
   virtual void __fastcall UpdateValue(void *value) override;
   virtual void __fastcall ApplyChange() override;
   virtual void __fastcall RevertChange() override;
@@ -137,7 +137,7 @@ struct ModRuntimeSettingsVarEnum : public ModRuntimeSettingsVar {
   virtual bool __fastcall WasModifiedSinceLastSave() override;
   virtual bool __fastcall HasChange() override;
   virtual bool __fastcall IsDefault() override;
-  virtual bool __fastcall RestoreDefault(char a1) override;
+  virtual bool __fastcall RestoreDefault(uint8_t a1) override;
   virtual void __fastcall UpdateValue(void *value) override;
   virtual void __fastcall ApplyChange() override;
   virtual void __fastcall RevertChange() override;

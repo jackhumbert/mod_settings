@@ -82,7 +82,7 @@ bool __fastcall ModRuntimeSettingsVarBool::IsDefault() {
   return value == defaultValue;
 }
 
-bool __fastcall ModRuntimeSettingsVarBool::RestoreDefault(char a1) {
+bool __fastcall ModRuntimeSettingsVarBool::RestoreDefault(uint8_t a1) {
   auto wasDefault = IsDefault();
   if (wasDefault)
     return !wasDefault;
@@ -221,7 +221,7 @@ bool __fastcall ModRuntimeSettingsVarFloat::IsDefault() {
   return value == defaultValue;
 }
 
-bool __fastcall ModRuntimeSettingsVarFloat::RestoreDefault(char a1) {
+bool __fastcall ModRuntimeSettingsVarFloat::RestoreDefault(uint8_t a1) {
   auto wasDefault = IsDefault();
   if (wasDefault)
     return !wasDefault;
@@ -336,7 +336,7 @@ bool __fastcall ModRuntimeSettingsVarInt32::IsDefault() {
   return value == defaultValue;
 }
 
-bool __fastcall ModRuntimeSettingsVarInt32::RestoreDefault(char a1) {
+bool __fastcall ModRuntimeSettingsVarInt32::RestoreDefault(uint8_t a1) {
   auto wasDefault = IsDefault();
   if (wasDefault)
     return !wasDefault;
@@ -428,7 +428,7 @@ bool __fastcall ModRuntimeSettingsVarEnum::IsDefault() {
   return value == defaultValue;
 }
 
-bool __fastcall ModRuntimeSettingsVarEnum::RestoreDefault(char a1) {
+bool __fastcall ModRuntimeSettingsVarEnum::RestoreDefault(uint8_t a1) {
   auto wasDefault = IsDefault();
   if (wasDefault)
     return !wasDefault;

@@ -7,14 +7,6 @@
         "label": "Lint Installed",
         "type": "shell",
         "command": "tools\\lint_installed.bat",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -30,14 +22,6 @@
         "label": "Lint",
         "type": "shell",
         "command": "tools\\lint.bat",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -53,14 +37,6 @@
         "label": "Build",
         "type": "shell",
         "command": "tools\\build.bat",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -76,14 +52,6 @@
         "label": "Pack",
         "type": "shell",
         "command": "tools\\pack.bat",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -99,14 +67,6 @@
         "label": "Lint/Build",
         "type": "shell",
         "command": "tools\\build.bat",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -123,14 +83,6 @@
         "label": "Install",
         "type": "shell",
         "command": "tools\\install.bat",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -146,14 +98,6 @@
         "label": "Install To Let There Be Flight",
         "type": "shell",
         "command": "tools\\install_ltbf.bat",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -169,14 +113,6 @@
         "label": "Lint/Build/Install",
         "type": "shell",
         "command": "tools\\install.bat",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -194,14 +130,6 @@
         "label": "Run",
         "type": "shell",
         "command": "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe\"",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -217,14 +145,6 @@
         "label": "Lint/Build/Install/Run",
         "type": "shell",
         "command": "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe\"",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -241,14 +161,6 @@
         "label": "Install/Run",
         "type": "shell",
         "command": "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe\"",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d", "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
