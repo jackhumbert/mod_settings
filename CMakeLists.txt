@@ -1,82 +1,48 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.24)
 
-# Change the project name here!
-project(ModSettings LANGUAGES CXX)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Set this option to ON to be able to use folders / filters in your project when using Visual Studio.
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/cpcmake")
 
-# Set the C++ standard to 20 (C++20).
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
+include(CMakeDependentOption)
 
-# Add RED4ext.SDK as a dependency.
-
-# Uncomment the following line if you want to use the header-only version of RED4ext.SDK.
-#option(RED4EXT_HEADER_ONLY "" ON)
-
-add_subdirectory(deps/red4ext.sdk)
-set_target_properties(RED4ext.SDK PROPERTIES FOLDER "Dependencies")
-
-# This will mark the following RED4ext variables as advanced. They won't be displayed in CMake's GUI.
-mark_as_advanced(
-  RED4EXT_BUILD_EXAMPLES
-  RED4EXT_HEADER_ONLY
+project(
+  mod_settings
+  DESCRIPTION "Mod Settings"
+  VERSION 0.0.8
+  LANGUAGES CXX
 )
 
-# detours
+# Customizable options
+set(MOD_NAME ${PROJECT_DESCRIPTION})
+set(MOD_SLUG ${PROJECT_NAME})
+set(MOD_AUTHOR "Jack Humbert")
+set(MOD_URL "https://github.com/jackhumbert/mod_settings")
+set(MOD_LICENSE "Licensed under the MIT license. See the license.md in the root project for details.")
+set(MOD_REDSCRIPT_DIR "${PROJECT_SOURCE_DIR}/src/redscript")
+set(MOD_TOOLS_DIR "${PROJECT_SOURCE_DIR}/tools")
+set(MOD_GAME_DIR "${PROJECT_SOURCE_DIR}/game_dir")
+set(MOD_PREREQ_DIR "${PROJECT_SOURCE_DIR}/prereqs")
+set(MOD_ARCHIVES "${PROJECT_SOURCE_DIR}/src/wolvenkit/packed/mods/ModSettings/archives/ModSettings.archive")
 
-add_library(Detours STATIC)
-set_target_properties(Detours PROPERTIES FOLDER "Dependencies")
+set(MOD_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(MOD_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(MOD_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(MOD_VERSION_STR "v${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
-set(DETOURS_SRC_DIR "${PROJECT_SOURCE_DIR}/deps/detours/src")
-file(GLOB_RECURSE HEADER_FILES ${DETOURS_SRC_DIR}/*.h)
-file(GLOB_RECURSE SOURCE_FILES ${DETOURS_SRC_DIR}/*.cpp)
+set(MOD_ZIP_FILE "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}_${MOD_VERSION_STR}.zip" CACHE STRING "Location and name of zip file")
+set(CYBERPUNK_2077_GAME_DIR "C:/Program Files (x86)/Steam/steamapps/common/Cyberpunk 2077" CACHE STRING "Cyberpunk 2077 game directory")
+set(CYBERPUNK_2077_EXE "${CYBERPUNK_2077_GAME_DIR}/bin/x64/Cyberpunk2077.exe")
+set(CYBERPUNK_2077_REDSCRIPT_BACKUP "${CYBERPUNK_2077_GAME_DIR}/r6/cache/final.redscripts.bk")
 
-# Remove "uimports.cpp" since it throws "detours.h version mismatch" error.
-list(REMOVE_ITEM SOURCE_FILES ${DETOURS_SRC_DIR}/uimports.cpp)
+set(MOD_RED4EXT_SDK_DIR "${PROJECT_SOURCE_DIR}/deps/red4ext.sdk")
+set(MOD_RED4EXT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src/red4ext")
+set(ZOLTAN_USER_SIGNATURES "${MOD_RED4EXT_SOURCE_DIR}/Main.cpp")
+set(ZOLTAN_ADDRESSES_OUTPUT "${MOD_RED4EXT_SOURCE_DIR}/Addresses.hpp")
+set(ZOLTAN_CLANG_EXE "${MOD_TOOLS_DIR}/zoltan-clang.exe")
 
-target_include_directories(Detours PUBLIC ${DETOURS_SRC_DIR})
-target_sources(Detours PRIVATE ${HEADER_FILES} ${SOURCE_FILES})
+find_package(RED4ext.SDK)
 
-# spdlog
-
-# option(SPDLOG_ENABLE_PCH "" ON)
-# option(SPDLOG_DISABLE_DEFAULT_LOGGER "" ON)
-# option(SPDLOG_FMT_EXTERNAL "" ON)
-# option(SPDLOG_NO_THREAD_ID "" ON)
-# option(SPDLOG_WCHAR_FILENAMES "" ON)
-# option(SPDLOG_WCHAR_SUPPORT "" ON)
-
-# add_subdirectory(deps/spdlog)
-# set_target_properties(spdlog PROPERTIES FOLDER "Dependencies")
-
-# mark_as_advanced(
-#   SPDLOG_BUILD_ALL
-#   SPDLOG_BUILD_BENCH
-#   SPDLOG_BUILD_EXAMPLE
-#   SPDLOG_BUILD_EXAMPLE_HO
-#   SPDLOG_BUILD_SHARED
-#   SPDLOG_BUILD_TESTS
-#   SPDLOG_BUILD_TESTS_HO
-#   SPDLOG_BUILD_WARNINGS
-#   SPDLOG_CLOCK_COARSE
-#   SPDLOG_DISABLE_DEFAULT_LOGGER
-#   SPDLOG_ENABLE_PCH
-#   SPDLOG_FMT_EXTERNAL
-#   SPDLOG_FMT_EXTERNAL_HO
-#   SPDLOG_INSTALL
-#   SPDLOG_NO_ATOMIC_LEVELS
-#   SPDLOG_NO_EXCEPTIONS
-#   SPDLOG_NO_THREAD_ID
-#   SPDLOG_NO_TLS
-#   SPDLOG_PREVENT_CHILD_FD
-#   SPDLOG_SANITIZE_ADDRESS
-#   SPDLOG_TIDY
-#   SPDLOG_USE_STD_FORMAT
-#   SPDLOG_WCHAR_FILENAMES
-#   SPDLOG_WCHAR_SUPPORT
-# )
-
-# Include the main project.
 add_subdirectory(src/red4ext)
+add_subdirectory(src/redscript)

@@ -3,13 +3,11 @@
     "redscript.sourcePath": "src/redscript",
     "redscript.modFolderName": "flight_control",
     "files.exclude": {
-        "packed": true,
         "**/.git": true,
         "**/.svn": true,
         "**/.hg": true,
         "**/CVS": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
-        "build": true
     }
 }

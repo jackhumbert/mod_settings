@@ -7,3 +7,6 @@
 [submodule "deps/red4ext.sdk"]
 	path = deps/red4ext.sdk
 	url = git@github.com:jackhumbert/RED4ext.SDK.git
+[submodule "deps/cpcmake"]
+	path = deps/cpcmake
+	url = git@github.com:jackhumbert/cpcmake.git

@@ -16,7 +16,7 @@
 # Mono auto generated files
 mono_crash.*
 
-.build
+build
 
 # Build results
 # [Dd]ebug/
@@ -37,8 +37,7 @@ make/
 src/red4ext/x64/
 src/red4ext/build/
 packed/
-packed*.zip
-build*.zip
+*.zip
 resources/custom_game_controller.zip
 resources/install_log.xml
 
