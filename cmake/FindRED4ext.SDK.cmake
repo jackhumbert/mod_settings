@@ -9,3 +9,5 @@ mark_as_advanced(
   RED4EXT_USE_PCH
   RED4EXT_INSTALL
 )
+
+set(MOD_RED4EXT_SDK_DIR ${PROJECT_SOURCE_DIR}/deps/red4ext.sdk)
