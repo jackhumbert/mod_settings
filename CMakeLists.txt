@@ -21,7 +21,7 @@ find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_
 
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Main.cpp Addresses.hpp)
-configure_archives(src/wolvenkit/packed/mods/ModSettings/archives/ModSettings.archive)
+configure_archives(src/wolvenkit/packed/mods/ModSettings/archives/ModSettings.archive src/archiveXL/ModSettings.archive.xl)
 configure_redscript(src/redscript)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
