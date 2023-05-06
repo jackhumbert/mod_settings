@@ -16,6 +16,7 @@
 
 #include "Scripting/RTTIClass.hpp"
 #include "ModConfigVar.hpp"
+#include "Addresses.hpp"
 
 const RED4ext::Sdk *sdk;
 RED4ext::PluginHandle pluginHandle;
@@ -88,9 +89,9 @@ void __fastcall ProcessModSettings(ScriptData * scriptData) {
 // 1.61 RVA: 0x274300
 // 1.61hf RVA: 0x274380
 // 1.62 RVA: 0x27E1B0
-// 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B D9 E8 99 0B 00 00 48 8D 8B 38 01 00 00 FF 15
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B D9 E8 99 0B 00 00 48 8D 8B 38 01 00 00 FF 15
 void *__fastcall ReleaseScriptData(ScriptData *scriptData);
-constexpr uintptr_t ReleaseScriptDataAddr = 0x27E1B0;
+constexpr uintptr_t ReleaseScriptDataAddr = ReleaseScriptData_Addr;
 decltype(&ReleaseScriptData) ReleaseScriptData_Original;
 
 void *__fastcall ReleaseScriptData(ScriptData *scriptData) {

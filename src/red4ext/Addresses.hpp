@@ -55,3 +55,6 @@
 #ifndef ISerializable_VFT_Addr
 #define ISerializable_VFT_Addr 0x31179A8
 #endif
+#ifndef ReleaseScriptData_Addr
+#define ReleaseScriptData_Addr 0x27E1B0
+#endif
