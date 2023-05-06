@@ -15,6 +15,10 @@ configure_mod(
   LICENSE "Licensed under the MIT license. See the license.md in the root project for details."
 )
 
+find_program(ZOLTAN_CLANG_EXE NAMES zoltan-clang.exe PATHS "${MOD_TOOLS_DIR}" CACHE)
+find_program(REDSCRIPT_CLI_EXE NAMES redscript-cli.exe PATHS "${MOD_TOOLS_DIR}" CACHE)
+find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_GAME_DIR}/bin/x64" CACHE DOC "Cyberpunk2077.exe Executable File")
+
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Main.cpp Addresses.hpp)
 configure_archives(src/wolvenkit/packed/mods/ModSettings/archives/ModSettings.archive)
