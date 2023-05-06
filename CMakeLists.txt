@@ -5,7 +5,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/cpcmake")
 
 include(CyberpunkMod)
 
-project(mod_settings VERSION 0.0.8)
+project(mod_settings VERSION 0.1.0)
 
 configure_mod(
   NAME "Mod Settings"
