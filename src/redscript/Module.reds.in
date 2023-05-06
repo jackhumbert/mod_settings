@@ -1,4 +1,4 @@
-module ModSettings
+module ModSettingsModule
 
 public func GetVersionString() -> String {
   return "v@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@";
