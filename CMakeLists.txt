@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.24)
 
 project(mod_settings VERSION 0.1.0)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/deps/cpcmake")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/deps/cpcmake")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/cmake")
 
 include(CyberpunkMod)
 
@@ -26,5 +27,7 @@ configure_archives(src/wolvenkit/packed/mods/ModSettings/archives/ModSettings.ar
 configure_redscript(src/redscript)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
+
 configure_uninstall()
+configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
 configure_install()
