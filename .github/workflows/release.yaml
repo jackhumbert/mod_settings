@@ -39,6 +39,7 @@ jobs:
         run: |
           git-cliff --current --strip header
           git-cliff --current --strip header -o ${{ env.CHANGELOG_FILE }}
+          cat requirements.md >> ${{ env.CHANGELOG_FILE }}
 
       - name: Zipping game_dir
         run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip" --format=zip *
@@ -52,6 +53,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body_path: ${{ env.CHANGELOG_FILE }}
+          append_body: true
           files: |
             ${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip
             ${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements.zip
