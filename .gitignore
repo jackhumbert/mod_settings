@@ -38,7 +38,7 @@ make/
 resources/custom_game_controller.zip
 resources/install_log.xml
 game_dir/
-game_dir_prereqs/
+game_dir_requirements/
 
 Cyberpunk2077.exe*
 REDEngineErrorReporter.exe*
