@@ -10,3 +10,6 @@
 [submodule "deps/cpcmake"]
 	path = deps/cpcmake
 	url = git@github.com:jackhumbert/cpcmake.git
+[submodule "deps/archive_xl"]
+	path = deps/archive_xl
+	url = https://github.com/psiberx/cp2077-archive-xl.git

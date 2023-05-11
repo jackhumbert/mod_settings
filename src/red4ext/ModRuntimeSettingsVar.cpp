@@ -73,7 +73,7 @@ bool __fastcall ModRuntimeSettingsVarBool::WasModifiedSinceLastSave() {
 bool __fastcall ModRuntimeSettingsVarBool::HasChange() { return valueInput != valueValidated; }
 
 bool __fastcall ModRuntimeSettingsVarBool::IsDefault() {
-  uint8_t value;
+  bool value;
   if (HasChange()) {
     value = valueInput;
   } else {

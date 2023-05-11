@@ -17,6 +17,7 @@
 #include "Scripting/RTTIClass.hpp"
 #include "ModConfigVar.hpp"
 #include "Addresses.hpp"
+#include <ArchiveXL.hpp>
 
 const RED4ext::Sdk *sdk;
 RED4ext::PluginHandle pluginHandle;
@@ -113,6 +114,10 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->logger->Info(aHandle, "Starting up Mod Settings " MOD_VERSION_STR);
     RED4ext::RTTIRegistrator::Add(ModSettings::RegisterTypes, ModSettings::PostRegisterTypes);
+
+    aSdk->scripts->Add(aHandle, L"packed.reds");
+    aSdk->scripts->Add(aHandle, L"module.reds");
+    ArchiveXL::RegisterArchive(aHandle, "ModSettings.archive");
 
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ReleaseScriptDataAddr), &ReleaseScriptData,
                                   reinterpret_cast<void **>(&ReleaseScriptData_Original)))

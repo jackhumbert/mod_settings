@@ -87,6 +87,7 @@
 			"xtree": "cpp",
 			"xutility": "cpp"
 		},
-		"editor.tabSize": 2
+		"editor.tabSize": 2,
+		"cmake.generator": "Ninja"
 	}
 }
