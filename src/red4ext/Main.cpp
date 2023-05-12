@@ -113,6 +113,28 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     pluginHandle = aHandle;
 
     aSdk->logger->Info(aHandle, "Starting up Mod Settings " MOD_VERSION_STR);
+
+    auto scriptsFolder = Utils::GetRootDir() / "r6" / "scripts" / "mod_settings";
+    if (std::filesystem::exists(scriptsFolder)) {
+      aSdk->logger->Info(aHandle, "Deleting old scripts folder");
+      std::filesystem::remove_all(scriptsFolder);
+    }
+    auto archive = Utils::GetRootDir() / "archive" / "pc" / "mod" / "ModSettings.archive";
+    if (std::filesystem::exists(archive)) {
+      aSdk->logger->Info(aHandle, "Deleting old archive");
+      std::filesystem::remove_all(archive);
+    }
+    auto archiveXL = Utils::GetRootDir() / "archive" / "pc" / "mod" / "ModSettings.archive.xl";
+    if (std::filesystem::exists(archiveXL)) {
+      aSdk->logger->Info(aHandle, "Deleting old archive.xl");
+      std::filesystem::remove_all(archiveXL);
+    }
+    auto XL = Utils::GetRootDir() / "archive" / "pc" / "mod" / "ModSettings.xl";
+    if (std::filesystem::exists(XL)) {
+      aSdk->logger->Info(aHandle, "Deleting old xl");
+      std::filesystem::remove_all(XL);
+    }
+
     RED4ext::RTTIRegistrator::Add(ModSettings::RegisterTypes, ModSettings::PostRegisterTypes);
 
     aSdk->scripts->Add(aHandle, L"packed.reds");
