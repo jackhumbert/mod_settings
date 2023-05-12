@@ -45,9 +45,17 @@ jobs:
         run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip" --format=zip *
         working-directory:  game_dir
 
+      - name: Zipping game_dir_debug
+        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_pdb.zip" --format=zip *
+        working-directory:  game_dir_debug
+
       - name: Zipping game_dir_requirements
         run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements.zip" --format=zip *
         working-directory:  game_dir_requirements
+
+      - name: Zipping game_dir_requirements_debug
+        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements_pdb.zip" --format=zip *
+        working-directory:  game_dir_requirements_debug
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -57,6 +65,8 @@ jobs:
           files: |
             ${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip
             ${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements.zip
+            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_pdb.zip
+            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements_pdb.zip
           prerelease: ${{ contains(github.ref_name, '-') || contains(github.ref_name, '_') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
