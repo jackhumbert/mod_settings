@@ -1,5 +1,6 @@
-#include "ModSettingsVariable.hpp"
+#include <ModSettingsVariable.hpp>
 #include "ModRuntimeSettingsVar.hpp"
+#include "ScriptDefinitions/ScriptDefinitions.hpp"
 
 void ModSettingsVariable::UpdateValues() {
   auto classType = RED4ext::CRTTISystem::Get()->GetClass(className);

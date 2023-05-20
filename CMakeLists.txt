@@ -4,7 +4,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/cpcmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/red4ext.sdk/cmake")
 
-project(mod_settings VERSION 0.1.0 LANGUAGES NONE)
+include(ConfigureVersionFromGit)
+configure_version_from_git()
+
+project(mod_settings VERSION ${GIT_VERSION_MAJOR}.${GIT_VERSION_MINOR}.${GIT_VERSION_PATCH} LANGUAGES NONE)
 
 include(CyberpunkMod)
 
@@ -27,10 +30,17 @@ find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Addresses.hpp)
 
+target_include_directories(${MOD_SLUG}.dll
+  PUBLIC
+    ${MOD_SOURCE_DIR}/include
+)
+
 target_link_libraries(${MOD_SLUG}.dll
   PUBLIC
     ArchiveXL
 )
+
+target_compile_definitions(${MOD_SLUG}.dll PRIVATE MOD_SETTINGS_DLLDIR_EX)
 
 configure_archives(src/wolvenkit/packed/mods/ModSettings/archives/ModSettings.archive src/archiveXL/ModSettings.archive.xl)
 

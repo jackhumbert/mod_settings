@@ -16,7 +16,7 @@ enum EBreakpointState : unsigned __int8 {
 struct ScriptHost {
   void *vft1;
   void *vft2;
-  RED4ext::DynArray<void*> unk10;
+  RED4ext::DynArray<void *> unk10;
   uint32_t unk20;
   uint16_t unk24;
   uint16_t unk26;

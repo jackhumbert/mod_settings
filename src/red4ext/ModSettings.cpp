@@ -4,12 +4,17 @@
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarFloat.hpp>
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarInt.hpp>
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarListInt.hpp>
+#include "ScriptDefinitions/ScriptDefinitions.hpp"
 #include "ModConfigVar.hpp"
 #include "Utils.hpp"
 #include <iostream>
-#include "ModSettings.hpp"
+#include <ModSettings.hpp>
 #include "ModRuntimeSettingsVar.hpp"
 #include "Scripting/RTTIRegistrar.hpp"
+#include "ScriptData.hpp"
+#include "INIReader.h"
+
+INIReader reader;
 
 const std::filesystem::path configPath =
     Utils::GetRootDir() / "red4ext" / "plugins" / "mod_settings" / "user.ini";
@@ -40,6 +45,52 @@ ModSettings *ModSettings::GetInstance() {
 
   return (ModSettings *)handle.instance;
 }
+
+void __fastcall ModSettings::ProcessScriptData(ScriptData * scriptData) {
+  if (scriptData) {
+    ModSettings::ReadFromFile();
+    ModSettings::ClearVariables();
+    for (const auto &scriptClass : scriptData->classes) {
+      for (const auto &prop : scriptClass->properties) {
+        if (prop->runtimeProperties.size) {
+          auto mod = prop->runtimeProperties.Get("ModSettings.mod");
+          if (mod) {
+            auto variable =
+                (ModSettingsVariable *)RED4ext::CRTTISystem::Get()->GetClass("ModSettings")->CreateInstance(true);
+            variable->mod = RED4ext::CNamePool::Add(mod->c_str());
+            variable->typeName = prop->type->name;
+            variable->className = scriptClass->name;
+
+            auto category = prop->runtimeProperties.Get("ModSettings.category");
+            if (category) {
+              variable->category = RED4ext::CNamePool::Add(category->c_str());
+            } else {
+              variable->category = "None";
+            }
+
+            IModRuntimeSettingsVar *settingsVar = NULL;
+            auto propType = RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
+
+            if (prop->type->name == "Bool") {
+              settingsVar = new ModRuntimeSettingsVar<bool>(prop);
+            } else if (prop->type->name == "Float") {
+              settingsVar = new ModRuntimeSettingsVarFloat(prop);
+            } else if (prop->type->name == "Int32" || prop->type->name == "Uint32") {
+              settingsVar = new ModRuntimeSettingsVarInt32(prop);
+            } else if (propType && propType->GetType() == RED4ext::ERTTIType::Enum) {
+              settingsVar = new ModRuntimeSettingsVarEnum(prop);
+            }
+
+            if (settingsVar) {
+              variable->settingsVar = settingsVar;
+              ModSettings::AddVariable(variable);
+            }
+          }
+        }
+      }
+    }
+  }
+} 
 
 void ModSettings::ClearVariables() {
   auto self = ModSettings::GetInstance();
@@ -205,7 +256,7 @@ void ModSettings::WriteToFile() {
           variable->settingsVar->ChangeWasWritten();
         }
         const char * value;
-        auto str = RED4ext::CString::CString(new RED4ext::Memory::DefaultAllocator());
+        auto str = RED4ext::CString(new RED4ext::Memory::DefaultAllocator());
         RED4ext::CRTTISystem::Get()->GetType(variable->typeName)->ToString(variable->settingsVar->GetValuePtr(), str);
         value = str.c_str();
 
@@ -223,7 +274,7 @@ void ModSettings::WriteToFile() {
 bool ModSettings::GetSettingString(RED4ext::CName className, RED4ext::CName propertyName, RED4ext::CString *value) {
   auto self = ModSettings::GetInstance();
   std::string defaultValue = "";
-  auto valueStr = self->reader.Get(className.ToString(), propertyName.ToString(), defaultValue);
+  auto valueStr = reader.Get(className.ToString(), propertyName.ToString(), defaultValue);
   if (valueStr != defaultValue) {
     *value = RED4ext::CString(valueStr.c_str());
     return true;
@@ -234,9 +285,9 @@ bool ModSettings::GetSettingString(RED4ext::CName className, RED4ext::CName prop
 
 void ModSettings::ReadFromFile() {
   auto self = ModSettings::GetInstance();
-  self->reader = INIReader::INIReader(configPath.string());
+  reader = INIReader::INIReader(configPath.string());
 
-  if (self->reader.ParseError() != 0) {
+  if (reader.ParseError() != 0) {
     return;
   }
 }

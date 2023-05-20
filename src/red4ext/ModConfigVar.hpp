@@ -1,24 +1,19 @@
 #pragma once
+#include "ModRuntimeSettingsVar.hpp"
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
 #include "Scripting/RTTIClass.hpp"
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVar.hpp>
-#include "ModRuntimeSettingsVar.hpp"
+
 
 class ModConfigVarBool : public Engine::RTTIClass<ModConfigVarBool, RED4ext::user::SettingsVar> {
 public:
-  bool GetValue() { 
-    return reinterpret_cast<ModRuntimeSettingsVarBool *>(this->runtimeVar)->valueInput;
-  }
+  bool GetValue() { return reinterpret_cast<ModRuntimeSettingsVar<bool> *>(this->runtimeVar)->valueInput; }
 
-  void SetValue(bool value) { 
-    reinterpret_cast<ModRuntimeSettingsVarBool *>(this->runtimeVar)->UpdateValue(&value);
-  }
+  void SetValue(bool value) { reinterpret_cast<ModRuntimeSettingsVar<bool> *>(this->runtimeVar)->UpdateValue(&value); }
 
-  bool GetDefaultValue() { 
-    return reinterpret_cast<ModRuntimeSettingsVarBool *>(this->runtimeVar)->defaultValue;
-  }
+  bool GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVar<bool> *>(this->runtimeVar)->defaultValue; }
 
 private:
   friend Descriptor;
@@ -34,13 +29,9 @@ class ModConfigVarFloat : public Engine::RTTIClass<ModConfigVarFloat, RED4ext::u
 public:
   float GetValue() { return reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->valueInput; }
 
-  void SetValue(float value) {
-    reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->UpdateValue(&value);
-  }
+  void SetValue(float value) { reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->UpdateValue(&value); }
 
-  float GetDefaultValue() {
-    return reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->defaultValue;
-  }
+  float GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->defaultValue; }
 
   float GetMinValue() { return reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->minValue; }
 
@@ -69,9 +60,7 @@ public:
     reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->UpdateValue(&value);
   }
 
-  int32_t GetDefaultValue() {
-    return reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->defaultValue;
-  }
+  int32_t GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->defaultValue; }
 
   int32_t GetMinValue() { return reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->minValue; }
 
@@ -134,13 +123,9 @@ public:
 
   int32_t GetIndex() { return reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->valueInput; }
 
-  int32_t GetDefaultIndex() {
-    return reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->defaultValue;
-  }
+  int32_t GetDefaultIndex() { return reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->defaultValue; }
 
-  void SetIndex(int32_t index) {
-    reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->UpdateValue(&index);
-  }
+  void SetIndex(int32_t index) { reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->UpdateValue(&index); }
 
   RED4ext::CName GetDisplayValue(int32_t index) {
     auto varEnum = reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar);
