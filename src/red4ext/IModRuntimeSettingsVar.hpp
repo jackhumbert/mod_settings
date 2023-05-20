@@ -20,13 +20,12 @@ struct IModRuntimeSettingsVar : public RED4ext::user::RuntimeSettingsVar {
     auto className = prop->parent->name;
     groupPath = RED4ext::CNamePool::Add("/mods/" + *className.ToString() + *"/" + *name.ToString());
 
-    prop->ReadProperty("ModSettings.displayName", &displayName, &name);
+    prop->ReadProperty("ModSettings.displayName", &displayName, name);
     prop->ReadProperty("ModSettings.description", &description);
     prop->ReadProperty("ModSettings.order", &order);
   }
 
   // custom virtuals
-  virtual void LoadValues(ScriptProperty *prop) = 0;
   virtual void __fastcall GetValueToWrite(char *value) = 0;
   virtual RED4ext::ScriptInstance *__fastcall GetValuePtr() = 0;
   virtual void __fastcall UpdateDefault(void *value) = 0;

@@ -9,11 +9,11 @@
 
 class ModConfigVarBool : public Engine::RTTIClass<ModConfigVarBool, RED4ext::user::SettingsVar> {
 public:
-  bool GetValue() { return reinterpret_cast<ModRuntimeSettingsVar<bool> *>(this->runtimeVar)->valueInput; }
+  bool GetValue() { return reinterpret_cast<ModRuntimeSettingsVarBool *>(this->runtimeVar)->valueInput; }
 
-  void SetValue(bool value) { reinterpret_cast<ModRuntimeSettingsVar<bool> *>(this->runtimeVar)->UpdateValue(&value); }
+  void SetValue(bool value) { reinterpret_cast<ModRuntimeSettingsVarBool *>(this->runtimeVar)->UpdateValue(&value); }
 
-  bool GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVar<bool> *>(this->runtimeVar)->defaultValue; }
+  bool GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarBool *>(this->runtimeVar)->defaultValue; }
 
 private:
   friend Descriptor;
@@ -27,17 +27,17 @@ private:
 
 class ModConfigVarFloat : public Engine::RTTIClass<ModConfigVarFloat, RED4ext::user::SettingsVar> {
 public:
-  float GetValue() { return reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->valueInput; }
+  float GetValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->valueInput; }
 
-  void SetValue(float value) { reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->UpdateValue(&value); }
+  void SetValue(float value) { reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->UpdateValue(&value); }
 
-  float GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->defaultValue; }
+  float GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->defaultValue; }
 
-  float GetMinValue() { return reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->minValue; }
+  float GetMinValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->minValue; }
 
-  float GetMaxValue() { return reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->maxValue; }
+  float GetMaxValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->maxValue; }
 
-  float GetStepValue() { return reinterpret_cast<ModRuntimeSettingsVarFloat *>(this->runtimeVar)->stepValue; }
+  float GetStepValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->stepValue; }
 
 private:
   friend Descriptor;
@@ -54,19 +54,19 @@ private:
 
 class ModConfigVarInt32 : public Engine::RTTIClass<ModConfigVarInt32, RED4ext::user::SettingsVar> {
 public:
-  int32_t GetValue() { return reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->valueInput; }
+  int32_t GetValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->valueInput; }
 
   void SetValue(int32_t value) {
-    reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->UpdateValue(&value);
+    reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->UpdateValue(&value);
   }
 
-  int32_t GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->defaultValue; }
+  int32_t GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->defaultValue; }
 
-  int32_t GetMinValue() { return reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->minValue; }
+  int32_t GetMinValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->minValue; }
 
-  int32_t GetMaxValue() { return reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->maxValue; }
+  int32_t GetMaxValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->maxValue; }
 
-  int32_t GetStepValue() { return reinterpret_cast<ModRuntimeSettingsVarInt32 *>(this->runtimeVar)->stepValue; }
+  int32_t GetStepValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->stepValue; }
 
 private:
   friend Descriptor;

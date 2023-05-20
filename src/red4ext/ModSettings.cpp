@@ -72,11 +72,13 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData * scriptData) {
             auto propType = RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
 
             if (prop->type->name == "Bool") {
-              settingsVar = new ModRuntimeSettingsVar<bool>(prop);
+              settingsVar = new ModRuntimeSettingsVarBool(prop);
             } else if (prop->type->name == "Float") {
-              settingsVar = new ModRuntimeSettingsVarFloat(prop);
-            } else if (prop->type->name == "Int32" || prop->type->name == "Uint32") {
-              settingsVar = new ModRuntimeSettingsVarInt32(prop);
+              settingsVar = new ModRuntimeSettingsVarRange<float>(prop);
+            } else if (prop->type->name == "Int32") {
+              settingsVar = new ModRuntimeSettingsVarRange<int32_t>(prop);
+            } else if (prop->type->name == "Uint32") {
+              settingsVar = new ModRuntimeSettingsVarRange<uint32_t>(prop);
             } else if (propType && propType->GetType() == RED4ext::ERTTIType::Enum) {
               settingsVar = new ModRuntimeSettingsVarEnum(prop);
             }

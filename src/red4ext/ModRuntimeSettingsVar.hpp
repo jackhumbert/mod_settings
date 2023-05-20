@@ -7,7 +7,30 @@
 #include <RED4ext/Scripting/Natives/userRuntimeSettingsVar.hpp>
 
 template <typename T> struct ModRuntimeSettingsVar : IModRuntimeSettingsVar {
-  inline ModRuntimeSettingsVar(ScriptProperty *prop) : IModRuntimeSettingsVar(prop) { this->LoadValues(prop); }
+  inline ModRuntimeSettingsVar(ScriptProperty *prop) : IModRuntimeSettingsVar(prop) {
+    auto typeName = prop->type->name;
+    auto propType = RED4ext::CRTTISystem::Get()->GetType(typeName);
+    T defaultValue;
+    void *defaultValue_p = &defaultValue;
+
+    if (prop->defaultValues.size) {
+      propType->FromString(defaultValue_p, prop->defaultValues[0]);
+    }
+    UpdateDefault(defaultValue_p);
+
+    T value = defaultValue;
+    void *value_p = &value;
+
+    RED4ext::CString settingFromFile;
+    if (ModSettings::GetSettingString(prop->parent->name, name, &settingFromFile)) {
+      propType->FromString(value_p, settingFromFile);
+    }
+    UpdateAll(value_p);
+
+    if (prop->defaultValues.size) {
+      propType->ToString(value_p, prop->defaultValues[0]);
+    }
+  }
 
   // overrides
 
@@ -97,31 +120,6 @@ template <typename T> struct ModRuntimeSettingsVar : IModRuntimeSettingsVar {
 
   // custom virtuals
 
-  virtual inline void LoadValues(ScriptProperty *prop) override {
-    auto typeName = prop->type->name;
-    auto propType = RED4ext::CRTTISystem::Get()->GetType(typeName);
-    T defaultValue;
-    void *defaultValue_p = &defaultValue;
-
-    if (prop->defaultValues.size) {
-      propType->FromString(defaultValue_p, prop->defaultValues[0]);
-    }
-    UpdateDefault(defaultValue_p);
-
-    T value = defaultValue;
-    void *value_p = &value;
-
-    RED4ext::CString settingFromFile;
-    if (ModSettings::GetSettingString(prop->parent->name, name, &settingFromFile)) {
-      propType->FromString(value_p, settingFromFile);
-    }
-    UpdateAll(value_p);
-
-    if (prop->defaultValues.size) {
-      propType->ToString(value_p, prop->defaultValues[0]);
-    }
-  }
-
   virtual void __fastcall GetValueToWrite(char *value) override;
 
   virtual inline RED4ext::ScriptInstance *__fastcall GetValuePtr() override {
@@ -139,9 +137,9 @@ template <typename T> struct ModRuntimeSettingsVar : IModRuntimeSettingsVar {
 template <typename T> struct ModRuntimeSettingsVarRange : ModRuntimeSettingsVar<T> {
   inline ModRuntimeSettingsVarRange(ScriptProperty *prop) : ModRuntimeSettingsVar<T>(prop) {
     this->type = RED4ext::user::EConfigVarType::Int;
-    prop->ReadProperty("ModSettings.step", &this->stepValue);
-    prop->ReadProperty("ModSettings.min", &this->minValue);
-    prop->ReadProperty("ModSettings.max", &this->maxValue);
+    prop->ReadProperty("ModSettings.step", &this->stepValue, (T)1);
+    prop->ReadProperty("ModSettings.min", &this->minValue, (T)0);
+    prop->ReadProperty("ModSettings.max", &this->maxValue, (T)10);
   }
 
   T minValue;
@@ -150,35 +148,18 @@ template <typename T> struct ModRuntimeSettingsVarRange : ModRuntimeSettingsVar<
 };
 
 template <typename T> struct ModRuntimeSettingsVarList : ModRuntimeSettingsVar<uint32_t> {
-  ModRuntimeSettingsVarList(ScriptProperty *prop) : ModRuntimeSettingsVar<uint32_t>(prop) {}
+  inline ModRuntimeSettingsVarList(ScriptProperty *prop) : ModRuntimeSettingsVar<uint32_t>(prop) {}
 
   T value;
   RED4ext::DynArray<T> values;
   RED4ext::DynArray<RED4ext::CName> displayValues;
 };
 
-/**
- * @brief A toggle switch
- */
-// template <>
-// struct ModRuntimeSettingsVar<bool> : IModRuntimeSettingsVar {
-//   ModRuntimeSettingsVar(ScriptProperty *prop) : IModRuntimeSettingsVar(prop) {
-//     this->type = RED4ext::user::EConfigVarType::Bool;
-//   }
-
-//   virtual void __fastcall GetValueToWrite(char *value) override { sprintf(value, "%d", valueValidated); }
-
-//   // uint32_t unk4C = 0;
-// };
-
-template <>
-inline ModRuntimeSettingsVar<bool>::ModRuntimeSettingsVar(ScriptProperty *prop) : IModRuntimeSettingsVar(prop) {
-  this->type = RED4ext::user::EConfigVarType::Bool;
-}
-
-template <> inline void __fastcall ModRuntimeSettingsVar<bool>::GetValueToWrite(char *value) {
-  sprintf(value, "%d", valueValidated);
-}
+struct ModRuntimeSettingsVarBool : ModRuntimeSettingsVar<bool> {
+  inline ModRuntimeSettingsVarBool(ScriptProperty *prop) : ModRuntimeSettingsVar<bool>(prop) {
+    this->type = RED4ext::user::EConfigVarType::Bool;
+  }
+};
 
 // RED4EXT_ASSERT_SIZE(ModRuntimeSettingsVarBool, 0x4E);
 RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, valueValidated, 0x48);
@@ -187,37 +168,30 @@ RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, valueInput, 0x4A);
 RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, valueWrittenToFile, 0x4B);
 // char (*__kaboom)[offsetof(ModRuntimeSettingsVarBool, valueValidated)] = 1;
 
-/**
- * @brief A range setting of int32_t
- */
-struct ModRuntimeSettingsVarInt32 : public ModRuntimeSettingsVarRange<int32_t> {
-  ModRuntimeSettingsVarInt32(ScriptProperty *prop) : ModRuntimeSettingsVarRange(prop) {
-    this->type = RED4ext::user::EConfigVarType::IntList;
-    this->minValue = 0;
-    this->maxValue = 10;
-    this->stepValue = 1;
-  }
+template <>
+inline ModRuntimeSettingsVarRange<float>::ModRuntimeSettingsVarRange(ScriptProperty *prop)
+    : ModRuntimeSettingsVar(prop) {
+  this->type = RED4ext::user::EConfigVarType::Float;
+  prop->ReadProperty("ModSettings.step", &this->stepValue, 0.05f);
+  prop->ReadProperty("ModSettings.min", &this->minValue, 0.0f);
+  prop->ReadProperty("ModSettings.max", &this->maxValue, 1.0f);
+}
 
-  virtual inline void __fastcall GetValueToWrite(char *value) override { sprintf(value, "%d", valueValidated); }
+template <> inline void __fastcall ModRuntimeSettingsVar<bool>::GetValueToWrite(char *value) {
+  sprintf(value, "%d", valueValidated);
+}
 
-  uint32_t unk64 = 0;
-};
+template <> inline void __fastcall ModRuntimeSettingsVar<int32_t>::GetValueToWrite(char *value) {
+  sprintf(value, "%d", valueValidated);
+}
 
-/**
- * @brief A range setting of floats
- */
-struct ModRuntimeSettingsVarFloat : public ModRuntimeSettingsVarRange<float> {
-  ModRuntimeSettingsVarFloat(ScriptProperty *prop) : ModRuntimeSettingsVarRange(prop) {
-    this->type = RED4ext::user::EConfigVarType::Float;
-    this->minValue = 0;
-    this->maxValue = 1.0;
-    this->stepValue = 0.05;
-  }
+template <> inline void __fastcall ModRuntimeSettingsVar<uint32_t>::GetValueToWrite(char *value) {
+  sprintf(value, "%d", valueValidated);
+}
 
-  virtual inline void __fastcall GetValueToWrite(char *value) override { sprintf(value, "%f", valueValidated); }
-
-  uint32_t unk64 = 0;
-};
+template <> inline void __fastcall ModRuntimeSettingsVar<float>::GetValueToWrite(char *value) {
+  sprintf(value, "%f", valueValidated);
+}
 
 struct ModRuntimeSettingsVarEnum : public ModRuntimeSettingsVarList<int32_t> {
   ModRuntimeSettingsVarEnum(ScriptProperty *prop) : ModRuntimeSettingsVarList<int32_t>(prop) {
@@ -248,6 +222,4 @@ struct ModRuntimeSettingsVarEnum : public ModRuntimeSettingsVarList<int32_t> {
       bitfield.listHasDisplayValues = true;
     }
   }
-
-  virtual inline void __fastcall GetValueToWrite(char *value) override { sprintf(value, "%d", valueValidated); }
 };

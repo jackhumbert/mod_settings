@@ -76,13 +76,13 @@ struct ScriptProperty : ScriptDefinition {
     }
   }
 
-  template <typename T> void ReadProperty(const RED4ext::CName &name, T *pointer, T *fallback) {
+  template <typename T> void ReadProperty(const RED4ext::CName &name, T *pointer, T fallback) {
     auto propType = RED4ext::CRTTISystem::Get()->GetType(this->type->name);
     auto str = this->runtimeProperties.Get(name);
     if (str && pointer) {
       propType->FromString(pointer, *str);
-    } else if (pointer && fallback) {
-      *pointer = *fallback;
+    } else if (pointer) {
+      *pointer = fallback;
     }
   }
 
@@ -115,12 +115,12 @@ struct ScriptProperty : ScriptDefinition {
   }
 
   template <>
-  void ReadProperty<RED4ext::CName>(const RED4ext::CName &name, RED4ext::CName *pointer, RED4ext::CName *fallback) {
+  void ReadProperty<RED4ext::CName>(const RED4ext::CName &name, RED4ext::CName *pointer, RED4ext::CName fallback) {
     auto str = this->runtimeProperties.Get(name);
     if (str && pointer) {
       *pointer = RED4ext::CNamePool::Add(str->c_str());
     } else if (pointer && fallback) {
-      *pointer = *fallback;
+      *pointer = fallback;
     }
   }
 
