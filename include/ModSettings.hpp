@@ -25,7 +25,7 @@ struct MOD_SETTINGS_DLLDIR ModSettings : RED4ext::IScriptable {
   static bool GetSettingString(RED4ext::CName, RED4ext::CName,
                                RED4ext::CString *);
   static void ClearVariables();
-  static void AddVariable(IModSettingsVariable *);
+  static void AddVariable(ModSettingsVariable *);
   static void WriteToFile();
   static void ReadFromFile();
 
@@ -35,12 +35,12 @@ struct MOD_SETTINGS_DLLDIR ModSettings : RED4ext::IScriptable {
   void NotifyListeners();
 
   bool changeMade = false;
-  RED4ext::DynArray<IModSettingsVariable *> variables;
+  RED4ext::DynArray<ModSettingsVariable *> variables;
   RED4ext::DynArray<RED4ext::CName> mods;
   RED4ext::DynArray<RED4ext::CName> classes;
-  RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<IModSettingsVariable *>>
+  RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>>
       variablesByMod;
-  RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<IModSettingsVariable *>>
+  RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>>
       variablesByClass;
   RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<RED4ext::CName>>
       categoriesByMod;

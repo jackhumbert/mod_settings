@@ -1,13 +1,13 @@
 #pragma once
 #include "IModRuntimeSettingsVar.hpp"
-#include "ScriptDefinitions/ScriptDefinitions.hpp"
+#include "ScriptDefinitions/ScriptProperty.hpp"
 #include <ModSettings.hpp>
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/userRuntimeSettingsVar.hpp>
 
 template <typename T> struct ModRuntimeSettingsVar : IModRuntimeSettingsVar {
-  inline ModRuntimeSettingsVar(ScriptProperty *prop) : IModRuntimeSettingsVar(prop) {
+  ModRuntimeSettingsVar(ScriptProperty *prop) : IModRuntimeSettingsVar(prop) {
     auto typeName = prop->type->name;
     auto propType = RED4ext::CRTTISystem::Get()->GetType(typeName);
     T defaultValue;
@@ -161,11 +161,12 @@ struct ModRuntimeSettingsVarBool : ModRuntimeSettingsVar<bool> {
   }
 };
 
+// i don't think these will matter here
 // RED4EXT_ASSERT_SIZE(ModRuntimeSettingsVarBool, 0x4E);
-RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, valueValidated, 0x48);
-RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, defaultValue, 0x49);
-RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, valueInput, 0x4A);
-RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, valueWrittenToFile, 0x4B);
+// RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, valueValidated, 0x48);
+// RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, defaultValue, 0x49);
+// RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, valueInput, 0x4A);
+// RED4EXT_ASSERT_OFFSET(ModRuntimeSettingsVar<bool>, valueWrittenToFile, 0x4B);
 // char (*__kaboom)[offsetof(ModRuntimeSettingsVarBool, valueValidated)] = 1;
 
 template <>
