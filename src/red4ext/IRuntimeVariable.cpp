@@ -1,7 +1,9 @@
-#include "IModRuntimeSettingsVar.hpp"
+#include "IRuntimeVariable.hpp"
 #include "ScriptDefinitions/ScriptProperty.hpp"
 
-IModRuntimeSettingsVar::IModRuntimeSettingsVar() {
+namespace ModSettings {
+
+IRuntimeVariable::IRuntimeVariable() {
   bitfield.isInPreGame = true;
   bitfield.isInGame = true;
   bitfield.isVisible = true;
@@ -10,7 +12,7 @@ IModRuntimeSettingsVar::IModRuntimeSettingsVar() {
   bitfield.canBeRestoredToDefault = true;
 }
 
-IModRuntimeSettingsVar::IModRuntimeSettingsVar(ScriptProperty* prop) : IModRuntimeSettingsVar() {
+IRuntimeVariable::IRuntimeVariable(ScriptProperty* prop) : IRuntimeVariable() {
   this->updatePolicy = RED4ext::user::EConfigVarUpdatePolicy::ConfirmationRequired;
   this->name = prop->name;
   char str[0x100];
@@ -21,5 +23,17 @@ IModRuntimeSettingsVar::IModRuntimeSettingsVar(ScriptProperty* prop) : IModRunti
   prop->ReadProperty("ModSettings.displayName", &this->displayName, this->name);
   prop->ReadProperty("ModSettings.description", &this->description);
   prop->ReadProperty("ModSettings.order", &this->order);
+
+}
+
+IRuntimeVariable::IRuntimeVariable(RED4ext::CName className, RED4ext::CName propertyName, RED4ext::CName displayName, RED4ext::CName description, uint32_t order) : IRuntimeVariable() {
+  this->name = propertyName;
+  this->displayName = displayName;
+  char str[0x100];
+  std::sprintf(str, "/mods/%s/%s", className.ToString(), propertyName.ToString());
+  this->groupPath = RED4ext::CNamePool::Add(str);
+  this->description = description;
+  this->order = order;
+}
 
 }

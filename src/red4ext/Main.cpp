@@ -1,37 +1,37 @@
-#include <RED4ext/InstanceType.hpp>
-#include <RED4ext/RED4ext.hpp>
-#include <RED4ext/RTTITypes.hpp>
-#include <RED4ext/RED4ext.hpp>
-#include <RED4ext/Scripting/Natives/Generated/EInputKey.hpp>
+#include "RED4ext/RTTISystem.hpp"
+#include "Red/TypeInfo/Registrar.hpp"
 #include "Utils.hpp"
-#include <stdio.h>
+#include <RED4ext/Common.hpp>
 #include <Windows.h>
-#include <Dbt.h>
+#include <stdio.h>
 
-#include "ModRuntimeSettingsVar.hpp"
-#include "ModSettings.hpp"
-#include "ScriptDefinitions/ScriptDefinitions.hpp"
-#include "ScriptDefinitions/ScriptHost.hpp"
-#include "stdafx.hpp"
 
-#include "Scripting/RTTIClass.hpp"
-#include "ModConfigVar.hpp"
+#include <ModSettings/ModSettings.hpp>
+
+#include <RedLib.hpp>
 #include <ArchiveXL.hpp>
 #include <Registrar.hpp>
 
+namespace ModSettings {
 const RED4ext::Sdk *sdk;
 RED4ext::PluginHandle pluginHandle;
+} // namespace ModSettings
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+  switch (fdwReason) {
+  case DLL_PROCESS_ATTACH:
+    ModSettings::ModSettings::GetInstance();
+    break;
+  }
+  return true;
+}
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk *aSdk) {
   switch (aReason) {
   case RED4ext::EMainReason::Load: {
-    // Attach hooks, register RTTI types, add custom states or initalize your
-    // application. DO NOT try to access the game's memory at this point, it
-    // is not initalized yet.
-
-    sdk = aSdk;
-    pluginHandle = aHandle;
+    ModSettings::sdk = aSdk;
+    ModSettings::pluginHandle = aHandle;
 
     aSdk->logger->Info(aHandle, "Starting up Mod Settings " MOD_VERSION_STR);
 
@@ -56,20 +56,17 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       std::filesystem::remove_all(XL);
     }
 
-    RED4ext::RTTIRegistrator::Add(ModSettings::RegisterTypes, ModSettings::PostRegisterTypes);
+    Red::TypeInfoRegistrar::RegisterDiscovered();
 
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
     ArchiveXL::RegisterArchive(aHandle, "ModSettings.archive");
     ModModuleFactory::GetInstance().Load(aSdk, aHandle);
-    Engine::RTTIRegistrar::RegisterPending();
+    // Engine::RTTIRegistrar::RegisterPending();
 
     break;
   }
   case RED4ext::EMainReason::Unload: {
-    // Free memory, detach hooks.
-    // The game's memory is already freed, to not try to do anything with it.
-
     aSdk->logger->Info(aHandle, "Shutting down");
     ModModuleFactory::GetInstance().Unload(aSdk, aHandle);
     break;

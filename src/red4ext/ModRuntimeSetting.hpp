@@ -1,14 +1,14 @@
 // #pragma once
 
-// #include <ModRuntimeSettingsVar.hpp>
+// #include <RuntimeVariable.hpp>
 // #include <ModSettingsVariable.hpp>
 
 // template<ModSettingType>
-// struct ModRuntimeSetting : ModRuntimeSettingsVar<void*> {
+// struct ModRuntimeSetting : RuntimeVariable<void*> {
 
 // };
 
 // template<>
-// struct ModRuntimeSetting<ModSettingType::Toggle> : ModRuntimeSettingsVar<bool> {
+// struct ModRuntimeSetting<ModSettingType::Toggle> : RuntimeVariable<bool> {
 
 // };

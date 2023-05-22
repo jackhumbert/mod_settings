@@ -27,6 +27,8 @@ find_program(ZOLTAN_CLANG_EXE NAMES zoltan-clang.exe PATHS "${MOD_TOOLS_DIR}" CA
 find_program(REDSCRIPT_CLI_EXE NAMES redscript-cli.exe PATHS "${MOD_TOOLS_DIR}" CACHE)
 find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_GAME_DIR}/bin/x64" CACHE DOC "Cyberpunk2077.exe Executable File")
 
+find_package(RedLib)
+
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Addresses.hpp)
 
@@ -38,6 +40,7 @@ target_include_directories(${MOD_SLUG}.dll
 target_link_libraries(${MOD_SLUG}.dll
   PUBLIC
     ArchiveXL
+    RedLib
 )
 
 target_compile_definitions(${MOD_SLUG}.dll PRIVATE MOD_SETTINGS_DLLDIR_EX)

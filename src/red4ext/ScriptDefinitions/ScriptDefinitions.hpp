@@ -3,6 +3,8 @@
 #include "RED4ext/RTTITypes.hpp"
 #include <RED4ext/RED4ext.hpp>
 
+namespace ModSettings {
+
 struct ScriptProperty;
 
 enum class EDefinitionType : char {
@@ -84,3 +86,5 @@ struct ScriptClass : ScriptDefinition {
 };
 RED4EXT_ASSERT_SIZE(ScriptClass, 0x90);
 // char (*__kaboom)[offsetof(ScriptClass, rttiType)] = 1;
+
+}

@@ -13,3 +13,6 @@
 [submodule "deps/archive_xl"]
 	path = deps/archive_xl
 	url = https://github.com/psiberx/cp2077-archive-xl.git
+[submodule "deps/red_lib"]
+	path = deps/red_lib
+	url = git@github.com:jackhumbert/cp2077-red-lib.git

@@ -74,7 +74,7 @@
 //    RED4ext::GetParameter(aFrame, &value);
 //    aFrame->code++;
 //    auto instance = reinterpret_cast<ModConfigVarBool *>(aContext);
-//    auto runtime = reinterpret_cast<ModRuntimeSettingsVarBool *>(instance->runtimeVar);
+//    auto runtime = reinterpret_cast<RuntimeVariableBool *>(instance->runtimeVar);
 //    if (runtime) {
 //      runtime->UpdateValue(&value);
 //    }
@@ -82,7 +82,7 @@
 //  SCRIPT_FUNCTION_RETURN_TYPE("GetValue", {.isNative = true}, bool *, {
 //    aFrame->code++;
 //    auto instance = reinterpret_cast<ModConfigVarBool *>(aContext);
-//    auto runtime = reinterpret_cast<ModRuntimeSettingsVarBool *>(instance->runtimeVar);
+//    auto runtime = reinterpret_cast<RuntimeVariableBool *>(instance->runtimeVar);
 //    if (runtime && aOut) {
 //      *aOut = runtime->valueInput;
 //    }
@@ -90,7 +90,7 @@
 //  SCRIPT_FUNCTION_RETURN_TYPE("GetDefaultValue", {.isNative = true}, bool *, {
 //    aFrame->code++;
 //    auto instance = reinterpret_cast<ModConfigVarBool *>(aContext);
-//    auto runtime = reinterpret_cast<ModRuntimeSettingsVarBool *>(instance->runtimeVar);
+//    auto runtime = reinterpret_cast<RuntimeVariableBool *>(instance->runtimeVar);
 //    if (runtime && aOut) {
 //      *aOut = runtime->defaultValue;
 //    }

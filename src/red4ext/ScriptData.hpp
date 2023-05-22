@@ -1,6 +1,8 @@
 #include <RED4ext/Common.hpp>
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
 
+namespace ModSettings {
+
 struct ScriptData {
   RED4ext::HashMap<uint64_t, uint64_t> unk00;
   RED4ext::HashMap<uint64_t, uint64_t> unk30;
@@ -16,3 +18,5 @@ struct ScriptData {
   uint8_t unk60MUTX;
   void *unk138;
 };
+
+}

@@ -1,90 +1,71 @@
 #pragma once
-#include "ModRuntimeSettingsVar.hpp"
+#include "RED4ext/Scripting/Natives/userSettingsVar.hpp"
+#include "RuntimeVariable.hpp"
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
 #include "Scripting/RTTIClass.hpp"
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVar.hpp>
+#include <RedLib.hpp>
 
+// namespace ModSettings {
 
-class ModConfigVarBool : public Engine::RTTIClass<ModConfigVarBool, RED4ext::user::SettingsVar> {
+template <typename T> struct ModConfigVar : RED4ext::IScriptable {
 public:
-  bool GetValue() { return reinterpret_cast<ModRuntimeSettingsVarBool *>(this->runtimeVar)->valueInput; }
+  T GetValue() { return this->runtimeVar->valueInput; }
+  void SetValue(T value) { this->runtimeVar->UpdateValue(&value); }
+  T GetDefaultValue() { return this->runtimeVar->defaultValue; }
 
-  void SetValue(bool value) { reinterpret_cast<ModRuntimeSettingsVarBool *>(this->runtimeVar)->UpdateValue(&value); }
+  ModSettings::RuntimeVariable<T> *runtimeVar; // 40
 
-  bool GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarBool *>(this->runtimeVar)->defaultValue; }
-
-private:
-  friend Descriptor;
-
-  static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
-    aType->AddFunction<&ModConfigVarBool::GetValue>("GetValue");
-    aType->AddFunction<&ModConfigVarBool::SetValue>("SetValue");
-    aType->AddFunction<&ModConfigVarBool::GetDefaultValue>("GetDefaultValue");
-  }
+  RTTI_IMPL_TYPEINFO(ModConfigVar);
+  RTTI_IMPL_ALLOCATOR();
 };
 
-class ModConfigVarFloat : public Engine::RTTIClass<ModConfigVarFloat, RED4ext::user::SettingsVar> {
-public:
-  float GetValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->valueInput; }
+template <typename T> struct ModConfigVarRange : RED4ext::IScriptable {
+  T GetValue() { return this->runtimeVar->valueInput; }
+  void SetValue(T value) { this->runtimeVar->UpdateValue(&value); }
+  T GetDefaultValue() { return this->runtimeVar->defaultValue; }
+  T GetMinValue() { return this->runtimeVar->minValue; }
+  T GetMaxValue() { return this->runtimeVar->maxValue; }
+  T GetStepValue() { return this->runtimeVar->stepValue; }
+  
+  ModSettings::RuntimeVariableRange<T> *runtimeVar; // 40
 
-  void SetValue(float value) { reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->UpdateValue(&value); }
-
-  float GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->defaultValue; }
-
-  float GetMinValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->minValue; }
-
-  float GetMaxValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->maxValue; }
-
-  float GetStepValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<float> *>(this->runtimeVar)->stepValue; }
-
-private:
-  friend Descriptor;
-
-  static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
-    aType->AddFunction<&ModConfigVarFloat::GetValue>("GetValue");
-    aType->AddFunction<&ModConfigVarFloat::SetValue>("SetValue");
-    aType->AddFunction<&ModConfigVarFloat::GetDefaultValue>("GetDefaultValue");
-    aType->AddFunction<&ModConfigVarFloat::GetMinValue>("GetMinValue");
-    aType->AddFunction<&ModConfigVarFloat::GetMaxValue>("GetMaxValue");
-    aType->AddFunction<&ModConfigVarFloat::GetStepValue>("GetStepValue");
-  }
+  RTTI_IMPL_TYPEINFO(ModConfigVarRange);
+  RTTI_IMPL_ALLOCATOR();
 };
 
-class ModConfigVarInt32 : public Engine::RTTIClass<ModConfigVarInt32, RED4ext::user::SettingsVar> {
-public:
-  int32_t GetValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->valueInput; }
+RTTI_DEFINE_CLASS(ModConfigVar<bool>, "ModConfigVarBool", {
+  RTTI_PARENT(RED4ext::user::SettingsVar);
+  RTTI_METHOD(GetValue);
+  RTTI_METHOD(SetValue);
+  RTTI_METHOD(GetDefaultValue);
+});
 
-  void SetValue(int32_t value) {
-    reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->UpdateValue(&value);
-  }
+RTTI_DEFINE_CLASS(ModConfigVarRange<float>, "ModConfigVarFloat", {
+  RTTI_PARENT(RED4ext::user::SettingsVar);
+  RTTI_METHOD(GetValue);
+  RTTI_METHOD(SetValue);
+  RTTI_METHOD(GetDefaultValue);
+  RTTI_METHOD(GetMinValue);
+  RTTI_METHOD(GetMaxValue);
+  RTTI_METHOD(GetStepValue);
+});
 
-  int32_t GetDefaultValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->defaultValue; }
+RTTI_DEFINE_CLASS(ModConfigVarRange<int32_t>, "ModConfigVarInt32", {
+  RTTI_PARENT(RED4ext::user::SettingsVar);
+  RTTI_METHOD(GetValue);
+  RTTI_METHOD(SetValue);
+  RTTI_METHOD(GetDefaultValue);
+  RTTI_METHOD(GetMinValue);
+  RTTI_METHOD(GetMaxValue);
+  RTTI_METHOD(GetStepValue);
+});
 
-  int32_t GetMinValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->minValue; }
-
-  int32_t GetMaxValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->maxValue; }
-
-  int32_t GetStepValue() { return reinterpret_cast<ModRuntimeSettingsVarRange<int32_t> *>(this->runtimeVar)->stepValue; }
-
-private:
-  friend Descriptor;
-
-  static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
-    aType->AddFunction<&ModConfigVarInt32::GetValue>("GetValue");
-    aType->AddFunction<&ModConfigVarInt32::SetValue>("SetValue");
-    aType->AddFunction<&ModConfigVarInt32::GetDefaultValue>("GetDefaultValue");
-    aType->AddFunction<&ModConfigVarInt32::GetMinValue>("GetMinValue");
-    aType->AddFunction<&ModConfigVarInt32::GetMaxValue>("GetMaxValue");
-    aType->AddFunction<&ModConfigVarInt32::GetStepValue>("GetStepValue");
-  }
-};
-
-class ModConfigVarEnum : public Engine::RTTIClass<ModConfigVarEnum, RED4ext::user::SettingsVar> {
-public:
+struct ModConfigVarEnum : RED4ext::IScriptable {
   int32_t GetValueFor(int32_t index) {
-    auto varEnum = reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar);
+    auto varEnum = reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar);
     if (varEnum->values.size > index) {
       return varEnum->values[index];
     } else {
@@ -92,16 +73,14 @@ public:
     }
   }
 
-  int32_t GetValue() {
-    return GetValueFor(reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->valueInput);
-  }
+  int32_t GetValue() { return GetValueFor(reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->valueInput); }
 
   int32_t GetDefaultValue() {
-    return GetValueFor(reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->defaultValue);
+    return GetValueFor(reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->defaultValue);
   }
 
   RED4ext::DynArray<int32_t> GetValues() {
-    auto varEnum = reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar);
+    auto varEnum = reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar);
     auto values = RED4ext::DynArray<int32_t>(new RED4ext::Memory::DefaultAllocator());
     for (const auto &value : varEnum->values) {
       values.EmplaceBack(value);
@@ -110,7 +89,7 @@ public:
   }
 
   int32_t GetIndexFor(int32_t value) {
-    auto varEnum = reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar);
+    auto varEnum = reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar);
     auto values = RED4ext::DynArray<int32_t>(new RED4ext::Memory::DefaultAllocator());
     int32_t index = -1;
     for (int i = 0; i < varEnum->values.size; i++) {
@@ -121,14 +100,14 @@ public:
     return index;
   }
 
-  int32_t GetIndex() { return reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->valueInput; }
+  int32_t GetIndex() { return reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->valueInput; }
 
-  int32_t GetDefaultIndex() { return reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->defaultValue; }
+  int32_t GetDefaultIndex() { return reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->defaultValue; }
 
-  void SetIndex(int32_t index) { reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar)->UpdateValue(&index); }
+  void SetIndex(int32_t index) { reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->UpdateValue(&index); }
 
   RED4ext::CName GetDisplayValue(int32_t index) {
-    auto varEnum = reinterpret_cast<ModRuntimeSettingsVarEnum *>(this->runtimeVar);
+    auto varEnum = reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar);
     if (varEnum->displayValues.size > index && index > -1) {
       return varEnum->displayValues[index];
     } else {
@@ -136,18 +115,20 @@ public:
     }
   }
 
-private:
-  friend Descriptor;
+  ModSettings::RuntimeVariableEnum *runtimeVar; // 40
 
-  static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
-    aType->AddFunction<&ModConfigVarEnum::GetValueFor>("GetValueFor");
-    aType->AddFunction<&ModConfigVarEnum::GetValue>("GetValue");
-    aType->AddFunction<&ModConfigVarEnum::GetDefaultValue>("GetDefaultValue");
-    aType->AddFunction<&ModConfigVarEnum::GetValues>("GetValues");
-    aType->AddFunction<&ModConfigVarEnum::GetIndexFor>("GetIndexFor");
-    aType->AddFunction<&ModConfigVarEnum::GetIndex>("GetIndex");
-    aType->AddFunction<&ModConfigVarEnum::GetDefaultIndex>("GetDefaultIndex");
-    aType->AddFunction<&ModConfigVarEnum::SetIndex>("SetIndex");
-    aType->AddFunction<&ModConfigVarEnum::GetDisplayValue>("GetDisplayValue");
-  }
+  RTTI_IMPL_TYPEINFO(ModConfigVarEnum);
+  RTTI_IMPL_ALLOCATOR();
 };
+
+RTTI_DEFINE_CLASS(ModConfigVarEnum, {
+  RTTI_PARENT(RED4ext::user::SettingsVar);
+  RTTI_METHOD(GetValue);
+  RTTI_METHOD(GetValueFor);
+  RTTI_METHOD(GetDefaultValue);
+  RTTI_METHOD(GetValues);
+  RTTI_METHOD(GetIndexFor);
+  RTTI_METHOD(GetDefaultIndex);
+  RTTI_METHOD(SetIndex);
+  RTTI_METHOD(GetDisplayValue);
+});

@@ -1,5 +1,7 @@
 #include <RED4ext/RED4ext.hpp>
 
+namespace ModSettings {
+
 struct ScriptFile {
   RED4ext::CName name;
   RED4ext::CString filename;
@@ -41,3 +43,5 @@ struct ScriptHost {
   uint8_t unk9F;
   void *psa;
 };
+
+}
