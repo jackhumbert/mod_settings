@@ -10,11 +10,19 @@
 
 // namespace ModSettings {
 
-template <typename T> struct ModConfigVar : RED4ext::IScriptable {
+struct IModConfigVar : RED4ext::IScriptable {
+  virtual void SetRuntime(ModSettings::IRuntimeVariable * runtime) = 0;
+};
+
+template <typename T> struct ModConfigVar : IModConfigVar {
 public:
   T GetValue() { return this->runtimeVar->valueInput; }
   void SetValue(T value) { this->runtimeVar->UpdateValue(&value); }
   T GetDefaultValue() { return this->runtimeVar->defaultValue; }
+  
+  inline virtual void SetRuntime(ModSettings::IRuntimeVariable * runtime) override {
+    runtimeVar = reinterpret_cast<ModSettings::RuntimeVariable<T>*>(runtime);
+  }
 
   ModSettings::RuntimeVariable<T> *runtimeVar; // 40
 
@@ -22,13 +30,17 @@ public:
   RTTI_IMPL_ALLOCATOR();
 };
 
-template <typename T> struct ModConfigVarRange : RED4ext::IScriptable {
+template <typename T> struct ModConfigVarRange : IModConfigVar {
   T GetValue() { return this->runtimeVar->valueInput; }
   void SetValue(T value) { this->runtimeVar->UpdateValue(&value); }
   T GetDefaultValue() { return this->runtimeVar->defaultValue; }
   T GetMinValue() { return this->runtimeVar->minValue; }
   T GetMaxValue() { return this->runtimeVar->maxValue; }
   T GetStepValue() { return this->runtimeVar->stepValue; }
+  
+  inline virtual void SetRuntime(ModSettings::IRuntimeVariable * runtime) override {
+    runtimeVar = reinterpret_cast<ModSettings::RuntimeVariableRange<T>*>(runtime);
+  }
   
   ModSettings::RuntimeVariableRange<T> *runtimeVar; // 40
 
@@ -63,7 +75,7 @@ RTTI_DEFINE_CLASS(ModConfigVarRange<int32_t>, "ModConfigVarInt32", {
   RTTI_METHOD(GetStepValue);
 });
 
-struct ModConfigVarEnum : RED4ext::IScriptable {
+struct ModConfigVarEnum : IModConfigVar {
   int32_t GetValueFor(int32_t index) {
     auto varEnum = reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar);
     if (varEnum->values.size > index) {
@@ -115,6 +127,10 @@ struct ModConfigVarEnum : RED4ext::IScriptable {
     }
   }
 
+  inline virtual void SetRuntime(ModSettings::IRuntimeVariable * runtime) override {
+    runtimeVar = reinterpret_cast<ModSettings::RuntimeVariableEnum*>(runtime);
+  }
+
   ModSettings::RuntimeVariableEnum *runtimeVar; // 40
 
   RTTI_IMPL_TYPEINFO(ModConfigVarEnum);
@@ -130,5 +146,6 @@ RTTI_DEFINE_CLASS(ModConfigVarEnum, {
   RTTI_METHOD(GetIndexFor);
   RTTI_METHOD(GetDefaultIndex);
   RTTI_METHOD(SetIndex);
+  RTTI_METHOD(GetIndex);
   RTTI_METHOD(GetDisplayValue);
 });

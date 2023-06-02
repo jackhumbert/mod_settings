@@ -257,7 +257,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     let mods = ModSettings.GetMods();
     let i = 0;
     while i < ArraySize(mods) {
-    let category: SettingsCategory;
+      let category: SettingsCategory;
       category.label = mods[i];
       category.options = ModSettings.GetVars(mods[i], n"None");
       category.isEmpty = false;

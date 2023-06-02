@@ -8,7 +8,7 @@
 
 namespace ModSettings {
 
-template <typename T> struct RuntimeVariable : IRuntimeVariable {
+template <typename T> struct RuntimeVariable : public IRuntimeVariable {
   RuntimeVariable(ScriptProperty *prop) : IRuntimeVariable(prop) {
     T value, defaultValue;
     prop->ReadDefaultValue(&defaultValue);
@@ -117,6 +117,10 @@ template <typename T> struct RuntimeVariable : IRuntimeVariable {
 
   virtual void __fastcall GetValueToWrite(char *value) override;
 
+  virtual inline RED4ext::ScriptInstance *__fastcall GetInputValue() override {
+    return (RED4ext::ScriptInstance *)&valueInput;
+  }
+
   virtual inline RED4ext::ScriptInstance *__fastcall GetValuePtr() override {
     return (RED4ext::ScriptInstance *)&valueValidated;
   }
@@ -142,7 +146,7 @@ template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
   T stepValue;
 };
 
-template <typename T> struct RuntimeVariableList : RuntimeVariable<uint32_t> {
+template <typename T> struct RuntimeVariableList : public RuntimeVariable<uint32_t> {
   inline RuntimeVariableList(ScriptProperty *prop) : RuntimeVariable<uint32_t>(prop) {}
 
   T value;

@@ -24,13 +24,13 @@ INIReader reader;
 
 const std::filesystem::path configPath = Utils::GetRootDir() / "red4ext" / "plugins" / "mod_settings" / "user.ini";
 
-ModSettings modSettings;
+ModSettings modSettings = ModSettings();
 
 ModSettings::ModSettings() {}
 
 Handle<ModSettings> ModSettings::GetInstance() { return Handle<ModSettings>(&modSettings); }
 
-void ClearVariables() {
+void ModSettings::ClearVariables() {
   modSettings.mods.clear();
 }
 
@@ -38,7 +38,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
   auto self = ModSettings::GetInstance();
   if (scriptData) {
     ModSettings::ReadFromFile();
-    ClearVariables();
+    ModSettings::ClearVariables();
     for (const auto &scriptClass : scriptData->classes) {
       for (const auto &prop : scriptClass->properties) {
         if (prop->runtimeProperties.size) {
@@ -47,11 +47,13 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
             if (!self->mods.contains(modName)) {
               self->mods[modName] = Mod(modName);
             }
-            auto mod = self->mods[modName];
-            auto variable = mod.AddVariable(
+            auto &mod = self->mods[modName];
+            auto &variable = mod.AddVariable(
                 {
                     .name = prop->name,
-                    .dependency = *prop->ReadDependency(scriptClass->name),
+                    .type = CRTTISystem::Get()->GetType(prop->type->name),
+                    .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(prop->type->name)),
+                    .dependency = *prop->ReadDependency(scriptClass->name)
                 },
                 prop->ReadProperty("ModSettings.category"), scriptClass->name);
             prop->ReadProperty("ModSettings.category.order", &variable.category->order);
@@ -70,7 +72,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
   }
 }
 
-void ModSettings::AddVariable(ModSettingsVariable *variable) {
+// void ModSettings::AddVariable(ModSettingsVariable *variable) {
 //   auto self = ModSettings::GetInstance();
 
 //   std::shared_lock<SharedMutex> _(self->variables_lock);
@@ -113,7 +115,7 @@ void ModSettings::AddVariable(ModSettingsVariable *variable) {
 //       self->categoriesByMod.Insert(variable->Mod(), ra);
 //     }
 //   }
-}
+// }
 
 DynArray<CName> ModSettings::GetMods() {
   auto array = DynArray<CName>(new Memory::DefaultAllocator);
@@ -127,19 +129,24 @@ DynArray<CName> ModSettings::GetCategories(CName modName) {
   auto array = DynArray<CName>(new Memory::DefaultAllocator);
   for (auto const &[modClassName, modClass] : modSettings.mods[modName].classes) {
     for (auto const &[categoryName, category] : modClass.categories) {
-      array.EmplaceBack(categoryName);
+      if (categoryName != "None" && !category.variables.empty()) {
+        array.EmplaceBack(categoryName);
+      }
     }
   }
   return array;
 }
 
-DynArray<CName> ModSettings::GetVars(CName modName, CName categoryName) {
-  auto array = DynArray<CName>(new Memory::DefaultAllocator);
+DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName categoryName) {
+  auto array = DynArray<Handle<IScriptable>>(new Memory::DefaultAllocator);
   if (modSettings.mods.contains(modName)) {
     for (auto &[modClassName, modClass] : modSettings.mods[modName].classes) {
       if (modClass.categories.contains(categoryName)) {
         for (auto const &[variableName, variable] : modClass.categories[categoryName].variables) {
-          array.EmplaceBack(variableName);
+          auto configVar = variable.ToConfigVar();
+          if (configVar) {
+            array.EmplaceBack(Handle(configVar));
+          }
         }
       }
     }
@@ -158,6 +165,7 @@ void ModSettings::WriteToFile() {
             configFile << variable;
           }
         }
+        modClass.NotifyListeners();
         configFile << "\n";
       }
     }

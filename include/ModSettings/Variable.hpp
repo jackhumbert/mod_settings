@@ -7,11 +7,20 @@
 #include <RED4ext/Scripting/Natives/userSettingsVar.hpp>
 #include <map>
 
+struct IModConfigVar;
+
 namespace ModSettings {
 
 using namespace RED4ext;
 
 struct ScriptProperty;
+
+struct Mod;
+struct ModClass;
+struct ModCategory;
+struct ModVariable;
+
+const CName ToConfigVar(CName typeName) noexcept;
 
 struct ModSettingDependency {
   static ModSettingDependency* FromString(std::string str, CName scriptClass);
@@ -19,11 +28,8 @@ struct ModSettingDependency {
   CName className;
   CName propertyName;
   CString value;
+  ModVariable * variable;
 };
-
-struct Mod;
-struct ModClass;
-struct ModCategory;
 
 struct ModVariable {
   uint32_t GetOrder() const {
@@ -34,15 +40,18 @@ struct ModVariable {
     return GetOrder() < other.GetOrder();
   }
 
-  std::ofstream& operator<< (std::ofstream& stream) {
-    this->Write(stream);
+  friend std::ofstream& operator<< (std::ofstream& stream, const ModVariable& mv) {
+    mv.Write(stream);
     return stream;
   }
 
-  void Write(std::ofstream& stream);
+  void Write(std::ofstream& stream) const;
   bool SetRuntimeVariable(ScriptProperty * prop);
   bool RestoreDefault();
   void RejectChange();
+  bool IsEnabled() const;
+  bool IsInputEqualToString(const CString& str) const;
+  IModConfigVar * ToConfigVar() const;
   
   CName name = 0LLU;
   CBaseRTTIType *type = nullptr;
@@ -76,7 +85,7 @@ struct ModClass {
   ModVariable& AddVariable(ModVariable variable, ModCategory category = CName());
   void RegisterListener(Handle<IScriptable> listener);
   void UnregisterListener(Handle<IScriptable> listener);
-  void NotifyListeners();
+  void NotifyListeners() const;
 
   constexpr operator CName() const noexcept {
     return this->name;
@@ -99,7 +108,7 @@ struct Mod {
   CName name;
   std::map<CName, ModClass> classes;
 };
-
+/*
 class ModSettingsVariable {
 public:
   ModSettingsVariable();
@@ -143,5 +152,5 @@ private:
   // std::mutex listeners_lock;
   ModSettingDependency dependency;
 };
-
+*/
 }

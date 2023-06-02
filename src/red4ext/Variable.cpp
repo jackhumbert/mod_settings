@@ -5,10 +5,11 @@
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
 #include "ScriptDefinitions/ScriptProperty.hpp"
 #include <ModSettings/Variable.hpp>
+#include "ModConfigVar.hpp"
 
 namespace ModSettings {
 
-constexpr const CName ToConfigVar(CName typeName) noexcept {
+const CName ToConfigVar(CName typeName) noexcept {
   switch (typeName) {
     case CName("Bool"):
       return "ModConfigVarBool";
@@ -16,31 +17,12 @@ constexpr const CName ToConfigVar(CName typeName) noexcept {
       return "ModConfigVarInt32";
     case CName("Float"):
       return "ModConfigVarFloat";
-    case CName("Enum"):
-      return "ModConfigVarEnum";
     default: 
-      return 0LLU;
+      return "ModConfigVarEnum";
   }
 }
 
-Mod::Mod(CName name) : name(name) {
-  // test
-  ModVariable var = {
-    .name = "My Prop",
-    .type = ToType("Bool"),
-    .configVarType = ToClass(ToConfigVar("Bool"))
-  };
-  this->AddVariable(var, CName(), name);
-}
-
-ModClass::ModClass(CName name) : ModClass() {
-  this->name = name;
-  this->type = ToClass(name);
-}
-
-ModCategory::ModCategory(CName name) {
-  this->name = name;
-}
+// Variable
 
 ModVariable& ModCategory::AddVariable(ModVariable variable) {
   this->variables[variable.name] = variable;
@@ -75,19 +57,94 @@ void ModVariable::RejectChange() {
   }
 }
 
+bool ModVariable::IsEnabled() const {
+  if (this->dependency.variable) {
+    return this->dependency.variable->IsInputEqualToString(this->dependency.value);
+  }
+  return true;
+}
+
+bool ModVariable::IsInputEqualToString(const CString& other) const {
+  CString str;
+  this->type->ToString(this->runtimeVar->GetInputValue(), str);
+  return str == other;
+}
+
+void ModVariable::Write(std::ofstream& stream) const {
+  this->runtimeVar->ApplyChange();
+  if (this->runtimeVar->WasModifiedSinceLastSave()) {
+    this->runtimeVar->ChangeWasWritten();
+  }
+  auto str = RED4ext::CString(new RED4ext::Memory::DefaultAllocator());
+  this->type->ToString(this->runtimeVar->GetValuePtr(), str);
+
+  stream << this->runtimeVar->name.ToString() << " = " << str.c_str() << "\n";
+}
+
+bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
+  if (!this->type) {
+    return false;
+  }
+  switch (this->type->GetName()) {
+    case CName("Bool"):
+      this->runtimeVar = new RuntimeVariableBool(prop);
+      return true;
+    case CName("Int32"):
+      this->runtimeVar = new RuntimeVariableRange<int32_t>(prop);
+      return true;
+    case CName("Uint32"):
+      this->runtimeVar = new RuntimeVariableRange<uint32_t>(prop);
+      return true;
+    case CName("Float"):
+      this->runtimeVar = new RuntimeVariableRange<float>(prop);
+      return true;
+    default: 
+      if(this->type->GetType() == RED4ext::ERTTIType::Enum) {
+        this->runtimeVar = new RuntimeVariableEnum(prop);
+        return true;
+      } else {
+        this->runtimeVar = nullptr;
+        return false;
+      }
+  }
+}
+
+IModConfigVar * ModVariable::ToConfigVar() const {
+  if (this->runtimeVar) {
+    auto configVar = this->configVarType->CreateInstance<IModConfigVar*>();
+    configVar->SetRuntime(this->runtimeVar);
+    return configVar;
+  } else {
+    return nullptr;
+  }
+}
+
+// Category
+
+ModCategory::ModCategory(CName name) {
+  this->name = name;
+}
+
+// Class
+
+ModClass::ModClass(CName name) : ModClass() {
+  this->name = name;
+  this->type = ToClass(name);
+}
+
 void ModClass::RegisterListener(Handle<IScriptable> listener) {
-  if (listener) {
+  if (listener && listener->unk28) {
     this->listeners[listener->unk28] = listener;
   }
 }
 
 void ModClass::UnregisterListener(Handle<IScriptable> listener) {
-  if (listener) {
+  if (listener && listener->unk28) {
     this->listeners.erase(listener->unk28);
   }
 }
 
-void ModClass::NotifyListeners() {
+void ModClass::NotifyListeners() const {
   if (this->type) {
     for (const auto &[categoryName, category] : this->categories) {
       for (const auto &[variableName, variable] : category.variables) {
@@ -113,20 +170,19 @@ void ModClass::NotifyListeners() {
   }
 }
 
-void ModVariable::Write(std::ofstream& stream) {
-  this->runtimeVar->ApplyChange();
-  if (this->runtimeVar->WasModifiedSinceLastSave()) {
-    this->UpdateValues();
-    this->runtimeVar->ChangeWasWritten();
-  }
-  auto str = RED4ext::CString(new RED4ext::Memory::DefaultAllocator());
-  this->type->ToString(this->runtimeVar->GetValuePtr(), str);
+// Mod
 
-  stream << this->runtimeVar->name.ToString() << " = " << str.c_str() << "\n";
+Mod::Mod(CName name) : name(name) {
+  // test
+  // ModVariable var = {
+  //   .name = "My Prop",
+  //   .type = ToType("Bool"),
+  //   .configVarType = ToClass(ToConfigVar("Bool"))
+  // };
+  // this->AddVariable(var, CName(), name);
 }
 
-
-
+/*
 
 ModSettingsVariable::ModSettingsVariable() {
   this->listeners = RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>>(new RED4ext::Memory::DefaultAllocator());
@@ -293,5 +349,6 @@ bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
       }
   }
 }
+*/
 
 } // namespace ModSettings

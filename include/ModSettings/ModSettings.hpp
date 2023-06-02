@@ -44,7 +44,8 @@ public:
     }
   }
 
-  static void AddVariable(ModSettingsVariable *);
+  static void ClearVariables();
+  // static void AddVariable(ModSettingsVariable *);
   static void WriteToFile();
   static void ReadFromFile();
   static void AcceptChanges();
@@ -57,7 +58,7 @@ public:
 
   static DynArray<CName> GetMods();
   static DynArray<CName> GetCategories(CName modName);
-  static DynArray<CName> GetVars(CName modName, CName categoryName);
+  static DynArray<Handle<IScriptable>> GetVars(CName modName, CName categoryName);
 
   void NotifyListeners();
 

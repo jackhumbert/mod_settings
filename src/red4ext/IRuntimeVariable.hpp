@@ -15,6 +15,7 @@ public:
 
   // custom virtuals
   virtual void __fastcall GetValueToWrite(char *value) = 0;
+  virtual RED4ext::ScriptInstance *__fastcall GetInputValue() = 0;
   virtual RED4ext::ScriptInstance *__fastcall GetValuePtr() = 0;
   virtual void __fastcall UpdateDefault(void *value) = 0;
 };
