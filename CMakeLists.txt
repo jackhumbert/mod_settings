@@ -52,6 +52,6 @@ configure_redscript(src/redscript)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
 
-configure_uninstall()
+# configure_uninstall()
 configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
 configure_install()
