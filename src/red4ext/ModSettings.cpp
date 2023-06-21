@@ -146,8 +146,8 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
 
 DynArray<CName> ModSettings::GetMods() {
   auto array = DynArray<CName>(new Memory::DefaultAllocator);
-  for (auto const &mod : modSettings.mods) {
-    array.EmplaceBack(mod.first);
+  for (auto const &[modName, mod] : modSettings.mods) {
+    array.EmplaceBack(modName);
   }
   return array;
 }

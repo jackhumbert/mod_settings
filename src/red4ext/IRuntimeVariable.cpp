@@ -27,6 +27,7 @@ IRuntimeVariable::IRuntimeVariable(ScriptProperty* prop) : IRuntimeVariable() {
 }
 
 IRuntimeVariable::IRuntimeVariable(CName className, CName propertyName, CName displayName, CName description, uint32_t order) : IRuntimeVariable() {
+  this->updatePolicy = user::EConfigVarUpdatePolicy::ConfirmationRequired;
   this->name = propertyName;
   this->displayName = displayName;
   char str[0x100];
