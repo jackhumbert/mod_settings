@@ -1,7 +1,7 @@
 #pragma once
 #include "IRuntimeVariable.hpp"
 #include "ScriptDefinitions/ScriptProperty.hpp"
-#include <ModSettings/ModSettings.hpp>
+#include "ModSettings.hpp"
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/userRuntimeSettingsVar.hpp>
@@ -140,6 +140,14 @@ template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
     prop->ReadProperty("ModSettings.min", &this->minValue, (T)0);
     prop->ReadProperty("ModSettings.max", &this->maxValue, (T)10);
   }
+  
+  inline RuntimeVariableRange(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+                             T defaultValue, T stepValue, T minValue, T maxValue)
+      : RuntimeVariable<T>(className, propertyName, displayName, description, order, defaultValue) {
+    this->stepValue = stepValue;
+    this->minValue = minValue;
+    this->maxValue = maxValue;
+  }
 
   T minValue;
   T maxValue;
@@ -148,7 +156,10 @@ template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
 
 template <typename T> struct RuntimeVariableList : public RuntimeVariable<uint32_t> {
   inline RuntimeVariableList(ScriptProperty *prop) : RuntimeVariable<uint32_t>(prop) {}
-
+  inline RuntimeVariableList(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+                             uint32_t defaultValue)
+      : RuntimeVariable<uint32_t>(className, propertyName, displayName, description, order, defaultValue) {
+  }
   T value;
   RED4ext::DynArray<T> values;
   RED4ext::DynArray<RED4ext::CName> displayValues;
@@ -157,6 +168,11 @@ template <typename T> struct RuntimeVariableList : public RuntimeVariable<uint32
 struct RuntimeVariableBool : RuntimeVariable<bool> {
   inline RuntimeVariableBool(ScriptProperty *prop) : RuntimeVariable<bool>(prop) {
     this->type = RED4ext::user::EConfigVarType::Bool;
+  }
+  inline RuntimeVariableBool(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+                             bool defaultValue)
+      : RuntimeVariable<bool>(className, propertyName, displayName, description, order, defaultValue) {
+
   }
 };
 
@@ -222,4 +238,4 @@ struct RuntimeVariableEnum : public RuntimeVariableList<int32_t> {
   }
 };
 
-}
+} // namespace ModSettings

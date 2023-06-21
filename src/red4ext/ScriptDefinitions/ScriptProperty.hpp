@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ModSettings/Variable.hpp>
+#include "Variable.hpp"
 #include <RED4ext/InstanceType.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include "ScriptDefinitions/ScriptDefinitions.hpp"

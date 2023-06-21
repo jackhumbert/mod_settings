@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ModSettings/ModSettings.hpp>
 #include "IRuntimeVariable.hpp"
 #include "RED4ext/RTTITypes.hpp"
 #include <RED4ext/Common.hpp>
@@ -22,15 +23,6 @@ struct ModVariable;
 
 const CName ToConfigVar(CName typeName) noexcept;
 
-struct ModSettingDependency {
-  static ModSettingDependency* FromString(std::string str, CName scriptClass);
-
-  CName className;
-  CName propertyName;
-  CString value;
-  ModVariable * variable;
-};
-
 struct ModVariable {
   uint32_t GetOrder() const {
     return runtimeVar->order;
@@ -47,6 +39,7 @@ struct ModVariable {
 
   void Write(std::ofstream& stream) const;
   bool SetRuntimeVariable(ScriptProperty * prop);
+  bool CreateRuntimeVariable(const Variable &var);
   bool RestoreDefault();
   void RejectChange();
   bool IsEnabled() const;
@@ -85,6 +78,7 @@ struct ModClass {
   ModVariable& AddVariable(ModVariable variable, ModCategory category = CName());
   void RegisterListener(Handle<IScriptable> listener);
   void UnregisterListener(Handle<IScriptable> listener);
+  void RegisterCallback(runtime_class_callback_t callback);
   void NotifyListeners() const;
 
   constexpr operator CName() const noexcept {
@@ -95,6 +89,7 @@ struct ModClass {
   uint32_t order;
   CClass* type;
   std::map<uint32_t, WeakHandle<IScriptable>> listeners;
+  std::vector<runtime_class_callback_t> callbacks;
   std::map<CName, ModCategory> categories;
   Mod * mod;
 };

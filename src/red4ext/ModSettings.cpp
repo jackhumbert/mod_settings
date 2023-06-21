@@ -8,7 +8,8 @@
 #include "Utils.hpp"
 #include "stdafx.hpp"
 #include <ModSettings/ModSettings.hpp>
-#include <ModSettings/Variable.hpp>
+#include "ModSettings.hpp"
+#include "Variable.hpp"
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVar.hpp>
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarBool.hpp>
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarFloat.hpp>
@@ -32,6 +33,12 @@ Handle<ModSettings> ModSettings::GetInstance() { return Handle<ModSettings>(&mod
 
 void ModSettings::ClearVariables() {
   modSettings.mods.clear();
+}
+
+std::vector<Variable> queuedVariables;
+
+void AddVariable(Variable &variable) {
+  queuedVariables.emplace_back(variable);
 }
 
 void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
@@ -68,6 +75,25 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
           }
         }
       }
+    }
+  }
+  for (const auto &var : queuedVariables) {
+    if (!self->mods.contains(var.modName)) {
+      self->mods[var.modName] = Mod(var.modName);
+    }
+    auto &mod = self->mods[var.modName];
+    auto &variable = mod.AddVariable(
+        {
+            .name = var.propertyName,
+            .type = CRTTISystem::Get()->GetType(var.type),
+            .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(var.type)),
+            .dependency = var.dependency
+        },
+        CName(var.categoryName), CName(var.className));
+    if (variable.CreateRuntimeVariable(var)) {
+      mod.classes[var.className].RegisterCallback(var.callback);
+    } else {
+      sdk->logger->ErrorF(pluginHandle, "Could not create runtime variable for {}", var.propertyName);
     }
   }
 }

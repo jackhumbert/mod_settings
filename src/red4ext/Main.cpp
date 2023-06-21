@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 
-#include <ModSettings/ModSettings.hpp>
+#include "ModSettings.hpp"
 
 #include <RedLib.hpp>
 #include <ArchiveXL.hpp>

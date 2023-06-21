@@ -4,7 +4,7 @@
 #include "RED4ext/Scripting/IScriptable.hpp"
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
 #include "ScriptDefinitions/ScriptProperty.hpp"
-#include <ModSettings/Variable.hpp>
+#include "Variable.hpp"
 #include "ModConfigVar.hpp"
 
 namespace ModSettings {
@@ -109,6 +109,31 @@ bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
   }
 }
 
+bool ModVariable::CreateRuntimeVariable(const Variable &var) {
+  switch (var.type) {
+    case CName("Bool"):
+      this->runtimeVar = new RuntimeVariableBool(var.className, var.propertyName, var.displayName, var.description, var.order, *(bool*)var.defaultValue);
+      return true;
+    case CName("Int32"):
+      this->runtimeVar = new RuntimeVariableRange<int32_t>(var.className, var.propertyName, var.displayName, var.description, var.order, *(int32_t*)var.defaultValue, *(int32_t*)var.stepValue, *(int32_t*)var.minValue, *(int32_t*)var.maxValue);
+      return true;
+    case CName("Uint32"):
+      this->runtimeVar = new RuntimeVariableRange<uint32_t>(var.className, var.propertyName, var.displayName, var.description, var.order, *(uint32_t*)var.defaultValue, *(uint32_t*)var.stepValue, *(uint32_t*)var.minValue, *(uint32_t*)var.maxValue);
+      return true;
+    case CName("Float"):
+      this->runtimeVar = new RuntimeVariableRange<float>(var.className, var.propertyName, var.displayName, var.description, var.order, *(float*)var.defaultValue, *(float*)var.stepValue, *(float*)var.minValue, *(float*)var.maxValue);
+      return true;
+    default: 
+      // if(this->type->GetType() == RED4ext::ERTTIType::Enum) {
+      //   this->runtimeVar = new RuntimeVariableEnum(var.className, var.propertyName, var.displayName, var.description, var.order, *var.defaultValue);
+      //   return true;
+      // } else {
+        this->runtimeVar = nullptr;
+        return false;
+      // }
+  }
+}
+
 IModConfigVar * ModVariable::ToConfigVar() const {
   if (this->runtimeVar) {
     auto configVar = this->configVarType->CreateInstance<IModConfigVar*>();
@@ -144,6 +169,12 @@ void ModClass::UnregisterListener(Handle<IScriptable> listener) {
   }
 }
 
+void ModClass::RegisterCallback(runtime_class_callback_t callback) {
+  if (callback) {
+    this->callbacks.emplace_back(callback);
+  }
+}
+
 void ModClass::NotifyListeners() const {
   if (this->type) {
     for (const auto &[categoryName, category] : this->categories) {
@@ -164,6 +195,17 @@ void ModClass::NotifyListeners() const {
               (*prop)->SetValue(listener.instance, valuePtr);
             }
           }
+        }
+      }
+    }
+  }
+  // notify runtime listeners
+  for (const auto &[categoryName, category] : this->categories) {
+    for (const auto &[variableName, variable] : category.variables) {
+      auto valuePtr = variable.runtimeVar->GetValuePtr();
+      for (auto &callback : this->callbacks) {
+        if (callback) {
+          callback(categoryName, variableName, valuePtr);
         }
       }
     }
