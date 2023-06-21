@@ -112,16 +112,16 @@ bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
 bool ModVariable::CreateRuntimeVariable(const Variable &var) {
   switch (var.type) {
     case CName("Bool"):
-      this->runtimeVar = new RuntimeVariableBool(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, *(bool*)var.defaultValue);
+      this->runtimeVar = new RuntimeVariableBool(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, *(bool*)&var.defaultValue);
       return true;
     case CName("Int32"):
-      this->runtimeVar = new RuntimeVariableRange<int32_t>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, *(int32_t*)var.defaultValue, *(int32_t*)var.stepValue, *(int32_t*)var.minValue, *(int32_t*)var.maxValue);
+      this->runtimeVar = new RuntimeVariableRange<int32_t>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, *(int32_t*)&var.defaultValue, *(int32_t*)&var.stepValue, *(int32_t*)&var.minValue, *(int32_t*)&var.maxValue);
       return true;
     case CName("Uint32"):
-      this->runtimeVar = new RuntimeVariableRange<uint32_t>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, *(uint32_t*)var.defaultValue, *(uint32_t*)var.stepValue, *(uint32_t*)var.minValue, *(uint32_t*)var.maxValue);
+      this->runtimeVar = new RuntimeVariableRange<uint32_t>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, *(uint32_t*)&var.defaultValue, *(uint32_t*)&var.stepValue, *(uint32_t*)&var.minValue, *(uint32_t*)&var.maxValue);
       return true;
     case CName("Float"):
-      this->runtimeVar = new RuntimeVariableRange<float>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, *(float*)var.defaultValue, *(float*)var.stepValue, *(float*)var.minValue, *(float*)var.maxValue);
+      this->runtimeVar = new RuntimeVariableRange<float>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, *(float*)&var.defaultValue, *(float*)&var.stepValue, *(float*)&var.minValue, *(float*)&var.maxValue);
       return true;
     default: 
       // if(this->type->GetType() == RED4ext::ERTTIType::Enum) {
