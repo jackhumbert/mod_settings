@@ -23,7 +23,14 @@ struct MOD_SETTINGS_DLLDIR ModSettingDependency {
   ModVariable * variable;
 };
 
-using runtime_class_callback_t = void (*)(CName categoryName, CName propertyName, ScriptInstance value);
+union MOD_SETTINGS_DLLDIR ModVariableType {
+  bool b;
+  uint32_t u32;
+  int32_t i32;
+  float f32;
+};
+
+using runtime_class_callback_t = void (*)(CName categoryName, CName propertyName, ModVariableType value);
 
 struct MOD_SETTINGS_DLLDIR Variable  {
   const char * modName;
@@ -34,10 +41,10 @@ struct MOD_SETTINGS_DLLDIR Variable  {
   const char * displayName;
   const char * description;
   uint32_t order;
-  ScriptInstance defaultValue;
-  ScriptInstance stepValue;
-  ScriptInstance minValue;
-  ScriptInstance maxValue;
+  ModVariableType defaultValue;
+  ModVariableType stepValue;
+  ModVariableType minValue;
+  ModVariableType maxValue;
   ModSettingDependency dependency;
   runtime_class_callback_t callback;
 };
