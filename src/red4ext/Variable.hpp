@@ -79,7 +79,7 @@ struct ModClass {
   ModVariable& AddVariable(ModVariable variable, ModCategory category = CName());
   void RegisterListener(Handle<IScriptable> listener);
   void UnregisterListener(Handle<IScriptable> listener);
-  void RegisterCallback(std::shared_ptr<std::function<runtime_class_callback_t>> callback);
+  void RegisterCallback(std::shared_ptr<std::function<runtime_class_callback_t>> &callback);
   void NotifyListeners() const;
 
   constexpr operator CName() const noexcept {
