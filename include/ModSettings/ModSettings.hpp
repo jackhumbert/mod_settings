@@ -30,7 +30,7 @@ union MOD_SETTINGS_DLLDIR ModVariableType {
   float f32;
 };
 
-using runtime_class_callback_t = void (*)(CName categoryName, CName propertyName, ModVariableType value);
+typedef void (__stdcall *runtime_class_callback_t)(CName categoryName, CName propertyName, ModVariableType value);
 
 struct MOD_SETTINGS_DLLDIR Variable  {
   const char * modName;
