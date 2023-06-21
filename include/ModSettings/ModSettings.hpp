@@ -14,7 +14,7 @@ using namespace RED4ext;
 
 struct ModVariable;
 
-struct MOD_SETTINGS_DLLDIR ModSettingDependency {
+struct ModSettingDependency {
   static ModSettingDependency* FromString(std::string str, CName scriptClass);
 
   CName className;
@@ -23,16 +23,16 @@ struct MOD_SETTINGS_DLLDIR ModSettingDependency {
   ModVariable * variable;
 };
 
-union MOD_SETTINGS_DLLDIR ModVariableType {
+union ModVariableType {
   bool b;
   uint32_t u32;
   int32_t i32;
   float f32;
 };
 
-typedef void (runtime_class_callback_t)(CName categoryName, CName propertyName, ModVariableType value);
+typedef std::function<void (CName categoryName, CName propertyName, ModVariableType value)> runtime_class_callback_t;
 
-struct MOD_SETTINGS_DLLDIR Variable  {
+struct Variable  {
   const char * modName;
   const char * className;
   const char * categoryName;
@@ -46,7 +46,7 @@ struct MOD_SETTINGS_DLLDIR Variable  {
   ModVariableType minValue;
   ModVariableType maxValue;
   ModSettingDependency dependency;
-  std::shared_ptr<std::function<runtime_class_callback_t>> callback;
+  std::shared_ptr<runtime_class_callback_t> callback;
 };
 
 extern "C" MOD_SETTINGS_DLLDIR void AddVariable(Variable *variable);
