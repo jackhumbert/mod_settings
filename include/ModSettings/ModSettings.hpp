@@ -30,7 +30,7 @@ union MOD_SETTINGS_DLLDIR ModVariableType {
   float f32;
 };
 
-typedef void (__stdcall *runtime_class_callback_t)(CName categoryName, CName propertyName, ModVariableType value);
+typedef void (runtime_class_callback_t)(CName categoryName, CName propertyName, ModVariableType value);
 
 struct MOD_SETTINGS_DLLDIR Variable  {
   const char * modName;
@@ -46,7 +46,7 @@ struct MOD_SETTINGS_DLLDIR Variable  {
   ModVariableType minValue;
   ModVariableType maxValue;
   ModSettingDependency dependency;
-  runtime_class_callback_t callback;
+  std::function<runtime_class_callback_t> callback;
 };
 
 extern "C" MOD_SETTINGS_DLLDIR void AddVariable(Variable *variable);

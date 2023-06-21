@@ -169,7 +169,7 @@ void ModClass::UnregisterListener(Handle<IScriptable> listener) {
   }
 }
 
-void ModClass::RegisterCallback(runtime_class_callback_t callback) {
+void ModClass::RegisterCallback(std::function<runtime_class_callback_t> callback) {
   if (callback) {
     this->callbacks.emplace_back(callback);
   }
