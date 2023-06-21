@@ -37,8 +37,8 @@ void ModSettings::ClearVariables() {
 
 std::vector<Variable> queuedVariables;
 
-void AddVariable(Variable variable) {
-  queuedVariables.emplace_back(variable);
+void AddVariable(Variable* variable) {
+  queuedVariables.emplace_back(*variable);
 }
 
 void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
