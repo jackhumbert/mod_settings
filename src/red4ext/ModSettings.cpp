@@ -37,7 +37,7 @@ void ModSettings::ClearVariables() {
 
 std::vector<Variable> queuedVariables;
 
-void AddVariable(Variable &variable) {
+void AddVariable(Variable variable) {
   queuedVariables.emplace_back(variable);
 }
 

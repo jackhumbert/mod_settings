@@ -42,6 +42,6 @@ struct MOD_SETTINGS_DLLDIR Variable  {
   runtime_class_callback_t callback;
 };
 
-MOD_SETTINGS_DLLDIR void AddVariable(Variable &variable);
+MOD_SETTINGS_DLLDIR void AddVariable(Variable variable);
 
 } // namespace ModSettings
