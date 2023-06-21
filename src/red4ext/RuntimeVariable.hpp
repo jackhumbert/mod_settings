@@ -144,6 +144,7 @@ template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
   inline RuntimeVariableRange(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
                              T defaultValue, T stepValue, T minValue, T maxValue)
       : RuntimeVariable<T>(className, propertyName, displayName, description, order, defaultValue) {
+    this->type = RED4ext::user::EConfigVarType::Int;
     this->stepValue = stepValue;
     this->minValue = minValue;
     this->maxValue = maxValue;
@@ -172,7 +173,7 @@ struct RuntimeVariableBool : RuntimeVariable<bool> {
   inline RuntimeVariableBool(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
                              bool defaultValue)
       : RuntimeVariable<bool>(className, propertyName, displayName, description, order, defaultValue) {
-
+    this->type = RED4ext::user::EConfigVarType::Bool;
   }
 };
 
