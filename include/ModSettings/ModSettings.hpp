@@ -26,13 +26,13 @@ struct MOD_SETTINGS_DLLDIR ModSettingDependency {
 using runtime_class_callback_t = void (*)(CName categoryName, CName propertyName, void* value);
 
 struct MOD_SETTINGS_DLLDIR Variable  {
-  std::string modName;
-  std::string className;
-  std::string categoryName;
-  std::string propertyName;
+  const char * modName;
+  const char * className;
+  const char * categoryName;
+  const char * propertyName;
   CName type;
-  std::string displayName;
-  std::string description;
+  const char * displayName;
+  const char * description;
   uint32_t order;
   void* defaultValue;
   void* stepValue;

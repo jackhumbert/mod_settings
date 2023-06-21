@@ -11,7 +11,7 @@
           "preLaunchTask": "Install Mod",
           "program": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe",
           "cwd": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\",
-          "visualizerFile": "${workspaceFolder}/deps/cyberpunk_cmake/.natvis",
+          "visualizerFile": "${workspaceFolder}/deps/cpcmake/.natvis",
           // "showDisplayString": true
       }
   ]
