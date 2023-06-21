@@ -79,7 +79,7 @@ struct ModClass {
   ModVariable& AddVariable(ModVariable variable, ModCategory category = CName());
   void RegisterListener(Handle<IScriptable> listener);
   void UnregisterListener(Handle<IScriptable> listener);
-  void RegisterCallback(std::function<runtime_class_callback_t> callback);
+  void RegisterCallback(std::shared_ptr<std::function<runtime_class_callback_t>> callback);
   void NotifyListeners() const;
 
   constexpr operator CName() const noexcept {
@@ -90,7 +90,7 @@ struct ModClass {
   uint32_t order;
   CClass* type;
   std::map<uint32_t, WeakHandle<IScriptable>> listeners;
-  std::vector<std::function<runtime_class_callback_t>> callbacks;
+  std::vector<std::shared_ptr<std::function<runtime_class_callback_t>>> callbacks;
   std::map<CName, ModCategory> categories;
   Mod * mod;
 };

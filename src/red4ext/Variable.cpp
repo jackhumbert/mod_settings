@@ -169,7 +169,7 @@ void ModClass::UnregisterListener(Handle<IScriptable> listener) {
   }
 }
 
-void ModClass::RegisterCallback(std::function<runtime_class_callback_t> callback) {
+void ModClass::RegisterCallback(std::shared_ptr<std::function<runtime_class_callback_t>> callback) {
   if (callback) {
     this->callbacks.emplace_back(callback);
   }
@@ -205,7 +205,7 @@ void ModClass::NotifyListeners() const {
       auto valuePtr = variable.runtimeVar->GetValuePtr();
       for (auto &callback : this->callbacks) {
         if (callback) {
-          callback(categoryName, variableName, *(ModVariableType*)valuePtr);
+          (*callback)(categoryName, variableName, *(ModVariableType*)valuePtr);
         }
       }
     }

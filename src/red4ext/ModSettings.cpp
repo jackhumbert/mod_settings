@@ -35,10 +35,10 @@ void ModSettings::ClearVariables() {
   modSettings.mods.clear();
 }
 
-std::vector<Variable> queuedVariables;
+std::vector<Variable*> queuedVariables;
 
 void AddVariable(Variable* variable) {
-  queuedVariables.emplace_back(*variable);
+  queuedVariables.emplace_back(variable);
 }
 
 void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
@@ -78,23 +78,23 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
     }
   }
   for (const auto &var : queuedVariables) {
-    CNamePool::Add(var.modName);
-    if (!self->mods.contains(var.modName)) {
-      self->mods[var.modName] = Mod(var.modName);
+    CNamePool::Add(var->modName);
+    if (!self->mods.contains(var->modName)) {
+      self->mods[var->modName] = Mod(var->modName);
     }
-    auto &mod = self->mods[var.modName];
+    auto &mod = self->mods[var->modName];
     auto &variable = mod.AddVariable(
         {
-            .name = CNamePool::Add(var.propertyName),
-            .type = CRTTISystem::Get()->GetType(var.type),
-            .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(var.type)),
-            .dependency = var.dependency
+            .name = CNamePool::Add(var->propertyName),
+            .type = CRTTISystem::Get()->GetType(var->type),
+            .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(var->type)),
+            .dependency = var->dependency
         },
-        CNamePool::Add(var.categoryName), CNamePool::Add(var.className));
-    if (variable.CreateRuntimeVariable(var)) {
-      mod.classes[var.className].RegisterCallback(var.callback);
+        CNamePool::Add(var->categoryName), CNamePool::Add(var->className));
+    if (variable.CreateRuntimeVariable(*var)) {
+      mod.classes[var->className].RegisterCallback(var->callback);
     } else {
-      sdk->logger->ErrorF(pluginHandle, "Could not create runtime variable for {}", var.propertyName);
+      sdk->logger->ErrorF(pluginHandle, "Could not create runtime variable for {}", var->propertyName);
     }
   }
 }

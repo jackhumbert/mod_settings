@@ -46,7 +46,7 @@ struct MOD_SETTINGS_DLLDIR Variable  {
   ModVariableType minValue;
   ModVariableType maxValue;
   ModSettingDependency dependency;
-  std::function<runtime_class_callback_t> callback;
+  std::shared_ptr<std::function<runtime_class_callback_t>> callback;
 };
 
 extern "C" MOD_SETTINGS_DLLDIR void AddVariable(Variable *variable);
