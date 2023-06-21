@@ -45,9 +45,11 @@ struct Variable  {
   ModVariableType stepValue;
   ModVariableType minValue;
   ModVariableType maxValue;
-  ModSettingDependency dependency;
   std::shared_ptr<runtime_class_callback_t> callback;
+  ModSettingDependency dependency;
 };
+
+RED4EXT_ASSERT_SIZE(Variable, 152);
 
 extern "C" MOD_SETTINGS_DLLDIR void AddVariable(Variable *variable);
 
