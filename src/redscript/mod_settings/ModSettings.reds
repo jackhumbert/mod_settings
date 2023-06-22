@@ -25,6 +25,12 @@ public native class ModConfigVarBool extends ConfigVar {
   }
 }
 
+public native class ModConfigVarName extends ConfigVar {
+  public native func SetValue(value: CName) -> Void;
+  public native func GetValue() -> CName;
+  public native func GetDefaultValue() -> CName;
+}
+
 public native class ModConfigVarFloat extends ConfigVar {
   public native func SetValue(value: Float) -> Void;
   public native func GetValue() -> Float;

@@ -55,6 +55,13 @@ RTTI_DEFINE_CLASS(ModConfigVar<bool>, "ModConfigVarBool", {
   RTTI_METHOD(GetDefaultValue);
 });
 
+RTTI_DEFINE_CLASS(ModConfigVar<RED4ext::CName>, "ModConfigVarName", {
+  RTTI_PARENT(RED4ext::user::SettingsVar);
+  RTTI_METHOD(GetValue);
+  RTTI_METHOD(SetValue);
+  RTTI_METHOD(GetDefaultValue);
+});
+
 RTTI_DEFINE_CLASS(ModConfigVarRange<float>, "ModConfigVarFloat", {
   RTTI_PARENT(RED4ext::user::SettingsVar);
   RTTI_METHOD(GetValue);

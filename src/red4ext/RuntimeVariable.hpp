@@ -127,10 +127,10 @@ template <typename T> struct RuntimeVariable : public IRuntimeVariable {
 
   virtual inline void __fastcall UpdateDefault(void *value) override { defaultValue = *(T *)value; }
 
-  T valueValidated = 0;
-  T defaultValue = 0;
-  T valueInput = 0;
-  T valueWrittenToFile = 0;
+  T valueValidated;
+  T defaultValue;
+  T valueInput;
+  T valueWrittenToFile;
 };
 
 template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
@@ -174,6 +174,17 @@ struct RuntimeVariableBool : RuntimeVariable<bool> {
                              bool defaultValue)
       : RuntimeVariable<bool>(className, propertyName, displayName, description, order, defaultValue) {
     this->type = RED4ext::user::EConfigVarType::Bool;
+  }
+};
+
+struct RuntimeVariableName : RuntimeVariable<CName> {
+  inline RuntimeVariableName(ScriptProperty *prop) : RuntimeVariable<CName>(prop) {
+    this->type = RED4ext::user::EConfigVarType::Name;
+  }
+  inline RuntimeVariableName(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+                             CName defaultValue)
+      : RuntimeVariable<CName>(className, propertyName, displayName, description, order, defaultValue) {
+    this->type = RED4ext::user::EConfigVarType::Name;
   }
 };
 

@@ -18,6 +18,8 @@ const CName ToConfigVar(CName typeName) noexcept {
       return "ModConfigVarInt32";
     case CName("Float"):
       return "ModConfigVarFloat";
+    case CName("CName"):
+      return "ModConfigVarName";
     default: 
       return "ModConfigVarEnum";
   }
