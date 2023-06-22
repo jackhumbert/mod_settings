@@ -26,7 +26,7 @@ const CName ToConfigVar(CName typeName) noexcept;
 
 struct ModVariable {
   uint32_t GetOrder() const {
-    return runtimeVar->order != (uint32_t)-1 ? runtimeVar->order : implicitOrder;
+    return (runtimeVar && runtimeVar->order != (uint32_t)-1) ? runtimeVar->order : implicitOrder;
   }
 
   bool operator< (const ModVariable &other) const {
