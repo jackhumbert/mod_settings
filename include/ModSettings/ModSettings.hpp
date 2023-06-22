@@ -15,7 +15,7 @@ using namespace RED4ext;
 struct ModVariable;
 
 struct ModSettingDependency {
-  static ModSettingDependency* FromString(std::string str, CName scriptClass);
+  // void Resolve(std::string str, CName scriptClass);
 
   CName className;
   CName propertyName;

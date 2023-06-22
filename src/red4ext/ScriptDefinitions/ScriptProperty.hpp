@@ -68,6 +68,17 @@ struct ScriptProperty : ScriptDefinition {
     auto str = this->runtimeProperties.Get(name);
     if (str) {
       uint32_t value;
+      RED4ext::CRTTISystem::Get()->GetType("Uint32")->FromString(&value, *str);
+      return value;
+    } else {
+      return 0;
+    }
+  }
+
+  template <> int32_t ReadProperty(const RED4ext::CName &name) const {
+    auto str = this->runtimeProperties.Get(name);
+    if (str) {
+      int32_t value;
       RED4ext::CRTTISystem::Get()->GetType("Int32")->FromString(&value, *str);
       return value;
     } else {
@@ -77,7 +88,7 @@ struct ScriptProperty : ScriptDefinition {
 
   ModSettingDependency* ReadDependency(const RED4ext::CName scriptClass) {
     auto dependency = (ModSettingDependency *)calloc(sizeof(ModSettingDependency), sizeof(char*));
-    auto str = this->runtimeProperties.Get(name);
+    auto str = this->runtimeProperties.Get("ModSettings.dependency");
     if (str) {
       std::string depends(str->c_str());
       trim(depends);

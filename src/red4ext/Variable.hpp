@@ -26,7 +26,7 @@ const CName ToConfigVar(CName typeName) noexcept;
 
 struct ModVariable {
   uint32_t GetOrder() const {
-    return runtimeVar->order;
+    return runtimeVar->order != (uint32_t)-1 ? runtimeVar->order : implicitOrder;
   }
 
   bool operator< (const ModVariable &other) const {
@@ -53,14 +53,15 @@ struct ModVariable {
   IRuntimeVariable *runtimeVar = nullptr;
   ModSettingDependency dependency;
   ModCategory * category;
+  uint32_t implicitOrder;
 };
 
 // maybe shouldn't use this structure interally?
 struct ModCategory {
-  ModCategory() = default;
-  ModCategory(CName name);
+  // ModCategory() = default;
+  // ModCategory(CName name);
 
-  ModVariable& AddVariable(ModVariable variable);
+  ModVariable& AddVariable(ModVariable &variable);
 
   constexpr operator CName() const noexcept {
     return this->name;
@@ -73,13 +74,14 @@ struct ModCategory {
 };
 
 struct ModClass {
-  ModClass() = default;
-  ModClass(CName name);
+  // ModClass() = default;
+  // ModClass(CName name);
 
-  ModVariable& AddVariable(ModVariable variable, ModCategory category = CName());
-  void RegisterListener(Handle<IScriptable> listener);
-  void UnregisterListener(Handle<IScriptable> listener);
+  ModVariable& AddVariable(ModVariable &variable, ModCategory &category);
+  void RegisterListener(Handle<IScriptable> &listener);
+  void UnregisterListener(Handle<IScriptable> &listener);
   void RegisterCallback(std::shared_ptr<runtime_class_callback_t> &callback);
+  void UpdateDefault(CName propertyName, ScriptInstance* value) const;
   void NotifyListeners() const;
 
   constexpr operator CName() const noexcept {
@@ -89,7 +91,7 @@ struct ModClass {
   CName name;
   uint32_t order;
   CClass* type;
-  std::map<uint32_t, WeakHandle<IScriptable>> listeners;
+  std::vector<WeakHandle<ISerializable>> listeners;
   std::vector<std::shared_ptr<runtime_class_callback_t>> callbacks;
   std::map<CName, ModCategory> categories;
   Mod * mod;
@@ -99,7 +101,7 @@ struct Mod {
   Mod() = default;
   Mod(CName name);
 
-  ModVariable& AddVariable(ModVariable variable, ModCategory category = CName(), ModClass modClass = CName());
+  ModVariable& AddVariable(ModVariable &variable, ModCategory &category, ModClass &modClass);
 
   CName name;
   std::map<CName, ModClass> classes;

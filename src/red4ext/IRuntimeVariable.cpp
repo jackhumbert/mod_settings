@@ -22,7 +22,7 @@ IRuntimeVariable::IRuntimeVariable(ScriptProperty* prop) : IRuntimeVariable() {
   // prop->ReadProperty("ModSettings.updatePolicy", &updatePolicy, user::EConfigVarUpdatePolicy::ConfirmationRequired);
   prop->ReadProperty("ModSettings.displayName", &this->displayName, this->name);
   prop->ReadProperty("ModSettings.description", &this->description);
-  prop->ReadProperty("ModSettings.order", &this->order);
+  prop->ReadProperty<uint32_t>("ModSettings.order", &this->order, (uint32_t)-1);
 
 }
 

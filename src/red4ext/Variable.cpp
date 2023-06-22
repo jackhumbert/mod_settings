@@ -6,6 +6,7 @@
 #include "ScriptDefinitions/ScriptProperty.hpp"
 #include "Variable.hpp"
 #include "ModConfigVar.hpp"
+#include <algorithm>
 
 namespace ModSettings {
 
@@ -24,26 +25,26 @@ const CName ToConfigVar(CName typeName) noexcept {
 
 // Variable
 
-ModVariable& ModCategory::AddVariable(ModVariable variable) {
+ModVariable& ModCategory::AddVariable(ModVariable &variable) {
   this->variables[variable.name] = variable;
   variable.category = this;
   return this->variables[variable.name];
 }
 
-ModVariable& ModClass::AddVariable(ModVariable variable, ModCategory category) {
-  if (!this->categories.contains(category)) {
+ModVariable& ModClass::AddVariable(ModVariable &variable, ModCategory &category) {
+  if (!this->categories.contains(category.name)) {
     category.modClass = this;
-    this->categories[category] = category;
+    this->categories[category.name] = category;
   }
-  return this->categories[category].AddVariable(variable);
+  return this->categories[category.name].AddVariable(variable);
 }
 
-ModVariable& Mod::AddVariable(ModVariable variable, ModCategory category, ModClass modClass) {
-  if (!this->classes.contains(modClass)) {
+ModVariable& Mod::AddVariable(ModVariable &variable, ModCategory &category, ModClass &modClass) {
+  if (!this->classes.contains(modClass.name)) {
     modClass.mod = this;
-    this->classes[modClass] = modClass;
+    this->classes[modClass.name] = modClass;
   }
-  return this->classes[modClass].AddVariable(variable, category);
+  return this->classes[modClass.name].AddVariable(variable, category);
 }
 
 bool ModVariable::RestoreDefault() {
@@ -144,28 +145,24 @@ IModConfigVar * ModVariable::ToConfigVar() const {
   }
 }
 
-// Category
-
-ModCategory::ModCategory(CName name) {
-  this->name = name;
-}
-
 // Class
 
-ModClass::ModClass(CName name) : ModClass() {
-  this->name = name;
-  this->type = ToClass(name);
-}
+// ModClass::ModClass(CName name) : ModClass() {
+//   this->name = name;
+//   this->type = ToClass(name);
+// }
 
-void ModClass::RegisterListener(Handle<IScriptable> listener) {
-  if (listener && listener->unk28) {
-    this->listeners[listener->unk28] = listener;
+void ModClass::RegisterListener(Handle<IScriptable> &listener) {
+  if (listener) {
+    this->listeners.emplace_back(listener->ref);
   }
 }
 
-void ModClass::UnregisterListener(Handle<IScriptable> listener) {
-  if (listener && listener->unk28) {
-    this->listeners.erase(listener->unk28);
+void ModClass::UnregisterListener(Handle<IScriptable> &listener) {
+  if (listener) {
+    auto position = std::find(this->listeners.begin(), this->listeners.end(), listener->ref);
+    if (position != this->listeners.end())
+      this->listeners.erase(position);
   }
 }
 
@@ -175,20 +172,26 @@ void ModClass::RegisterCallback(std::shared_ptr<runtime_class_callback_t> &callb
   }
 }
 
+void ModClass::UpdateDefault(CName propertyName, ScriptInstance* value) const {
+  if (this->type) {
+      for (auto i = 0; i < this->type->defaults.keys.size; i++) {
+        if (this->type->defaults.keys[i] == propertyName) {
+          // sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", this->name.ToString(), propertyName.ToString());
+          auto propType = this->type->defaults.values[i]->GetType();
+          this->type->defaults.values[i]->Fill(propType, value);
+        }
+      }
+  }
+}
+
 void ModClass::NotifyListeners() const {
   if (this->type) {
     for (const auto &[categoryName, category] : this->categories) {
       for (const auto &[variableName, variable] : category.variables) {
         auto valuePtr = variable.runtimeVar->GetValuePtr();
-        for (auto i = 0; i < this->type->defaults.keys.size; i++) {
-          if (this->type->defaults.keys[i] == variable.name) {
-            sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", this->name.ToString(), variable.name.ToString());
-            auto propType = this->type->defaults.values[i]->GetType();
-            this->type->defaults.values[i]->Fill(propType, valuePtr);
-          }
-        }
+        this->UpdateDefault(variableName, valuePtr);
         // std::shared_lock<RED4ext::SharedMutex> _(listeners_lock);
-        for (auto &[id, listener] : this->listeners) {
+        for (auto &listener : this->listeners) {
           if (listener) {
             auto prop = this->type->propsByName.Get(variable.name);
             if (prop && *prop) {
@@ -224,6 +227,35 @@ Mod::Mod(CName name) : name(name) {
   // this->AddVariable(var, CName(), name);
 }
 
+// void ModSettingDependency::Resolve(std::string str, CName scriptClass) {
+//   trim(str);
+//   if (!str.empty()) {
+//     auto period = str.find(".");
+//     auto equals = str.find("=");
+//     if (equals != std::string::npos) {
+//       auto value = str.substr(equals, str.length());
+//       trim(value);
+//       if (value.length()) {
+//         this->value = value;
+//       }
+//     } else {
+//       equals = str.length();
+//       this->value = "true";
+//     }
+//     if (period != std::string::npos) {
+//       auto className = str.substr(0, period);
+//       auto propertyName = str.substr(period+1, equals);
+//       trim(className);
+//       trim(propertyName);
+//       this->propertyName = RED4ext::CNamePool::Add(propertyName.c_str());
+//       this->className = RED4ext::CNamePool::Add(className.c_str());
+//     } else {
+//       this->className = scriptClass;
+//       this->propertyName = RED4ext::CNamePool::Add(str.c_str());
+//     }
+//   }
+
+
 /*
 
 ModSettingsVariable::ModSettingsVariable() {
@@ -246,7 +278,7 @@ ModSettingsVariable::ModSettingsVariable() {
 //       auto value = depends.substr(equals, depends.length());
 //       trim(value);
 //       if (value.length()) {
-//         this->dependency.value = value;
+//         this->value = value;
 //       }
 //     } else {
 //       equals = depends.length();

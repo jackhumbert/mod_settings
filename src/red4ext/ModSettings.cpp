@@ -55,46 +55,108 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
               self->mods[modName] = Mod(modName);
             }
             auto &mod = self->mods[modName];
-            auto &variable = mod.AddVariable(
-                {
-                    .name = prop->name,
-                    .type = CRTTISystem::Get()->GetType(prop->type->name),
-                    .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(prop->type->name)),
-                    .dependency = *prop->ReadDependency(scriptClass->name)
-                },
-                prop->ReadProperty("ModSettings.category"), scriptClass->name);
-            prop->ReadProperty("ModSettings.category.order", &variable.category->order);
-            if (!variable.SetRuntimeVariable(prop)) {
+
+            if (!mod.classes.contains(scriptClass->name)) {
+              mod.classes[scriptClass->name] = {
+                .name = scriptClass->name,
+                .type = ToClass(scriptClass->name),
+                .mod = &mod
+              };
+            }
+            auto &modClass = mod.classes[scriptClass->name];
+
+            auto categoryName = prop->ReadProperty("ModSettings.category");
+            if (!modClass.categories.contains(categoryName)) {
+              modClass.categories[categoryName] = {
+                .name = categoryName,
+                .order = prop->ReadProperty<uint32_t>("ModSettings.category.order"),
+                .modClass = &modClass
+              };
+            }
+            auto &category = modClass.categories[categoryName];
+
+            category.variables[prop->name] = {
+              .name = prop->name,
+              .type = CRTTISystem::Get()->GetType(prop->type->name),
+              .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(prop->type->name)),
+              .dependency = *prop->ReadDependency(scriptClass->name),
+              .category = &category,
+              .implicitOrder = (uint32_t)category.variables.size()
+            };
+            auto &variable = category.variables[prop->name];
+            
+            if (variable.SetRuntimeVariable(prop)) {
+              modClass.UpdateDefault(variable.name, variable.runtimeVar->GetValuePtr());
+              sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", modClass.name.ToString(), variable.name.ToString());
+            } else {
               sdk->logger->ErrorF(pluginHandle, "Could not find runtime variable for {}", prop->type->name.ToString());
             }
-
-            // auto variable = new ModSettingsVariable(prop, scriptClass->name);
-            // if (variable->IsValid()) {
-            //   ModSettings::AddVariable(variable);
-            // }
           }
         }
       }
     }
-  }
-  for (const auto &var : queuedVariables) {
-    CNamePool::Add(var->modName);
-    if (!self->mods.contains(var->modName)) {
-      self->mods[var->modName] = Mod(var->modName);
+    for (const auto &var : queuedVariables) {
+      CNamePool::Add(var->modName);
+      if (!self->mods.contains(var->modName)) {
+        self->mods[var->modName] = Mod(var->modName);
+      }
+      auto &mod = self->mods[var->modName];
+
+      auto modClassName = CNamePool::Add(var->className);
+      if (!mod.classes.contains(modClassName)) {
+        mod.classes[modClassName] = {
+          .name = modClassName,
+          .mod = &mod
+        };
+      }
+      auto &modClass = mod.classes[modClassName];
+
+      auto categoryName = CNamePool::Add(var->categoryName);
+      if (!modClass.categories.contains(categoryName)) {
+        modClass.categories[categoryName] = {
+          .name = categoryName,
+          .modClass = &modClass
+        };
+      }
+      auto &category = modClass.categories[categoryName];
+
+      auto variableName = CNamePool::Add(var->propertyName);
+      category.variables[variableName] = {
+        .name = variableName,
+        .type = CRTTISystem::Get()->GetType(var->type),
+        .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(var->type)),
+        .dependency = var->dependency,
+        .category = &category,
+        .implicitOrder = (uint32_t)category.variables.size()
+      };
+      auto &variable = category.variables[variableName];
+
+      if (variable.CreateRuntimeVariable(*var)) {
+        modClass.RegisterCallback(var->callback);
+        (*var->callback)(var->categoryName, var->propertyName, *(ModVariableType*)variable.runtimeVar->GetValuePtr());
+        sdk->logger->InfoF(pluginHandle, "Loaded '%s'.%s", var->modName, var->propertyName);
+      } else {
+        sdk->logger->ErrorF(pluginHandle, "Could not create runtime variable for {}", var->propertyName);
+      }
     }
-    auto &mod = self->mods[var->modName];
-    auto &variable = mod.AddVariable(
-        {
-            .name = CNamePool::Add(var->propertyName),
-            .type = CRTTISystem::Get()->GetType(var->type),
-            .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(var->type)),
-            .dependency = var->dependency
-        },
-        CNamePool::Add(var->categoryName), CNamePool::Add(var->className));
-    if (variable.CreateRuntimeVariable(*var)) {
-      mod.classes[var->className].RegisterCallback(var->callback);
-    } else {
-      sdk->logger->ErrorF(pluginHandle, "Could not create runtime variable for {}", var->propertyName);
+    // resolve dependencies
+    for (auto &[_, mod] : self->mods) {
+      for (auto &[_, modClass] : mod.classes) {
+        for (auto &[_, category] : modClass.categories) {
+          for (auto &[_, variable] : category.variables) {
+            if (variable.dependency.propertyName) {
+              if (mod.classes.contains(variable.dependency.className)) {
+                auto &depClass = mod.classes[variable.dependency.className];
+                for (auto &[_, depCategory] : depClass.categories) {
+                  if (depCategory.variables.contains(variable.dependency.propertyName)) {
+                      variable.dependency.variable = &depCategory.variables[variable.dependency.propertyName];
+                  } 
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -169,7 +231,14 @@ DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName category
   if (modSettings.mods.contains(modName)) {
     for (auto &[modClassName, modClass] : modSettings.mods[modName].classes) {
       if (modClass.categories.contains(categoryName)) {
+        std::vector<ModVariable> variables;
         for (auto const &[variableName, variable] : modClass.categories[categoryName].variables) {
+          if (variable.IsEnabled()) {
+            variables.emplace_back(variable);
+          }
+        }
+        std::sort(variables.begin(), variables.end());
+        for (auto const &variable : variables) {
           auto configVar = variable.ToConfigVar();
           if (configVar) {
             array.EmplaceBack(Handle(configVar));
