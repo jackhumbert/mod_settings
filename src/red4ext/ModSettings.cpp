@@ -75,7 +75,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
             }
             auto &category = modClass.categories[categoryName];
 
-            category.variables[prop->name] = {
+            ModVariable variable = {
               .name = prop->name,
               .type = CRTTISystem::Get()->GetType(prop->type->name),
               .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(prop->type->name)),
@@ -83,9 +83,9 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
               .category = &category,
               .implicitOrder = (uint32_t)category.variables.size()
             };
-            auto &variable = category.variables[prop->name];
             
             if (variable.SetRuntimeVariable(prop)) {
+              category.variables[prop->name] = variable;
               modClass.UpdateDefault(variable.name, variable.runtimeVar->GetValuePtr());
               sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", modClass.name.ToString(), variable.name.ToString());
             } else {
@@ -121,7 +121,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
       auto &category = modClass.categories[categoryName];
 
       auto variableName = CNamePool::Add(var->propertyName);
-      category.variables[variableName] = {
+      ModVariable variable = {
         .name = variableName,
         .type = CRTTISystem::Get()->GetType(var->type),
         .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(var->type)),
@@ -129,9 +129,9 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
         .category = &category,
         .implicitOrder = (uint32_t)category.variables.size()
       };
-      auto &variable = category.variables[variableName];
 
       if (variable.CreateRuntimeVariable(*var)) {
+        category.variables[variableName] = variable;
         modClass.RegisterCallback(var->callback);
         (*var->callback)(var->categoryName, var->propertyName, *(ModVariableType*)variable.runtimeVar->GetValuePtr());
         sdk->logger->InfoF(pluginHandle, "Loaded '%s'.%s", var->modName, var->propertyName);
