@@ -89,7 +89,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
               modClass.UpdateDefault(variable.name, variable.runtimeVar->GetValuePtr());
               sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", modClass.name.ToString(), variable.name.ToString());
             } else {
-              sdk->logger->ErrorF(pluginHandle, "Could not find runtime variable for {}", prop->type->name.ToString());
+              sdk->logger->ErrorF(pluginHandle, "Could not find runtime variable for %s", prop->type->name.ToString());
             }
           }
         }
