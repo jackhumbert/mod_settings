@@ -1,5 +1,7 @@
 # Mod Settings
 
+[![](https://byob.yarr.is/jackhumbert/mod_settings/cp_version)](https://github.com/jackhumbert/mod_settings/actions/workflows/build.yaml)
+
 ![Wt2Z4fgfQT](https://user-images.githubusercontent.com/141431/223482953-f7860657-62dd-4cc9-90ea-e099edfa1691.jpg)
 
 ## Installation
