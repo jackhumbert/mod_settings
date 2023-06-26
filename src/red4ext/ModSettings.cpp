@@ -98,7 +98,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
               modClass.UpdateDefault(variable.name, variable.runtimeVar->GetValuePtr());
               sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", modClass.name.ToString(), variable.name.ToString());
             } else {
-              sdk->logger->ErrorF(pluginHandle, "Could not find runtime variable for %s", prop->type->name.ToString());
+              sdk->logger->ErrorF(pluginHandle, "%s.%s: Could not find runtime type for script type %s", modClass.name.ToString(), prop->name.ToString(), prop->type->name.ToString());
             }
           }
         }
@@ -240,21 +240,21 @@ DynArray<CName> ModSettings::GetCategories(CName modName) {
 DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName categoryName) {
   auto array = DynArray<Handle<IScriptable>>(new Memory::DefaultAllocator);
   if (modSettings.mods.contains(modName)) {
+    std::vector<ModVariable> variables;
     for (auto &[modClassName, modClass] : modSettings.mods[modName].classes) {
       if (modClass.categories.contains(categoryName)) {
-        std::vector<ModVariable> variables;
         for (auto const &[variableName, variable] : modClass.categories[categoryName].variables) {
           if (variable.IsEnabled()) {
             variables.emplace_back(variable);
           }
         }
-        std::sort(variables.begin(), variables.end());
-        for (auto const &variable : variables) {
-          auto configVar = variable.ToConfigVar();
-          if (configVar) {
-            array.EmplaceBack(Handle(configVar));
-          }
-        }
+      }
+    }
+    std::sort(variables.begin(), variables.end());
+    for (auto const &variable : variables) {
+      auto configVar = variable.ToConfigVar();
+      if (configVar) {
+        array.EmplaceBack(Handle(configVar));
       }
     }
   }
