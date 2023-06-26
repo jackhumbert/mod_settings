@@ -48,6 +48,15 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
     ModSettings::ClearVariables();
     for (const auto &scriptClass : scriptData->classes) {
       for (const auto &prop : scriptClass->properties) {
+        // filter out inherited props?
+        // if (scriptClass->parent) {
+        //   auto found = false;
+        //   for (const auto &parentProp : scriptClass->parent->properties) {
+        //     found |= prop->name == parentProp->name;
+        //   }
+        //   if (found)
+        //     continue;
+        // }
         if (prop->runtimeProperties.size) {
           if (prop->IsValid()) {
             auto modName = prop->ReadProperty("ModSettings.mod");
@@ -219,7 +228,9 @@ DynArray<CName> ModSettings::GetCategories(CName modName) {
   for (auto const &[modClassName, modClass] : modSettings.mods[modName].classes) {
     for (auto const &[categoryName, category] : modClass.categories) {
       if (categoryName != "None" && !category.variables.empty()) {
-        array.EmplaceBack(categoryName);
+        auto position = std::find(array.begin(), array.end(), categoryName);
+        if (position == array.end())
+          array.EmplaceBack(categoryName);
       }
     }
   }
