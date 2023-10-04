@@ -348,7 +348,10 @@ void ModSettings::NotifyListeners() {
   std::shared_lock<SharedMutex> _(listeners_lock);
   for (auto &[id, listener] : this->listeners) {
     if (listener) {
-      listener.Lock()->ExecuteFunction("OnModSettingsChange");
+      auto instance = listener.Lock();
+      auto func = instance->GetType()->GetFunction("OnModSettingsChange");
+      if (func) 
+        RED4ext::ExecuteFunction(instance, func, nullptr);
     } else {
       // remove?
     }

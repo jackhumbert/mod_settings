@@ -5,5 +5,5 @@
 #define __LINE_STR__ ZOLTAN_EXPAND_THEN_STRINGISE(__LINE__)
 
 #ifndef ReleaseScriptData_Addr
-#define ReleaseScriptData_Addr 0x27E3D0
+#define ReleaseScriptData_Addr 0x6EBFAC
 #endif
