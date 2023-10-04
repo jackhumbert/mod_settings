@@ -146,7 +146,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     let i: Int32;
     let item: ref<SettingsSelectorController>;
     let size: Int32;
-    Log("[VAR] modified groupPath: " + NameToString(groupPath) + " varName: " + NameToString(varName));
+    // Log("[VAR] modified groupPath: " + NameToString(groupPath) + " varName: " + NameToString(varName));
     size = ArraySize(this.m_settingsElements);
     this.CheckButtons();
     i = 0;
@@ -435,7 +435,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     if !this.IsApplyButtonEnabled() {
       return;
     };
-    Log("OnApplyButton");
+    // Log("OnApplyButton");
     if this.m_settings.NeedsConfirmation() {
       this.m_settings.ConfirmChanges();
     } else {
@@ -447,7 +447,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     if !this.IsResetButtonEnabled() {
       return;
     };
-    Log("OnResetButton");
+    // Log("OnResetButton");
     this.m_resetSettingsRequest = true;
     this.CheckSettings();
   }
@@ -569,7 +569,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
               currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorNameList").GetController() as SettingsSelectorController;
               break;
             default:
-              LogUIWarning("Cannot create UI settings drawer for " + NameToString(currentSettingsItem.GetDisplayName()));
+              // LogUIWarning("Cannot create UI settings drawer for " + NameToString(currentSettingsItem.GetDisplayName()));
           };
           if IsDefined(currentItem) {
             currentItem.Setup(currentSettingsItem, this.m_isPreGame);

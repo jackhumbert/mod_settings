@@ -1,7 +1,7 @@
 @replaceMethod(PauseMenuGameController)
 private func PopulateMenuItemList() -> Void {
     this.AddMenuItem(GetLocalizedText("UI-Labels-Resume"), n"OnClosePauseMenu");
-    if !IsFinal() || UseProfiler() {
+    if !IsFinal() {
         this.AddMenuItem("OPEN DEBUG MENU", n"OnOpenDebugHubMenu");
     };
     this.AddMenuItem(GetLocalizedText("UI-ResourceExports-SaveGame"), PauseMenuAction.Save);

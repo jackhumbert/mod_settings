@@ -12,7 +12,7 @@ private func PopulateMenuItemList() -> Void {
     if TrialHelper.IsInPS5TrialMode() {
       this.AddMenuItem(GetLocalizedText("UI-Notifications-Ps5TrialBuyMenuItem"), n"OnBuyGame");
     };
-    if !IsFinal() || UseProfiler() {
+    if !IsFinal() {
       this.AddMenuItem("DEBUG NEW GAME", n"OnDebug");
     };
     this.m_menuListController.Refresh();

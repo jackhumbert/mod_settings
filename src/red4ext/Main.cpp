@@ -34,6 +34,8 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     ModSettings::pluginHandle = aHandle;
 
     aSdk->logger->Info(aHandle, "Starting up Mod Settings " MOD_VERSION_STR);
+    auto ptr = GetModuleHandle(nullptr);
+    aSdk->logger->InfoF(aHandle, "Base address: %p", ptr);
 
     auto scriptsFolder = Utils::GetRootDir() / "r6" / "scripts" / "mod_settings";
     if (std::filesystem::exists(scriptsFolder)) {

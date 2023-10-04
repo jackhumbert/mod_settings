@@ -8,7 +8,7 @@ public class ModSettingsNotificationListener extends ConfigNotificationListener 
   }
 
   public func OnNotify(status: ConfigNotificationType) -> Void {
-    Log("SettingsNotificationListener::OnNotify");
+    // Log("SettingsNotificationListener::OnNotify");
     this.m_ctrl.OnSettingsNotify(status);
   }
 }
@@ -22,7 +22,7 @@ public class ModSettingsVarListener extends ConfigVarListener {
   }
 
   public func OnVarModified(groupPath: CName, varName: CName, varType: ConfigVarType, reason: ConfigChangeReason) -> Void {
-    Log("ModSettingsVarListener::OnVarModified");
+    // Log("ModSettingsVarListener::OnVarModified");
     this.m_ctrl.OnVarModified(groupPath, varName, varType, reason);
   }
 }
