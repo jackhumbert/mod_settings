@@ -41,7 +41,7 @@ struct ScriptProperty : ScriptDefinition {
   }
 
   void FromString(RED4ext::ScriptInstance pointer, const RED4ext::CString& str) const {
-    this->GetType()->FromString(pointer, str);
+    this->GetType()->FromString(pointer, str.c_str());
   }
 
   // ReadProperty(CName)
