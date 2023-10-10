@@ -203,6 +203,15 @@ template <> inline RuntimeVariableRange<float>::RuntimeVariableRange(ScriptPrope
   prop->ReadProperty("ModSettings.max", &this->maxValue, 1.0f);
 }
 
+template <> inline RuntimeVariableRange<float>::RuntimeVariableRange(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+                             float defaultValue, float stepValue, float minValue, float maxValue)
+      : RuntimeVariable<float>(className, propertyName, displayName, description, order, defaultValue) {
+    this->type = RED4ext::user::EConfigVarType::Float;
+    this->stepValue = stepValue;
+    this->minValue = minValue;
+    this->maxValue = maxValue;
+  }
+
 template <> inline void __fastcall RuntimeVariable<bool>::GetValueToWrite(char *value) {
   sprintf(value, "%d", valueValidated);
 }

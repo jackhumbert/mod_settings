@@ -41,7 +41,10 @@ struct ScriptProperty : ScriptDefinition {
   }
 
   void FromString(RED4ext::ScriptInstance pointer, const RED4ext::CString& str) const {
-    this->GetType()->FromString(pointer, str.c_str());
+    RED4ext::RawBuffer buffer;
+    buffer.data = (void*)str.c_str();
+    buffer.size = str.Length();
+    this->GetType()->FromString(pointer, buffer);
   }
 
   // ReadProperty(CName)
@@ -68,7 +71,10 @@ struct ScriptProperty : ScriptDefinition {
     auto str = this->runtimeProperties.Get(name);
     if (str) {
       uint32_t value;
-      RED4ext::CRTTISystem::Get()->GetType("Uint32")->FromString(&value, *str);
+      RED4ext::RawBuffer buffer;
+      buffer.data = (void*)str->c_str();
+      buffer.size = str->length;
+      RED4ext::CRTTISystem::Get()->GetType("Uint32")->FromString(&value, buffer);
       return value;
     } else {
       return 0;
@@ -79,7 +85,10 @@ struct ScriptProperty : ScriptDefinition {
     auto str = this->runtimeProperties.Get(name);
     if (str) {
       int32_t value;
-      RED4ext::CRTTISystem::Get()->GetType("Int32")->FromString(&value, *str);
+      RED4ext::RawBuffer buffer;
+      buffer.data = (void*)str->c_str();
+      buffer.size = str->length;
+      RED4ext::CRTTISystem::Get()->GetType("Int32")->FromString(&value, buffer);
       return value;
     } else {
       return 0;
@@ -133,21 +142,30 @@ struct ScriptProperty : ScriptDefinition {
   template <> void ReadProperty<uint32_t>(const RED4ext::CName &name, uint32_t *pointer) const {
     auto str = this->runtimeProperties.Get(name);
     if (str && pointer) {
-      RED4ext::CRTTISystem::Get()->GetType("Uint32")->FromString(pointer, *str);
+      RED4ext::RawBuffer buffer;
+      buffer.data = (void*)str->c_str();
+      buffer.size = str->length;
+      RED4ext::CRTTISystem::Get()->GetType("Uint32")->FromString(pointer, buffer);
     }
   }
 
   template <> void ReadProperty<int32_t>(const RED4ext::CName &name, int32_t *pointer) const {
     auto str = this->runtimeProperties.Get(name);
     if (str && pointer) {
-      RED4ext::CRTTISystem::Get()->GetType("Int32")->FromString(pointer, *str);
+      RED4ext::RawBuffer buffer;
+      buffer.data = (void*)str->c_str();
+      buffer.size = str->length;
+      RED4ext::CRTTISystem::Get()->GetType("Int32")->FromString(pointer, buffer);
     }
   }
 
   template <> void ReadProperty<float>(const RED4ext::CName &name, float *pointer) const {
     auto str = this->runtimeProperties.Get(name);
     if (str && pointer) {
-      RED4ext::CRTTISystem::Get()->GetType("Float")->FromString(pointer, *str);
+      RED4ext::RawBuffer buffer;
+      buffer.data = (void*)str->c_str();
+      buffer.size = str->length;
+      RED4ext::CRTTISystem::Get()->GetType("Float")->FromString(pointer, buffer);
     }
   }
 
