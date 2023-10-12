@@ -45,7 +45,7 @@ target_link_libraries(${MOD_SLUG}.dll
 
 target_compile_definitions(${MOD_SLUG}.dll PRIVATE MOD_SETTINGS_DLLDIR_EX)
 
-configure_archives(src/wolvenkit/packed/mods/ModSettings/archives/ModSettings.archive src/archiveXL/ModSettings.archive.xl)
+configure_archives(src/wolvenkit/packed/archive/pc/mod/ModSettings.archive src/archiveXL/ModSettings.archive.xl)
 
 configure_redscript(src/redscript)
 
