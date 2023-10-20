@@ -225,20 +225,20 @@ DynArray<CName> ModSettings::GetMods() {
 
 DynArray<CName> ModSettings::GetCategories(CName modName) {
   auto array = DynArray<CName>(new Memory::DefaultAllocator);
+  std::vector<std::pair<CName, ModCategory>> modCategories;
   for (auto const &[modClassName, modClass] : modSettings.mods[modName].classes) {
-    std::vector<std::pair<CName, ModCategory>> modCategories;
     for (auto itr = modClass.categories.begin(); itr != modClass.categories.end(); ++itr ) {
       modCategories.push_back(*itr); 
     }
-    sort(modCategories.begin(), modCategories.end(), [=](std::pair<CName, ModCategory>& a, std::pair<CName, ModCategory>& b) {
-        return a.second.order < b.second.order;
-    });
-    for (auto const &[categoryName, category] : modCategories) {
-      if (categoryName != "None" && !category.variables.empty()) {
-        auto position = std::find(array.begin(), array.end(), categoryName);
-        if (position == array.end())
-          array.EmplaceBack(categoryName);
-      }
+  }
+  sort(modCategories.begin(), modCategories.end(), [=](std::pair<CName, ModCategory>& a, std::pair<CName, ModCategory>& b) {
+      return a.second.order < b.second.order;
+  });
+  for (auto const &[categoryName, category] : modCategories) {
+    if (categoryName != "None" && !category.variables.empty()) {
+      auto position = std::find(array.begin(), array.end(), categoryName);
+      if (position == array.end())
+        array.EmplaceBack(categoryName);
     }
   }
   return array;
