@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CP77Mod xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>ModSettings</Name>
+  <ModName>ModSettings</ModName>
   <Author />
   <Email />
-  <Name>ModSettings</Name>
   <Version />
-  <IsRedMod>false</IsRedMod>
-  <ExecuteDeploy>false</ExecuteDeploy>
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\menu.inkmenu</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\menu.inkmenu</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\main_menu\pregame_menu.inkmenu</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\main_menu\pregame_menu.inkmenu</OpenProjectFiles>
 </CP77Mod>
