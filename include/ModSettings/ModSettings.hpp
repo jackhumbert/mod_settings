@@ -28,6 +28,8 @@ union ModVariableType {
   uint32_t u32;
   int32_t i32;
   float f32;
+  // not yet supported
+  // CName cname;
 };
 
 typedef std::function<void (CName categoryName, CName propertyName, ModVariableType value)> runtime_class_callback_t;
@@ -49,6 +51,7 @@ struct Variable  {
   ModSettingDependency dependency;
 };
 
+// updating ModVariableType for CName will change this
 RED4EXT_ASSERT_SIZE(Variable, 152);
 
 extern "C" MOD_SETTINGS_DLLDIR void AddVariable(Variable *variable);

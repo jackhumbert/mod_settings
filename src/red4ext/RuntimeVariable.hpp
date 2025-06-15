@@ -228,6 +228,11 @@ template <> inline void __fastcall RuntimeVariable<float>::GetValueToWrite(char 
   sprintf(value, "%f", valueValidated);
 }
 
+// not suppported in the UI yet
+// template <> inline void __fastcall RuntimeVariable<CName>::GetValueToWrite(char *value) {
+//   sprintf(value, "%s", valueValidated.ToString());
+// }
+
 struct RuntimeVariableEnum : public RuntimeVariableList<int32_t> {
   RuntimeVariableEnum(ScriptProperty *prop) : RuntimeVariableList<int32_t>(prop) {
     this->type = RED4ext::user::EConfigVarType::IntList;

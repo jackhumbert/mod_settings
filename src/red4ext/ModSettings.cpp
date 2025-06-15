@@ -98,7 +98,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
               modClass.UpdateDefault(variable.name, variable.runtimeVar->GetValuePtr());
               sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", modClass.name.ToString(), variable.name.ToString());
             } else {
-              sdk->logger->ErrorF(pluginHandle, "%s.%s: Could not find runtime type for script type %s", modClass.name.ToString(), prop->name.ToString(), prop->type->name.ToString());
+              sdk->logger->WarnF(pluginHandle, "%s.%s: type '%s' is not supported and was ignored", modClass.name.ToString(), prop->name.ToString(), prop->type->name.ToString());
             }
           }
         }
@@ -217,7 +217,18 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
 
 DynArray<CName> ModSettings::GetMods() {
   auto array = DynArray<CName>(new Memory::DefaultAllocator);
-  for (auto const &[modName, mod] : modSettings.mods) {
+
+  std::vector<CName> names;
+  for (auto itr = modSettings.mods.begin(); itr != modSettings.mods.end(); ++itr) {
+    names.push_back(itr->first);
+  }
+
+  sort(names.begin(), names.end(), [=](CName& a, CName& b)
+  {
+    return std::string(a.ToString()) < std::string(b.ToString());
+  });
+
+  for (auto const &modName : names) {
     array.EmplaceBack(modName);
   }
   return array;
