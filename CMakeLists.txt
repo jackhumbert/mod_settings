@@ -30,7 +30,7 @@ find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_
 find_package(RedLib)
 
 configure_red4ext(src/red4ext)
-configure_red4ext_addresses(Addresses.hpp)
+# configure_red4ext_addresses(Addresses.hpp)
 
 target_include_directories(${MOD_SLUG}.dll
   PUBLIC

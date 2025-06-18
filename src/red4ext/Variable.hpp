@@ -78,8 +78,8 @@ struct ModClass {
   // ModClass(CName name);
 
   ModVariable& AddVariable(ModVariable &variable, ModCategory &category);
-  void RegisterListener(Handle<IScriptable> &listener);
-  void UnregisterListener(Handle<IScriptable> &listener);
+  void RegisterListener(const Handle<IScriptable> &listener);
+  void UnregisterListener(const Handle<IScriptable> &listener);
   void RegisterCallback(std::shared_ptr<runtime_class_callback_t> &callback);
   void UpdateDefault(CName propertyName, ScriptInstance* value) const;
   void NotifyListeners() const;

@@ -162,18 +162,25 @@ IModConfigVar * ModVariable::ToConfigVar() const {
 //   this->type = ToClass(name);
 // }
 
-void ModClass::RegisterListener(Handle<IScriptable> &listener) {
-  for (auto it = this->listeners.begin(); it != this->listeners.end(); ++it) {
-    if (!it->instance || !it->refCount || (int64_t)it->refCount == -1 || it->Expired()) {
-      this->listeners.erase(it);
-    }
-  }
+std::mutex listener_mutex;
+
+void ModClass::RegisterListener(const Handle<IScriptable> &listener) {
+  // for (auto it = this->listeners.begin(); it != this->listeners.end(); ++it) {
+  //   if (!it->refCount || (int64_t)it->refCount == -1 || it->Expired()) {
+  //     this->listeners.erase(it);
+  //   }
+  // }
+
+  std::unique_lock _(listener_mutex);
+
   if (listener && listener->ref && !listener->ref.Expired()) {
     this->listeners.emplace_back(listener);
   }
 }
 
-void ModClass::UnregisterListener(Handle<IScriptable> &listener) {
+void ModClass::UnregisterListener(const Handle<IScriptable> &listener) {
+  std::unique_lock _(listener_mutex);
+
   if (listener && listener->ref && !listener->ref.Expired()) {
     auto position = std::find(this->listeners.begin(), this->listeners.end(), WeakHandle<IScriptable>(listener));
     if (position != this->listeners.end())
@@ -206,6 +213,9 @@ void ModClass::NotifyListeners() const {
         auto valuePtr = variable.runtimeVar->GetValuePtr();
         this->UpdateDefault(variableName, valuePtr);
         // std::shared_lock<RED4ext::SharedMutex> _(listeners_lock);
+
+        std::unique_lock _(listener_mutex);
+
         for (auto &listener : this->listeners) {
           if (listener) {
             auto prop = this->type->propsByName.Get(variable.name);
