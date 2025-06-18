@@ -43,7 +43,7 @@ void AddVariable(Variable* variable) {
   queuedVariables.emplace_back(variable);
 }
 
-void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
+void __fastcall ModSettings::ProcessScriptData(const ScriptData *scriptData) {
   auto self = ModSettings::GetInstance();
   if (scriptData) {
     ModSettings::ReadFromFile();
@@ -63,46 +63,46 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
           if (prop->IsValid()) {
             auto modName = prop->ReadProperty("ModSettings.mod");
             if (!self->mods.contains(modName)) {
-              self->mods[modName] = Mod(modName);
+              self->mods[modName] = new Mod(modName);
             }
-            auto &mod = self->mods[modName];
+            auto mod = self->mods[modName];
 
-            std::unique_lock _(*mod.classes_lock);
-            if (!mod.classes.contains(scriptClass->name)) {
-              // mod.classes[scriptClass->name] = ModClass(scriptClass->name, ToClass(scriptClass->name), &mod);
-              mod.classes[scriptClass->name] = {
+            std::unique_lock _(*mod->classes_lock);
+            if (!mod->classes.contains(scriptClass->name)) {
+              // mod->classes[scriptClass->name] = ModClass(scriptClass->name, ToClass(scriptClass->name), &mod);
+              mod->classes[scriptClass->name] = new ModClass {
                 .name = scriptClass->name,
                 .type = ToClass(scriptClass->name),
-                .mod = &mod
+                .mod = mod
               };
             }
-            auto &modClass = mod.classes[scriptClass->name];
+            auto modClass = mod->classes[scriptClass->name];
 
             auto categoryName = prop->ReadProperty("ModSettings.category");
-            if (!modClass.categories.contains(categoryName)) {
-              modClass.categories[categoryName] = {
+            if (!modClass->categories.contains(categoryName)) {
+              modClass->categories[categoryName] = new ModCategory {
                 .name = categoryName,
                 .order = prop->ReadProperty<uint32_t>("ModSettings.category.order"),
-                .modClass = &modClass
+                .modClass = modClass
               };
             }
-            auto &category = modClass.categories[categoryName];
+            auto category = modClass->categories[categoryName];
 
-            ModVariable variable = {
+            auto variable = new ModVariable {
               .name = prop->name,
               .type = CRTTISystem::Get()->GetType(prop->type->name),
               .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(prop->type->name)),
               .dependency = *prop->ReadDependency(scriptClass->name),
-              .category = &category,
-              .implicitOrder = (uint32_t)category.variables.size()
+              .category = category,
+              .implicitOrder = (uint32_t)category->variables.size()
             };
             
-            if (variable.SetRuntimeVariable(prop)) {
-              category.variables[prop->name] = variable;
-              modClass.UpdateDefault(variable.name, variable.runtimeVar->GetValuePtr());
-              sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", modClass.name.ToString(), variable.name.ToString());
+            if (variable->SetRuntimeVariable(prop)) {
+              category->variables[prop->name] = variable;
+              modClass->UpdateDefault(variable->name, variable->runtimeVar->GetValuePtr());
+              sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", modClass->name.ToString(), variable->name.ToString());
             } else {
-              sdk->logger->WarnF(pluginHandle, "%s.%s: type '%s' is not supported and was ignored", modClass.name.ToString(), prop->name.ToString(), prop->type->name.ToString());
+              sdk->logger->WarnF(pluginHandle, "%s.%s: type '%s' is not supported and was ignored", modClass->name.ToString(), prop->name.ToString(), prop->type->name.ToString());
             }
           }
         }
@@ -112,44 +112,44 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
     for (const auto &var : queuedVariables) {
       CNamePool::Add(var->modName);
       if (!self->mods.contains(var->modName)) {
-        self->mods[var->modName] = Mod(var->modName);
+        self->mods[var->modName] = new Mod(var->modName);
       }
-      auto &mod = self->mods[var->modName];
+      auto mod = self->mods[var->modName];
 
       auto modClassName = CNamePool::Add(var->className);
-      std::shared_lock _(*mod.classes_lock);
-      if (!mod.classes.contains(modClassName)) {
-        std::unique_lock _(*mod.classes_lock);
-        mod.classes[modClassName] = {
+      std::shared_lock _(*mod->classes_lock);
+      if (!mod->classes.contains(modClassName)) {
+        std::unique_lock _(*mod->classes_lock);
+        mod->classes[modClassName] = new ModClass {
           .name = modClassName,
-          .mod = &mod
+          .mod = mod
         };
       }
-      auto &modClass = mod.classes[modClassName];
+      auto &modClass = mod->classes[modClassName];
 
       auto categoryName = CNamePool::Add(var->categoryName);
-      if (!modClass.categories.contains(categoryName)) {
-        modClass.categories[categoryName] = {
+      if (!modClass->categories.contains(categoryName)) {
+        modClass->categories[categoryName] = new ModCategory {
           .name = categoryName,
-          .modClass = &modClass
+          .modClass = modClass
         };
       }
-      auto &category = modClass.categories[categoryName];
+      auto category = modClass->categories[categoryName];
 
       auto variableName = CNamePool::Add(var->propertyName);
-      ModVariable variable = {
+      auto variable = new ModVariable {
         .name = variableName,
         .type = CRTTISystem::Get()->GetType(var->type),
         .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(var->type)),
         .dependency = var->dependency,
-        .category = &category,
-        .implicitOrder = (uint32_t)category.variables.size()
+        .category = category,
+        .implicitOrder = (uint32_t)category->variables.size()
       };
 
-      if (variable.CreateRuntimeVariable(*var)) {
-        category.variables[variableName] = variable;
-        modClass.RegisterCallback(var->callback);
-        (*var->callback)(var->categoryName, var->propertyName, *(ModVariableType*)variable.runtimeVar->GetValuePtr());
+      if (variable->CreateRuntimeVariable(*var)) {
+        category->variables[variableName] = variable;
+        modClass->RegisterCallback(var->callback);
+        (*var->callback)(var->categoryName, var->propertyName, *(ModVariableType*)variable->runtimeVar->GetValuePtr());
         sdk->logger->InfoF(pluginHandle, "Loaded '%s'.%s", var->modName, var->propertyName);
       } else {
         sdk->logger->ErrorF(pluginHandle, "Could not create runtime variable for {}", var->propertyName);
@@ -157,16 +157,16 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
     }
     // resolve dependencies
     for (auto &[_, mod] : self->mods) {
-      std::shared_lock _(*mod.classes_lock);
-      for (auto &[_, modClass] : mod.classes) {
-        for (auto &[_, category] : modClass.categories) {
-          for (auto &[_, variable] : category.variables) {
-            if (variable.dependency.propertyName) {
-              if (mod.classes.contains(variable.dependency.className)) {
-                auto &depClass = mod.classes[variable.dependency.className];
-                for (auto &[_, depCategory] : depClass.categories) {
-                  if (depCategory.variables.contains(variable.dependency.propertyName)) {
-                      variable.dependency.variable = &depCategory.variables[variable.dependency.propertyName];
+      std::shared_lock _(*mod->classes_lock);
+      for (auto &[_, modClass] : mod->classes) {
+        for (auto &[_, category] : modClass->categories) {
+          for (auto &[_, variable] : category->variables) {
+            if (variable->dependency.propertyName) {
+              if (mod->classes.contains(variable->dependency.className)) {
+                auto &depClass = mod->classes[variable->dependency.className];
+                for (auto &[_, depCategory] : depClass->categories) {
+                  if (depCategory->variables.contains(variable->dependency.propertyName)) {
+                      variable->dependency.variable = depCategory->variables[variable->dependency.propertyName];
                   } 
                 }
               }
@@ -244,17 +244,17 @@ DynArray<CName> ModSettings::GetMods() {
 
 DynArray<CName> ModSettings::GetCategories(CName modName) {
   auto array = DynArray<CName>(new Memory::DefaultAllocator);
-  std::vector<std::pair<CName, ModCategory>> modCategories;
-  for (auto const &[modClassName, modClass] : modSettings.mods[modName].classes) {
-    for (auto itr = modClass.categories.begin(); itr != modClass.categories.end(); ++itr ) {
+  std::vector<std::pair<CName, ModCategory*>> modCategories;
+  for (auto const &[modClassName, modClass] : modSettings.mods[modName]->classes) {
+    for (auto itr = modClass->categories.begin(); itr != modClass->categories.end(); ++itr ) {
       modCategories.push_back(*itr); 
     }
   }
-  sort(modCategories.begin(), modCategories.end(), [=](std::pair<CName, ModCategory>& a, std::pair<CName, ModCategory>& b) {
-      return a.second.order < b.second.order;
+  sort(modCategories.begin(), modCategories.end(), [=](std::pair<CName, ModCategory*>& a, std::pair<CName, ModCategory*>& b) {
+      return a.second->order < b.second->order;
   });
   for (auto const &[categoryName, category] : modCategories) {
-    if (categoryName != "None" && !category.variables.empty()) {
+    if (categoryName != "None" && !category->variables.empty()) {
       auto position = std::find(array.begin(), array.end(), categoryName);
       if (position == array.end())
         array.EmplaceBack(categoryName);
@@ -266,19 +266,19 @@ DynArray<CName> ModSettings::GetCategories(CName modName) {
 DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName categoryName) {
   auto array = DynArray<Handle<IScriptable>>(new Memory::DefaultAllocator);
   if (modSettings.mods.contains(modName)) {
-    std::vector<ModVariable> variables;
-    for (auto &[modClassName, modClass] : modSettings.mods[modName].classes) {
-      if (modClass.categories.contains(categoryName)) {
-        for (auto const &[variableName, variable] : modClass.categories[categoryName].variables) {
-          if (variable.IsEnabled()) {
+    std::vector<ModVariable*> variables;
+    for (auto &[modClassName, modClass] : modSettings.mods[modName]->classes) {
+      if (modClass->categories.contains(categoryName)) {
+        for (auto const &[variableName, variable] : modClass->categories[categoryName]->variables) {
+          if (variable->IsEnabled()) {
             variables.emplace_back(variable);
           }
         }
       }
     }
     std::sort(variables.begin(), variables.end());
-    for (auto const &variable : variables) {
-      auto configVar = variable.ToConfigVar();
+    for (auto const variable : variables) {
+      auto configVar = variable->ToConfigVar();
       if (configVar) {
         array.EmplaceBack(Handle(configVar));
       }
@@ -291,15 +291,15 @@ void ModSettings::WriteToFile() {
   std::ofstream configFile(configPath);
   if (configFile.is_open()) {
     for (const auto &[modName, mod] : modSettings.mods) {
-      std::unique_lock _(*mod.classes_lock);
-      for (const auto &[className, modClass] : mod.classes) {
+      std::unique_lock _(*mod->classes_lock);
+      for (const auto &[className, modClass] : mod->classes) {
         configFile << "[" << className.ToString() << "]\n";
-        for (const auto &[categoryName, category] : modClass.categories) {
-          for (const auto &[variableName, variable] : category.variables) {
+        for (const auto &[categoryName, category] : modClass->categories) {
+          for (const auto &[variableName, variable] : category->variables) {
             configFile << variable;
           }
         }
-        modClass.NotifyListeners();
+        modClass->NotifyListeners();
         configFile << "\n";
       }
     }
@@ -346,10 +346,10 @@ void ModSettings::RestoreDefaults(CName modName) {
   if (modSettings.mods.contains(modName)) {
     auto mod = modSettings.mods[modName];
     modSettings.changeMade = false;
-    for (auto [modClassName, modClass] : mod.classes) {
-      for (auto [categoryName, category] : modClass.categories) {
-        for (auto [variableName, variable] : category.variables) {
-          modSettings.changeMade |= variable.RestoreDefault();
+    for (auto [modClassName, modClass] : mod->classes) {
+      for (auto [categoryName, category] : modClass->categories) {
+        for (auto [variableName, variable] : category->variables) {
+          modSettings.changeMade |= variable->RestoreDefault();
         }
       }
     }
@@ -359,10 +359,10 @@ void ModSettings::RestoreDefaults(CName modName) {
 
 void ModSettings::RejectChanges() {
   for (auto [modName, mod] : modSettings.mods) {
-    for (auto [modClassName, modClass] : mod.classes) {
-      for (auto [categoryName, category] : modClass.categories) {
-        for (auto [variableName, variable] : category.variables) {
-          modSettings.changeMade |= variable.RestoreDefault();
+    for (auto [modClassName, modClass] : mod->classes) {
+      for (auto [categoryName, category] : modClass->categories) {
+        for (auto [variableName, variable] : category->variables) {
+          modSettings.changeMade |= variable->RestoreDefault();
         }
       }
     }
@@ -403,8 +403,8 @@ void ModSettings::RegisterListenerToClass(const Handle<IScriptable> &listener) {
   if (listener) {
     auto className = listener->GetType()->GetName();
     for (auto &[modName, mod] : modSettings.mods) {
-      if (mod.classes.contains(className)) {
-        mod.classes[className].RegisterListener(listener);
+      if (mod->classes.contains(className)) {
+        mod->classes[className]->RegisterListener(listener);
       }
     }
   }
@@ -414,8 +414,8 @@ void ModSettings::UnregisterListenerToClass(const Handle<IScriptable> &listener)
   if (listener) {
     auto className = listener->GetType()->GetName();
     for (auto &[modName, mod] : modSettings.mods) {
-      if (mod.classes.contains(className)) {
-        mod.classes[className].UnregisterListener(listener);
+      if (mod->classes.contains(className)) {
+        mod->classes[className]->UnregisterListener(listener);
       }
     }
   }

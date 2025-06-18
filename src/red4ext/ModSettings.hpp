@@ -23,7 +23,7 @@ public:
 
   static Handle<ModSettings> GetInstance();
 
-  static void ProcessScriptData(ScriptData *scriptData);
+  static void ProcessScriptData(const ScriptData *scriptData);
   static bool GetSettingString(CName, CName, CString *);
   static void ReadValueFromFile(ScriptProperty *prop, ScriptInstance pointer);
 
@@ -66,7 +66,7 @@ private:
   std::shared_mutex variables_lock;
   std::map<uint32_t, WeakHandle<IScriptable>> listeners;
   std::shared_mutex listeners_lock;
-  std::map<CName, Mod> mods;
+  std::map<CName, Mod*> mods;
 };
 
 } // namespace ModSettings

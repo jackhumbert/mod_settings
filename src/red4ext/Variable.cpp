@@ -27,27 +27,27 @@ const CName ToConfigVar(CName typeName) noexcept {
 
 // Variable
 
-ModVariable& ModCategory::AddVariable(ModVariable &variable) {
-  this->variables[variable.name] = variable;
-  variable.category = this;
-  return this->variables[variable.name];
+ModVariable* ModCategory::AddVariable(ModVariable *variable) {
+  this->variables[variable->name] = variable;
+  variable->category = this;
+  return this->variables[variable->name];
 }
 
-ModVariable& ModClass::AddVariable(ModVariable &variable, ModCategory &category) {
-  if (!this->categories.contains(category.name)) {
-    category.modClass = this;
-    this->categories[category.name] = category;
+ModVariable* ModClass::AddVariable(ModVariable *variable, ModCategory *category) {
+  if (!this->categories.contains(category->name)) {
+    category->modClass = this;
+    this->categories[category->name] = category;
   }
-  return this->categories[category.name].AddVariable(variable);
+  return this->categories[category->name]->AddVariable(variable);
 }
 
-ModVariable& Mod::AddVariable(ModVariable &variable, ModCategory &category, ModClass &modClass) {
+ModVariable* Mod::AddVariable(ModVariable *variable, ModCategory *category, ModClass *modClass) {
   std::unique_lock _(*this->classes_lock);
-  if (!this->classes.contains(modClass.name)) {
-    modClass.mod = this;
-    this->classes[modClass.name] = modClass;
+  if (!this->classes.contains(modClass->name)) {
+    modClass->mod = this;
+    this->classes[modClass->name] = modClass;
   }
-  return this->classes[modClass.name].AddVariable(variable, category);
+  return this->classes[modClass->name]->AddVariable(variable, category);
 }
 
 bool ModVariable::RestoreDefault() {
@@ -215,15 +215,15 @@ void ModClass::UpdateDefault(CName propertyName, ScriptInstance* value) const {
 void ModClass::NotifyListeners() const {
   if (this->type) {
     for (const auto &[categoryName, category] : this->categories) {
-      for (const auto &[variableName, variable] : category.variables) {
-        auto valuePtr = variable.runtimeVar->GetValuePtr();
+      for (const auto &[variableName, variable] : category->variables) {
+        auto valuePtr = variable->runtimeVar->GetValuePtr();
         this->UpdateDefault(variableName, valuePtr);
 
         std::shared_lock _(*this->listeners_lock);
 
         for (auto &listener : this->listeners) {
           if (listener) {
-            auto prop = this->type->propsByName.Get(variable.name);
+            auto prop = this->type->propsByName.Get(variable->name);
             if (prop && *prop) {
               (*prop)->SetValue(listener.instance, valuePtr);
             }
@@ -234,8 +234,8 @@ void ModClass::NotifyListeners() const {
   }
   // notify runtime listeners
   for (const auto &[categoryName, category] : this->categories) {
-    for (const auto &[variableName, variable] : category.variables) {
-      auto valuePtr = variable.runtimeVar->GetValuePtr();
+    for (const auto &[variableName, variable] : category->variables) {
+      auto valuePtr = variable->runtimeVar->GetValuePtr();
       
       std::shared_lock _(*this->callbacks_lock);
       for (auto &callback : this->callbacks) {

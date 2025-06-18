@@ -61,7 +61,7 @@ struct ModCategory {
   // ModCategory() = default;
   // ModCategory(CName name);
 
-  ModVariable& AddVariable(ModVariable &variable);
+  ModVariable* AddVariable(ModVariable *variable);
 
   constexpr operator CName() const noexcept {
     return this->name;
@@ -69,7 +69,7 @@ struct ModCategory {
 
   CName name;
   uint32_t order;
-  std::map<CName, ModVariable> variables;
+  std::map<CName, ModVariable *> variables;
   ModClass * modClass;
 };
 
@@ -81,7 +81,7 @@ struct ModClass {
   // ModClass &operator=(const ModClass &) = default;
   // ModClass(CName name);
 
-  ModVariable& AddVariable(ModVariable &variable, ModCategory &category);
+  ModVariable* AddVariable(ModVariable *variable, ModCategory *category);
   void RegisterListener(const Handle<IScriptable> &listener);
   void UnregisterListener(const Handle<IScriptable> &listener);
   void RegisterCallback(std::shared_ptr<runtime_class_callback_t> &callback);
@@ -99,7 +99,7 @@ struct ModClass {
   std::vector<WeakHandle<ISerializable>> listeners;
   std::shared_mutex * callbacks_lock = new std::shared_mutex();
   std::vector<std::shared_ptr<runtime_class_callback_t>> callbacks;
-  std::map<CName, ModCategory> categories;
+  std::map<CName, ModCategory *> categories;
   Mod * mod;
 };
 
@@ -107,11 +107,11 @@ struct Mod {
   Mod() = default;
   Mod(CName name);
 
-  ModVariable& AddVariable(ModVariable &variable, ModCategory &category, ModClass &modClass);
+  ModVariable* AddVariable(ModVariable *variable, ModCategory *category, ModClass *modClass);
 
   CName name;
   std::shared_mutex * classes_lock = new std::shared_mutex();
-  std::map<CName, ModClass> classes;
+  std::map<CName, ModClass *> classes;
 };
 /*
 class ModSettingsVariable {
