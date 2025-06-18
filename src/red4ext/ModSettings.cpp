@@ -296,7 +296,7 @@ void ModSettings::WriteToFile() {
         configFile << "[" << className.ToString() << "]\n";
         for (const auto &[categoryName, category] : modClass->categories) {
           for (const auto &[variableName, variable] : category->variables) {
-            configFile << variable;
+            configFile << *variable;
           }
         }
         modClass->NotifyListeners();
