@@ -162,23 +162,16 @@ IModConfigVar * ModVariable::ToConfigVar() const {
 //   this->type = ToClass(name);
 // }
 
-void ModClass::RegisterListener(Handle<IScriptable> &listener) {
-  for (auto it = this->listeners.begin(); it != this->listeners.end(); ++it) {
-    if (!it->instance || !it->refCount || (int64_t)it->refCount == -1 || it->Expired()) {
-      this->listeners.erase(it);
-    }
-  }
-  if (listener && listener->ref && !listener->ref.Expired()) {
-    this->listeners.emplace_back(listener);
-  }
+std::mutex listeners_mutex;
+
+void ModClass::RegisterListener(const Handle<IScriptable> &listener) {
+  std::unique_lock _(listeners_mutex);
+  this->listeners.push_back(listener);
 }
 
-void ModClass::UnregisterListener(Handle<IScriptable> &listener) {
-  if (listener && listener->ref && !listener->ref.Expired()) {
-    auto position = std::find(this->listeners.begin(), this->listeners.end(), WeakHandle<IScriptable>(listener));
-    if (position != this->listeners.end())
-      this->listeners.erase(position);
-  }
+void ModClass::UnregisterListener(const Handle<IScriptable> &target) {
+  std::unique_lock _(listeners_mutex);
+  this->listeners.erase(std::remove(this->listeners.begin(), this->listeners.end(), target), this->listeners.end());
 }
 
 void ModClass::RegisterCallback(std::shared_ptr<runtime_class_callback_t> &callback) {

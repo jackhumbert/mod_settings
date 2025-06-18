@@ -376,19 +376,19 @@ void ModSettings::NotifyListeners() {
   }
 }
 
-void ModSettings::RegisterListenerToModifications(Handle<IScriptable> &listener) {
-  if (listener) {
+void ModSettings::RegisterListenerToModifications(const Handle<IScriptable> &listener) {
+  if (listener && !listener->ref.Expired()) {
     modSettings.listeners[listener->unk28] = listener;
   }
 }
 
-void ModSettings::UnregisterListenerToModifications(Handle<IScriptable> &listener) {
+void ModSettings::UnregisterListenerToModifications(const Handle<IScriptable> &listener) {
   if (listener) {
     modSettings.listeners.erase(listener->unk28);
   }
 }
 
-void ModSettings::RegisterListenerToClass(Handle<IScriptable> &listener) {
+void ModSettings::RegisterListenerToClass(const Handle<IScriptable> &listener) {
   if (listener) {
     auto className = listener->GetType()->GetName();
     for (auto &[modName, mod] : modSettings.mods) {
@@ -399,7 +399,7 @@ void ModSettings::RegisterListenerToClass(Handle<IScriptable> &listener) {
   }
 }
 
-void ModSettings::UnregisterListenerToClass(Handle<IScriptable> &listener) {
+void ModSettings::UnregisterListenerToClass(const Handle<IScriptable> &listener) {
   if (listener) {
     auto className = listener->GetType()->GetName();
     for (auto &[modName, mod] : modSettings.mods) {

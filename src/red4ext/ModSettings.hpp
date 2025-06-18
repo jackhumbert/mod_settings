@@ -46,10 +46,10 @@ public:
   static void AcceptChanges();
   static void RestoreDefaults(CName modName);
   static void RejectChanges();
-  static void RegisterListenerToModifications(Handle<IScriptable>& listener);
-  static void UnregisterListenerToModifications(Handle<IScriptable>& listener);
-  static void RegisterListenerToClass(Handle<IScriptable>& listener);
-  static void UnregisterListenerToClass(Handle<IScriptable>& listener);
+  static void RegisterListenerToModifications(const Handle<IScriptable>& listener);
+  static void UnregisterListenerToModifications(const Handle<IScriptable>& listener);
+  static void RegisterListenerToClass(const Handle<IScriptable>& listener);
+  static void UnregisterListenerToClass(const Handle<IScriptable>& listener);
 
   static DynArray<CName> GetMods();
   static DynArray<CName> GetCategories(CName modName);

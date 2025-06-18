@@ -78,8 +78,8 @@ struct ModClass {
   // ModClass(CName name);
 
   ModVariable& AddVariable(ModVariable &variable, ModCategory &category);
-  void RegisterListener(Handle<IScriptable> &listener);
-  void UnregisterListener(Handle<IScriptable> &listener);
+  void RegisterListener(const Handle<IScriptable> &listener);
+  void UnregisterListener(const Handle<IScriptable> &listener);
   void RegisterCallback(std::shared_ptr<runtime_class_callback_t> &callback);
   void UpdateDefault(CName propertyName, ScriptInstance* value) const;
   void NotifyListeners() const;
@@ -91,8 +91,10 @@ struct ModClass {
   CName name;
   uint32_t order;
   CClass* type;
-  std::vector<WeakHandle<ISerializable>> listeners;
+  
+  std::vector<WeakHandle<IScriptable>> listeners;
   std::vector<std::shared_ptr<runtime_class_callback_t>> callbacks;
+
   std::map<CName, ModCategory> categories;
   Mod * mod;
 };
