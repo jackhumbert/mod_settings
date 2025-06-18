@@ -35,9 +35,11 @@ void ModSettings::ClearVariables() {
   modSettings.mods.clear();
 }
 
+std::shared_mutex queuedVariables_lock;
 std::vector<Variable*> queuedVariables;
 
 void AddVariable(Variable* variable) {
+  std::unique_lock _(queuedVariables_lock);
   queuedVariables.emplace_back(variable);
 }
 
@@ -65,7 +67,9 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
             }
             auto &mod = self->mods[modName];
 
+            std::unique_lock _(*mod.classes_lock);
             if (!mod.classes.contains(scriptClass->name)) {
+              // mod.classes[scriptClass->name] = ModClass(scriptClass->name, ToClass(scriptClass->name), &mod);
               mod.classes[scriptClass->name] = {
                 .name = scriptClass->name,
                 .type = ToClass(scriptClass->name),
@@ -104,6 +108,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
         }
       }
     }
+    std::shared_lock _(queuedVariables_lock);
     for (const auto &var : queuedVariables) {
       CNamePool::Add(var->modName);
       if (!self->mods.contains(var->modName)) {
@@ -112,7 +117,9 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
       auto &mod = self->mods[var->modName];
 
       auto modClassName = CNamePool::Add(var->className);
+      std::shared_lock _(*mod.classes_lock);
       if (!mod.classes.contains(modClassName)) {
+        std::unique_lock _(*mod.classes_lock);
         mod.classes[modClassName] = {
           .name = modClassName,
           .mod = &mod
@@ -150,6 +157,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
     }
     // resolve dependencies
     for (auto &[_, mod] : self->mods) {
+      std::shared_lock _(*mod.classes_lock);
       for (auto &[_, modClass] : mod.classes) {
         for (auto &[_, category] : modClass.categories) {
           for (auto &[_, variable] : category.variables) {
@@ -173,7 +181,7 @@ void __fastcall ModSettings::ProcessScriptData(ScriptData *scriptData) {
 // void ModSettings::AddVariable(ModSettingsVariable *variable) {
 //   auto self = ModSettings::GetInstance();
 
-//   std::shared_lock<SharedMutex> _(self->variables_lock);
+//   std::shared_lock _(self->variables_lock);
 //   variable->UpdateValues();
 //   self->variables.EmplaceBack(variable);
 
@@ -283,6 +291,7 @@ void ModSettings::WriteToFile() {
   std::ofstream configFile(configPath);
   if (configFile.is_open()) {
     for (const auto &[modName, mod] : modSettings.mods) {
+      std::unique_lock _(*mod.classes_lock);
       for (const auto &[className, modClass] : mod.classes) {
         configFile << "[" << className.ToString() << "]\n";
         for (const auto &[categoryName, category] : modClass.categories) {
@@ -363,7 +372,7 @@ void ModSettings::RejectChanges() {
 }
 
 void ModSettings::NotifyListeners() {
-  std::shared_lock<SharedMutex> _(listeners_lock);
+  std::shared_lock _(listeners_lock);
   for (auto &[id, listener] : this->listeners) {
     if (listener) {
       auto instance = listener.Lock();
@@ -378,12 +387,14 @@ void ModSettings::NotifyListeners() {
 
 void ModSettings::RegisterListenerToModifications(const Handle<IScriptable> &listener) {
   if (listener) {
+    std::unique_lock _(modSettings.listeners_lock);
     modSettings.listeners[listener->unk28] = listener;
   }
 }
 
 void ModSettings::UnregisterListenerToModifications(const Handle<IScriptable> &listener) {
   if (listener) {
+    std::unique_lock _(modSettings.listeners_lock);
     modSettings.listeners.erase(listener->unk28);
   }
 }

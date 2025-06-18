@@ -75,6 +75,10 @@ struct ModCategory {
 
 struct ModClass {
   // ModClass() = default;
+  // ModClass(CName, CClass*, Mod*);
+
+  // ModClass(const ModClass&) = default;
+  // ModClass &operator=(const ModClass &) = default;
   // ModClass(CName name);
 
   ModVariable& AddVariable(ModVariable &variable, ModCategory &category);
@@ -91,7 +95,9 @@ struct ModClass {
   CName name;
   uint32_t order;
   CClass* type;
+  std::shared_mutex * listeners_lock = new std::shared_mutex();
   std::vector<WeakHandle<ISerializable>> listeners;
+  std::shared_mutex * callbacks_lock = new std::shared_mutex();
   std::vector<std::shared_ptr<runtime_class_callback_t>> callbacks;
   std::map<CName, ModCategory> categories;
   Mod * mod;
@@ -104,6 +110,7 @@ struct Mod {
   ModVariable& AddVariable(ModVariable &variable, ModCategory &category, ModClass &modClass);
 
   CName name;
+  std::shared_mutex * classes_lock = new std::shared_mutex();
   std::map<CName, ModClass> classes;
 };
 /*

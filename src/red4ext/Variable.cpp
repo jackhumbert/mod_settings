@@ -42,6 +42,7 @@ ModVariable& ModClass::AddVariable(ModVariable &variable, ModCategory &category)
 }
 
 ModVariable& Mod::AddVariable(ModVariable &variable, ModCategory &category, ModClass &modClass) {
+  std::unique_lock _(*this->classes_lock);
   if (!this->classes.contains(modClass.name)) {
     modClass.mod = this;
     this->classes[modClass.name] = modClass;
@@ -162,7 +163,11 @@ IModConfigVar * ModVariable::ToConfigVar() const {
 //   this->type = ToClass(name);
 // }
 
-std::mutex listener_mutex;
+  // ModClass::ModClass(CName name, CClass* type, Mod* mod) : ModClass() {
+  //   this->name = name;
+  //   this->type = type;
+  //   this->mod = mod;
+  // }
 
 void ModClass::RegisterListener(const Handle<IScriptable> &listener) {
   // for (auto it = this->listeners.begin(); it != this->listeners.end(); ++it) {
@@ -171,7 +176,7 @@ void ModClass::RegisterListener(const Handle<IScriptable> &listener) {
   //   }
   // }
 
-  std::unique_lock _(listener_mutex);
+  std::unique_lock _(*this->listeners_lock);
 
   if (listener && listener->ref && !listener->ref.Expired()) {
     this->listeners.emplace_back(listener);
@@ -179,7 +184,7 @@ void ModClass::RegisterListener(const Handle<IScriptable> &listener) {
 }
 
 void ModClass::UnregisterListener(const Handle<IScriptable> &listener) {
-  std::unique_lock _(listener_mutex);
+  std::unique_lock _(*this->listeners_lock);
 
   if (listener && listener->ref && !listener->ref.Expired()) {
     auto position = std::find(this->listeners.begin(), this->listeners.end(), WeakHandle<IScriptable>(listener));
@@ -190,6 +195,7 @@ void ModClass::UnregisterListener(const Handle<IScriptable> &listener) {
 
 void ModClass::RegisterCallback(std::shared_ptr<runtime_class_callback_t> &callback) {
   if (callback) {
+    std::unique_lock _(*this->callbacks_lock);
     this->callbacks.emplace_back(callback);
   }
 }
@@ -212,9 +218,8 @@ void ModClass::NotifyListeners() const {
       for (const auto &[variableName, variable] : category.variables) {
         auto valuePtr = variable.runtimeVar->GetValuePtr();
         this->UpdateDefault(variableName, valuePtr);
-        // std::shared_lock<RED4ext::SharedMutex> _(listeners_lock);
 
-        std::unique_lock _(listener_mutex);
+        std::shared_lock _(*this->listeners_lock);
 
         for (auto &listener : this->listeners) {
           if (listener) {
@@ -231,6 +236,8 @@ void ModClass::NotifyListeners() const {
   for (const auto &[categoryName, category] : this->categories) {
     for (const auto &[variableName, variable] : category.variables) {
       auto valuePtr = variable.runtimeVar->GetValuePtr();
+      
+      std::shared_lock _(*this->callbacks_lock);
       for (auto &callback : this->callbacks) {
         if (callback) {
           (*callback)(categoryName, variableName, *(ModVariableType*)valuePtr);
@@ -364,7 +371,7 @@ void ModSettingsVariable::UpdateValues() {
         classType->defaults.values[i]->Fill(propType, valuePtr);
       }
     }
-    // std::shared_lock<RED4ext::SharedMutex> _(listeners_lock);
+    // std::shared_lock _(listeners_lock);
     for (auto &listener : listeners) {
       if (listener) {
         auto prop = classType->propsByName.Get(runtimeVar->name);
@@ -408,14 +415,14 @@ void ModSettingsVariable::RejectChange() {
 }
 
 void ModSettingsVariable::RegisterListener(Handle<RED4ext::IScriptable> handle) {
-  // std::shared_lock<RED4ext::SharedMutex> _(this->listeners_lock);
+  // std::shared_lock _(*this->listeners_lock);
   this->listeners.EmplaceBack(handle);
 }
 
 void ModSettingsVariable::UnregisterListener(Handle<RED4ext::IScriptable> handle) {
   auto i = 0;
   for (const auto &listener : this->listeners) {
-    // std::shared_lock<RED4ext::SharedMutex> _(this->listeners_lock);
+    // std::shared_lock _(*this->listeners_lock);
     if (listener && listener.instance == handle.instance) {
       this->listeners.RemoveAt(i);
       break;
