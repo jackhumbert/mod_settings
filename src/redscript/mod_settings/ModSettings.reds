@@ -61,10 +61,10 @@ public native class ModConfigVarEnum extends ConfigVar {
   public native func GetDisplayValue(index: Int32) -> CName;
 }
 
-// public class TestClassForCount {
+public class ModSettingsTest {
 
-// @runtimeProperty("ModSettings.mod", "Automatic Mod With a really long name, just for fun")
-// public let automaticValue: Float = 0.0;
+@runtimeProperty("ModSettings.mod", "Test mod")
+public let vehicleFlight: CName = n"Cats";
 
 // @runtimeProperty("ModSettings.mod", "Stone Mod")
 // public let stoneValue: Float = 0.0;
@@ -207,4 +207,4 @@ public native class ModConfigVarEnum extends ConfigVar {
 // @runtimeProperty("ModSettings.mod", "Reflect Mod")
 // public let reflectValue: Float = 0.0;
 
-// }
+}

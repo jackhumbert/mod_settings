@@ -229,9 +229,9 @@ template <> inline void __fastcall RuntimeVariable<float>::GetValueToWrite(char 
 }
 
 // not suppported in the UI yet
-// template <> inline void __fastcall RuntimeVariable<CName>::GetValueToWrite(char *value) {
-//   sprintf(value, "%s", valueValidated.ToString());
-// }
+template <> inline void __fastcall RuntimeVariable<CName>::GetValueToWrite(char *value) {
+  sprintf(value, "%s", valueValidated.ToString());
+}
 
 struct RuntimeVariableEnum : public RuntimeVariableList<int32_t> {
   RuntimeVariableEnum(ScriptProperty *prop) : RuntimeVariableList<int32_t>(prop) {

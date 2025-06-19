@@ -94,9 +94,9 @@ bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
       this->runtimeVar = new RuntimeVariableBool(prop);
       return true;
     // not supported in the UI yet
-    // case CName("CName"):
-    //   this->runtimeVar = new RuntimeVariableName(prop);
-    //   return true;
+    case CName("CName"):
+      this->runtimeVar = new RuntimeVariableName(prop);
+      return true;
     case CName("Int32"):
       this->runtimeVar = new RuntimeVariableRange<int32_t>(prop);
       return true;
@@ -123,9 +123,9 @@ bool ModVariable::CreateRuntimeVariable(const Variable &var) {
       this->runtimeVar = new RuntimeVariableBool(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.b);
       return true;
     // not supported in the UI yet
-    // case CName("CName"):
-    //   this->runtimeVar = new RuntimeVariableName(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.cname);
-    //   return true;
+    case CName("CName"):
+      this->runtimeVar = new RuntimeVariableName(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.cname);
+      return true;
     case CName("Int32"):
       this->runtimeVar = new RuntimeVariableRange<int32_t>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.i32, var.stepValue.i32, var.minValue.i32, var.maxValue.i32);
       return true;
