@@ -42,11 +42,11 @@ protected cb func OnRelease(e: ref<inkPointerEvent>) -> Bool {
 @wrapMethod(SettingsSelectorControllerKeyBinding)
 public func Refresh() -> Void {
   if ModSettings.GetInstance().isActive {
-    let varName: ref<ModConfigVarName>;
+    let varName: ref<ModConfigVarKeyBinding>;
     super.Refresh();
-    varName = this.m_SettingsEntry as ModConfigVarName;
+    varName = this.m_SettingsEntry as ModConfigVarKeyBinding;
     // inkTextRef.SetText(this.m_text, SettingsSelectorControllerKeyBinding.PrepareInputTag(varName.GetValue(), varName.GetGroup().GetName(), varName.GetName()));
-    inkTextRef.SetText(this.m_text, SettingsSelectorControllerKeyBinding.PrepareInputTag(varName.GetValue(), n"/key_bindings", varName.GetName()));
+    inkTextRef.SetText(this.m_text, SettingsSelectorControllerKeyBinding.PrepareInputTag(varName.GetValueName(), n"/key_bindings", varName.GetName()));
     this.TriggerActionFeedback();
   } else {
     wrappedMethod();
@@ -55,6 +55,10 @@ public func Refresh() -> Void {
 
 @wrapMethod(SettingsSelectorControllerKeyBinding)
 private final func SetValue(key: CName) -> Void {
-  let value: ref<ModConfigVarName> = this.m_SettingsEntry as ModConfigVarName;
-  value.SetValue(key);
+  if ModSettings.GetInstance().isActive {
+    let value: ref<ModConfigVarKeyBinding> = this.m_SettingsEntry as ModConfigVarKeyBinding;
+    value.SetValueName(key);
+  } else {
+    wrappedMethod(key);
+  }
 }

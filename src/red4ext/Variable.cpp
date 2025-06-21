@@ -18,8 +18,10 @@ const CName ToConfigVar(CName typeName) noexcept {
       return "ModConfigVarInt32";
     case CName("Float"):
       return "ModConfigVarFloat";
-    case CName("CName"):
-      return "ModConfigVarName";
+    case CName("EInputKey"):
+      return "ModConfigVarKeyBinding";
+    // case CName("CName"):
+    //   return "ModConfigVarName";
     default: 
       return "ModConfigVarEnum";
   }
@@ -93,6 +95,9 @@ bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
     case CName("Bool"):
       this->runtimeVar = new RuntimeVariableBool(prop);
       return true;
+    case CName("EInputKey"):
+      this->runtimeVar = new RuntimeVariableKeyBinding(prop);
+      return true;
     // not supported in the UI yet
     case CName("CName"):
       this->runtimeVar = new RuntimeVariableName(prop);
@@ -118,9 +123,16 @@ bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
 }
 
 bool ModVariable::CreateRuntimeVariable(const Variable &var) {
+  // auto rtti = CRTTISystem::Get();
+  // CEnum * keyCls = rtti->GetEnumByScriptName("EInputKey");
+  // CString keyString;
   switch (var.type) {
     case CName("Bool"):
       this->runtimeVar = new RuntimeVariableBool(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.b);
+      return true;
+    case CName("EInputKey"):
+      // keyCls->ToString((ScriptInstance)var.defaultValue.u32, keyString);
+      this->runtimeVar = new RuntimeVariableKeyBinding(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, (EInputKey)var.defaultValue.u32); //CNamePool::Add(keyString));
       return true;
     // not supported in the UI yet
     case CName("CName"):

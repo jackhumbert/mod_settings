@@ -10,21 +10,21 @@ namespace ModSettings {
 
 template <typename T> struct RuntimeVariable : public IRuntimeVariable {
   RuntimeVariable(ScriptProperty *prop) : IRuntimeVariable(prop) {
-    T value, defaultValue;
-    prop->ReadDefaultValue(&defaultValue);
+    T _value, _defaultValue;
+    prop->ReadDefaultValue(&_defaultValue);
     UpdateDefault(&defaultValue);
-    value = defaultValue;
-    ModSettings::ReadValueFromFile(prop, &value);
-    UpdateAll(&value);
+    _value = _defaultValue;
+    ModSettings::ReadValueFromFile(prop, &_value);
+    UpdateAll(&_value);
   }
 
   RuntimeVariable(RED4ext::CName className, RED4ext::CName propertyName, RED4ext::CName displayName,
-                  RED4ext::CName description, uint32_t order, T defaultValue)
+                  RED4ext::CName description, uint32_t order, T _defaultValue)
       : IRuntimeVariable(className, propertyName, displayName, description, order) {
-    UpdateDefault(&defaultValue);
-    T value = defaultValue;
-    ModSettings::ReadValueFromFile(className, propertyName, &value);
-    UpdateAll(&value);
+    UpdateDefault(&_defaultValue);
+    T _value = _defaultValue;
+    ModSettings::ReadValueFromFile(className, propertyName, &_value);
+    UpdateAll(&_value);
   }
 
   // overrides
@@ -177,6 +177,17 @@ struct RuntimeVariableBool : RuntimeVariable<bool> {
   }
 };
 
+struct RuntimeVariableKeyBinding : RuntimeVariable<EInputKey> {
+  inline RuntimeVariableKeyBinding(ScriptProperty *prop) : RuntimeVariable<EInputKey>(prop) {
+    this->type = RED4ext::user::EConfigVarType::Name;
+  }
+  inline RuntimeVariableKeyBinding(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+                             EInputKey defaultValue)
+      : RuntimeVariable<EInputKey>(className, propertyName, displayName, description, order, defaultValue) {
+    this->type = RED4ext::user::EConfigVarType::Name;
+  }
+};
+
 struct RuntimeVariableName : RuntimeVariable<CName> {
   inline RuntimeVariableName(ScriptProperty *prop) : RuntimeVariable<CName>(prop) {
     this->type = RED4ext::user::EConfigVarType::Name;
@@ -226,6 +237,10 @@ template <> inline void __fastcall RuntimeVariable<uint32_t>::GetValueToWrite(ch
 
 template <> inline void __fastcall RuntimeVariable<float>::GetValueToWrite(char *value) {
   sprintf(value, "%f", valueValidated);
+}
+
+template <> inline void __fastcall RuntimeVariable<EInputKey>::GetValueToWrite(char *value) {
+  sprintf(value, "%u", valueValidated);
 }
 
 // not suppported in the UI yet

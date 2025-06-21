@@ -4,6 +4,8 @@
 #include "Variable.hpp"
 #include <RED4ext/Common.hpp>
 
+struct Manager;
+
 namespace ModSettings {
 
 extern const Sdk *sdk;
@@ -54,6 +56,8 @@ public:
   static DynArray<CName> GetMods();
   static DynArray<CName> GetCategories(CName modName);
   static DynArray<Handle<IScriptable>> GetVars(CName modName, CName categoryName);
+  static void AddOverrides(Manager* manager);
+
 
   void NotifyListeners();
 

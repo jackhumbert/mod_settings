@@ -4,6 +4,7 @@
 #include <RED4ext/InstanceType.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
+#include <RED4ext/Scripting/Natives/Generated/EInputKey.hpp>
 
 namespace ModSettings {
 
@@ -158,6 +159,17 @@ struct ScriptProperty : ScriptDefinition {
       RED4ext::CRTTISystem::Get()->GetType("Int32")->FromString(pointer, buffer);
     }
   }
+
+  // not sure this is needed
+  // template <> void ReadProperty<RED4ext::EInputKey>(const RED4ext::CName &name, int32_t *pointer) const {
+  //   auto str = this->runtimeProperties.Get(name);
+  //   if (str && pointer) {
+  //     RED4ext::RawBuffer buffer;
+  //     buffer.data = (void*)str->c_str();
+  //     buffer.size = str->length;
+  //     RED4ext::CRTTISystem::Get()->GetType("EInputKey")->FromString(pointer, buffer);
+  //   }
+  // }
 
   template <> void ReadProperty<float>(const RED4ext::CName &name, float *pointer) const {
     auto str = this->runtimeProperties.Get(name);

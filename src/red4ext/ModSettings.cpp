@@ -17,7 +17,7 @@
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarListInt.hpp>
 #include <RedLib.hpp>
 #include <iostream>
-
+#include <Hooks/ApplyOverrides.hpp>
 
 namespace ModSettings {
 
@@ -285,6 +285,21 @@ DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName category
     }
   }
   return array;
+}
+
+void ModSettings::AddOverrides(Manager* manager) {
+  for (const auto &[modName, mod] : modSettings.mods) {
+    std::unique_lock _(*mod->classes_lock);
+    for (const auto &[className, modClass] : mod->classes) {
+      for (const auto &[categoryName, category] : modClass->categories) {
+        for (const auto &[variableName, variable] : category->variables) {
+          if (variable->type->GetName() == "EInputKey") {
+            manager->Override("Context", variable->name.ToString(), *(uint16_t*)variable->runtimeVar->GetValuePtr());
+          }
+        }
+      }
+    }
+  }
 }
 
 void ModSettings::WriteToFile() {

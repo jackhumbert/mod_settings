@@ -1,0 +1,33 @@
+{
+    "env": {
+        "myIncludePath": [
+            "${workspaceFolder}/include"
+        ]
+    },
+    "configurations": [
+        {
+            "name": "Win32",
+            "compilerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\cl.exe",
+            "intelliSenseMode": "windows-msvc-x64",
+            "compileCommands": [
+                "build/compile_commands.json"
+            ],
+            "includePath": [
+                "${myIncludePath}",
+                "${workspaceFolder}/include"
+            ],
+            "defines": [
+                "_WINDOWS"
+            ],
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "browse": {
+                "path": [
+                    "${myIncludePath}",
+                    "${workspaceFolder}"
+                ]
+            }
+        }
+    ],
+    "version": 4
+}

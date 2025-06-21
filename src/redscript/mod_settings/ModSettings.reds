@@ -31,6 +31,24 @@ public native class ModConfigVarName extends ConfigVar {
   public native func GetDefaultValue() -> CName;
 }
 
+public native class ModConfigVarKeyBinding extends ConfigVar {
+  public native func SetValue(value: EInputKey) -> Void;
+  public native func GetValue() -> EInputKey;
+  public native func GetDefaultValue() -> EInputKey;
+
+  public func SetValueName(value: CName) -> Void {
+    this.SetValue(IntEnum<EInputKey>(EnumValueFromName(n"EInputKey", value)));
+  } 
+
+  public func GetValueName() -> CName {
+    return EnumValueToName(n"EInputKey", Cast<Int64>(EnumInt(this.GetValue())));
+  } 
+
+  public func GetDefaultValueName() -> CName {
+    return EnumValueToName(n"EInputKey", Cast<Int64>(EnumInt(this.GetDefaultValue())));
+  } 
+}
+
 public native class ModConfigVarFloat extends ConfigVar {
   public native func SetValue(value: Float) -> Void;
   public native func GetValue() -> Float;
@@ -64,7 +82,8 @@ public native class ModConfigVarEnum extends ConfigVar {
 public class ModSettingsTest {
 
 @runtimeProperty("ModSettings.mod", "Test mod")
-public let vehicleFlight: CName = n"Cats";
+@runtimeProperty("ModSettings.context", "VehicleFlightToggle")
+public let vehicleFlight: EInputKey = EInputKey.IK_L;
 
 // @runtimeProperty("ModSettings.mod", "Stone Mod")
 // public let stoneValue: Float = 0.0;
