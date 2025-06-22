@@ -82,8 +82,10 @@ public native class ModConfigVarEnum extends ConfigVar {
 public class ModSettingsTest {
 
 @runtimeProperty("ModSettings.mod", "Test mod")
-@runtimeProperty("ModSettings.context", "VehicleFlightToggle")
 public let vehicleFlight: EInputKey = EInputKey.IK_L;
+
+@runtimeProperty("ModSettings.mod", "Test mod")
+public let not_found: EInputKey = EInputKey.IK_A;
 
 // @runtimeProperty("ModSettings.mod", "Stone Mod")
 // public let stoneValue: Float = 0.0;

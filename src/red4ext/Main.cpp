@@ -11,6 +11,7 @@
 #include <RedLib.hpp>
 #include <ArchiveXL.hpp>
 #include <Registrar.hpp>
+#include <CNames.hpp>
 
 namespace ModSettings {
 const RED4ext::Sdk *sdk;

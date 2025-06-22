@@ -3,9 +3,31 @@
 #include <RED4ext/HashMap.hpp>
 #include <ModSettings.hpp>
 
-void Manager::Override(RED4ext::CName contextName, Overridable overridableUI, uint16_t inputKey) {
-  static RED4ext::UniRelocFunc<decltype(&Manager::Override)> call(2948927698);
-  call(this, contextName, overridableUI, inputKey);
+UserMapping::RawMappingCollection * UserMapping::GetMappingCollection(CName mapName) {
+  static UniRelocFunc<decltype(&UserMapping::GetMappingCollection)> call(3702071356);
+  return call(this, mapName);
+}
+
+bool Manager::Override(
+    // CName contextName, 
+    Overridable overridableUI, 
+    uint16_t inputKey
+) {
+  // static UniRelocFunc<decltype(&Manager::Override)> call(2948927698);
+  // call(this, contextName, overridableUI, inputKey);
+  bool status = false;
+  for (auto & action : this->contextManager->actions.values) {
+    for (auto & mapName : action->data.mapNames) {
+      auto mappingCollection = this->contextManager->userMapping->GetMappingCollection(mapName);
+      for (auto & mapping : mappingCollection->mappings) {
+        if (mapping.overridableUI == overridableUI && mapping.key16 != inputKey) {
+          mapping.key16 = inputKey;
+          status = true;
+        }
+      }
+    }
+  }
+  return status;
 }
 
 // enum EMappingType : uint8_t {

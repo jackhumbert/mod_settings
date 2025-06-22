@@ -27,6 +27,8 @@ const std::filesystem::path configPath = Utils::GetRootDir() / "red4ext" / "plug
 
 ModSettings modSettings = ModSettings();
 
+Manager * gameinputManager = nullptr;
+
 ModSettings::ModSettings() {}
 
 Handle<ModSettings> ModSettings::GetInstance() { return Handle<ModSettings>(&modSettings); }
@@ -288,13 +290,18 @@ DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName category
 }
 
 void ModSettings::AddOverrides(Manager* manager) {
+  gameinputManager = manager;
   for (const auto &[modName, mod] : modSettings.mods) {
     std::unique_lock _(*mod->classes_lock);
     for (const auto &[className, modClass] : mod->classes) {
       for (const auto &[categoryName, category] : modClass->categories) {
         for (const auto &[variableName, variable] : category->variables) {
           if (variable->type->GetName() == "EInputKey") {
-            manager->Override("Context", variable->name.ToString(), *(uint16_t*)variable->runtimeVar->GetValuePtr());
+            auto name = variable->name.ToString();
+            auto key = *(EInputKey*)variable->runtimeVar->GetValuePtr();
+            if (!manager->Override(name, (uint16_t)key)) {
+              sdk->logger->WarnF(pluginHandle, "%s is not specified as an overridableUI via input config (%s, %s)", name, modName.ToString(), className.ToString());
+            }
           }
         }
       }

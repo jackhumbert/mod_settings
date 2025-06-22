@@ -5,7 +5,7 @@ protected let m_listeningForModSettingsInput: Bool;
 protected cb func OnKeyBindingEvent(e: ref<KeyBindingEvent>) -> Bool {
   if ModSettings.GetInstance().isActive {
     if this.m_listeningForModSettingsInput {
-      LogChannel(n"DEBUG", NameToString(e.keyName));
+      // LogChannel(n"DEBUG", NameToString(e.keyName));
       if !this.IsCancel(e.keyName) {
         this.SetValue(e.keyName);
       } else {
@@ -23,7 +23,7 @@ protected cb func OnKeyBindingEvent(e: ref<KeyBindingEvent>) -> Bool {
 @wrapMethod(SettingsSelectorControllerKeyBinding)
 protected cb func OnRelease(e: ref<inkPointerEvent>) -> Bool {
   if ModSettings.GetInstance().isActive {
-    LogChannel(n"DEBUG", NameToString(e.GetActionName().ToName()));
+    // LogChannel(n"DEBUG", NameToString(e.GetActionName().ToName()));
     if e.IsAction(n"click") {
       inkTextRef.SetLocalizedText(this.m_text, n"UI-Settings-ButtonMappings-Misc-KeyBind");
       inkWidgetRef.SetOpacity(this.m_editView, this.m_editOpacity);
