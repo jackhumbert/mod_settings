@@ -19,17 +19,6 @@ struct Overridable {
   uint32_t m_hash;
 };
 
-// struct OverridableMapping {
-//   uint32_t overridableUI;
-//   uint32_t unk04_unk28;
-//   uint64_t name;
-//   uint64_t unk10;
-//   EInputKey inputKey;
-//   float val;
-//   float thresholdPress;
-//   float thresholdRelease;
-// };
-
 struct UserMapping {
   struct Mapping {
     uint8_t type;
@@ -124,3 +113,5 @@ struct Manager {
     DynArray<void*> unk40;
     uint64_t listener_id;
 };
+
+void ApplyOverrides(Manager * manager);

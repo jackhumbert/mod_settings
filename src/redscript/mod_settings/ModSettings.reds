@@ -79,13 +79,13 @@ public native class ModConfigVarEnum extends ConfigVar {
   public native func GetDisplayValue(index: Int32) -> CName;
 }
 
-public class ModSettingsTest {
+// public class ModSettingsTest {
 
-@runtimeProperty("ModSettings.mod", "Test mod")
-public let vehicleFlight: EInputKey = EInputKey.IK_L;
+// @runtimeProperty("ModSettings.mod", "Test mod")
+// public let vehicleFlight: EInputKey = EInputKey.IK_L;
 
-@runtimeProperty("ModSettings.mod", "Test mod")
-public let not_found: EInputKey = EInputKey.IK_A;
+// @runtimeProperty("ModSettings.mod", "Test mod")
+// public let not_found: EInputKey = EInputKey.IK_A;
 
 // @runtimeProperty("ModSettings.mod", "Stone Mod")
 // public let stoneValue: Float = 0.0;
@@ -228,4 +228,4 @@ public let not_found: EInputKey = EInputKey.IK_A;
 // @runtimeProperty("ModSettings.mod", "Reflect Mod")
 // public let reflectValue: Float = 0.0;
 
-}
+// }

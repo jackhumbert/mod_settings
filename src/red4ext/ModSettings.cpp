@@ -300,7 +300,7 @@ void ModSettings::AddOverrides(Manager* manager) {
             auto name = variable->name.ToString();
             auto key = *(EInputKey*)variable->runtimeVar->GetValuePtr();
             if (!manager->Override(name, (uint16_t)key)) {
-              sdk->logger->WarnF(pluginHandle, "%s is not specified as an overridableUI via input config (%s, %s)", name, modName.ToString(), className.ToString());
+              sdk->logger->WarnF(pluginHandle, "overridableUI \"%s\" not found (%s, %s)", name, modName.ToString(), className.ToString());
             }
           }
         }
@@ -362,6 +362,8 @@ void ModSettings::AcceptChanges() {
   ModSettings::WriteToFile();
   modSettings.changeMade = false;
   modSettings.NotifyListeners();
+  if (gameinputManager != nullptr)
+    ApplyOverrides(gameinputManager);
 }
 
 void ModSettings::RestoreDefaults(CName modName) {
