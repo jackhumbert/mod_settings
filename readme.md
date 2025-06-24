@@ -14,6 +14,45 @@ If you want to install the mod outside of a release (not recommended), the `buil
 
 Configuration is done through redscript classes. [See one example here](https://github.com/jackhumbert/in_world_navigation/blob/main/src/redscript/in_world_navigation/InWorldNavigation.reds). Variable & class names are limited to 1024 characters.
 
+## Keybinding Configuration
+
+Specify an .xml file to be processed by Input Loader like, defining a `overridableUI` attribute in a button inside of a mapping:
+
+```xml
+<?xml version="1.0"?>
+<bindings>
+    <context name="VehicleDriveBase" append="true">
+        <action name="TestModAction" map="TestModMap"/>
+    </context>
+    <mapping name="TestModMap" type="Button" >
+        <button id="IK_A" overridableUI="MyModTestButton" />
+    </mapping>
+</bindings>
+```
+
+On the redscript side, define a variable using the `overridableUI` value as the name in a class (any class) for your mod like this:
+
+```swift
+@runtimeProperty("ModSettings.mod", "Test mod")
+public let MyModTestButton: EInputKey = EInputKey.IK_A;
+```
+
+You can then listen for your action when the context you specified in the .xml is active:
+
+```swift
+player.RegisterInputListener(this, n"TestModAction");
+```
+
+And respond to it with a callback: 
+
+```swift
+protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool { 
+  if Equals(ListenerAction.GetName(action), n"TestModAction") {
+    ...
+  }
+}
+```
+
 ## Advanced Configuration for Enums
 
 ```swift
