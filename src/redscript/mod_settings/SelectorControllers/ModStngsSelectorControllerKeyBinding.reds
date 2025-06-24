@@ -54,7 +54,7 @@ public func Refresh() -> Void {
     let varName = this.m_SettingsEntry as ModConfigVarKeyBinding;
     if IsDefined(varName) {
       // inkTextRef.SetText(this.m_text, SettingsSelectorControllerKeyBinding.PrepareInputTag(varName.GetValue(), varName.GetGroup().GetName(), varName.GetName()));
-      let key = EnumInt(varName.GetValue());
+      // let key = EnumInt(varName.GetValue());
       // if ((key - 136) <= 19) {
         inkTextRef.SetText(this.m_text, "<Input key=\""+ NameToString(varName.GetValueName()) +"\"></>");
       // } else {

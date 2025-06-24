@@ -12,7 +12,7 @@ template <typename T> struct RuntimeVariable : public IRuntimeVariable {
   RuntimeVariable(ScriptProperty *prop) : IRuntimeVariable(prop) {
     T _value, _defaultValue;
     prop->ReadDefaultValue(&_defaultValue);
-    UpdateDefault(&defaultValue);
+    UpdateDefault(&_defaultValue);
     _value = _defaultValue;
     ModSettings::ReadValueFromFile(prop, &_value);
     UpdateAll(&_value);
