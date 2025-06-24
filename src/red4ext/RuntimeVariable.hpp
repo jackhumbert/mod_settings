@@ -96,12 +96,18 @@ template <typename T> struct RuntimeVariable : public IRuntimeVariable {
 
   virtual inline void __fastcall UpdateValue(void *value) override {
     valueInput = *(T *)value;
+
     auto ms = ModSettings::GetInstance();
-    ms->changeMade = true;
-    ms->NotifyListeners();
+    ms->changeMade |= valueInput != valueValidated;
+    ms->NotifyListenersChanged(this->groupPath, this->name);
   }
 
-  virtual inline void __fastcall ApplyChange() override { valueValidated = valueInput; }
+  virtual inline void __fastcall ApplyChange() override { 
+    valueValidated = valueInput;
+
+    auto ms = ModSettings::GetInstance();
+    ms->NotifyListenersValidated(this->groupPath, this->name);
+  }
 
   virtual inline void __fastcall RevertChange() override { valueInput = valueValidated; }
 

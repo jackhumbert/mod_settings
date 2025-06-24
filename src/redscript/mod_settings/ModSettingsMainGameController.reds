@@ -23,8 +23,8 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   private let m_data: array<SettingsCategory>;
   private let m_menusList: array<CName>;
   private let m_eventsList: array<CName>;
-  private let m_settingsListener: ref<ModSettingsVarListener>;
-  private let m_settingsNotificationListener: ref<ModSettingsNotificationListener>;
+  // private let m_settingsListener: ref<ModSettingsVarListener>;
+  // private let m_settingsNotificationListener: ref<ModSettingsNotificationListener>;
   private let m_settings: ref<UserSettings>;
   private let m_isPreGame: Bool;
   private let m_benchmarkNotificationToken: ref<inkGameNotificationToken>;
@@ -142,11 +142,11 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     }
   }
 
-  public final func OnVarModified(groupPath: CName, varName: CName, varType: ConfigVarType, reason: ConfigChangeReason) -> Void {
+  public func OnVarChanged(groupPath: CName, varName: CName) -> Void {
     let i: Int32;
     let item: ref<SettingsSelectorController>;
     let size: Int32;
-    // Log("[VAR] modified groupPath: " + NameToString(groupPath) + " varName: " + NameToString(varName));
+    // LogChannel(n"DEBUG", "[VAR] modified groupPath: " + NameToString(groupPath) + " varName: " + NameToString(varName));
     size = ArraySize(this.m_settingsElements);
     this.CheckButtons();
     i = 0;
@@ -497,7 +497,14 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     let description: String;
     let params: ref<inkTextParams>;
     let updatePolicy: ConfigVarUpdatePolicy;
-    let currentItem: wref<SettingsSelectorController> = evt.GetCurrentTarget().GetController() as SettingsSelectorController;
+    if !IsDefined(evt) {
+      return false;
+    }
+    let target = evt.GetCurrentTarget();
+    if !IsDefined(target) {
+      return false;
+    }
+    let currentItem = target.GetController() as SettingsSelectorController;
     if IsDefined(currentItem) {
       descriptionName = currentItem.GetDescription();
       description = GetLocalizedTextByKey(descriptionName);
@@ -575,7 +582,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
             currentItem.Setup(currentSettingsItem, this.m_isPreGame);
             currentItem.RegisterToCallback(n"OnHoverOver", this, n"OnSettingHoverOver");
             currentItem.RegisterToCallback(n"OnHoverOut", this, n"OnSettingHoverOut");
-            currentItem.Refresh();
+            // currentItem.Refresh();
             ArrayPush(this.m_settingsElements, currentItem);
           };
         };
@@ -591,6 +598,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     let settingsSubCategory: SettingsCategory;
     ArrayClear(this.m_settingsElements);
     inkCompoundRef.RemoveAllChildren(this.m_settingsOptionsList);
+    inkTextRef.SetText(this.m_descriptionText, "");
     inkWidgetRef.SetVisible(this.m_descriptionText, false);
     if idx < 0 {
       idx = this.m_selectorCtrl.GetToggledIndex();

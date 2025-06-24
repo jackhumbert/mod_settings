@@ -60,6 +60,8 @@ public:
 
 
   void NotifyListeners();
+  void NotifyListenersChanged(CName, CName);
+  void NotifyListenersValidated(CName, CName);
 
   bool changeMade = false;
 

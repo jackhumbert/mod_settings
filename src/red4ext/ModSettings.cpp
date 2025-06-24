@@ -278,7 +278,9 @@ DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName category
         }
       }
     }
-    std::sort(variables.begin(), variables.end());
+    std::sort(variables.begin(), variables.end(), [=](ModVariable*& a, ModVariable*& b) {
+      return a->GetOrder() < b->GetOrder();
+    });
     for (auto const variable : variables) {
       auto configVar = variable->ToConfigVar();
       if (configVar) {
@@ -288,6 +290,8 @@ DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName category
   }
   return array;
 }
+
+uint32_t applyOverridesCallNumber = 0;
 
 void ModSettings::AddOverrides(Manager* manager) {
   gameinputManager = manager;
@@ -299,7 +303,7 @@ void ModSettings::AddOverrides(Manager* manager) {
           if (variable->type->GetName() == "EInputKey") {
             auto name = variable->name.ToString();
             auto key = *(EInputKey*)variable->runtimeVar->GetValuePtr();
-            if (!manager->Override(name, (uint16_t)key)) {
+            if (manager->Override(name, (uint16_t)key, applyOverridesCallNumber) == Manager::OverrideStatus::NotFound) {
               sdk->logger->WarnF(pluginHandle, "overridableUI \"%s\" not found (%s, %s)", name, modName.ToString(), className.ToString());
             }
           }
@@ -307,6 +311,7 @@ void ModSettings::AddOverrides(Manager* manager) {
       }
     }
   }
+  applyOverridesCallNumber++;
 }
 
 void ModSettings::WriteToFile() {
@@ -360,10 +365,10 @@ void ModSettings::ReadFromFile() {
 
 void ModSettings::AcceptChanges() {
   ModSettings::WriteToFile();
-  modSettings.changeMade = false;
-  modSettings.NotifyListeners();
   if (gameinputManager != nullptr)
     ApplyOverrides(gameinputManager);
+  modSettings.changeMade = false;
+  modSettings.NotifyListeners();
 }
 
 void ModSettings::RestoreDefaults(CName modName) {
@@ -403,6 +408,48 @@ void ModSettings::NotifyListeners() {
       auto func = instance->GetType()->GetFunction("OnModSettingsChange");
       if (func) 
         RED4ext::ExecuteFunction(instance, func, nullptr);
+    } else {
+      // remove?
+    }
+  }
+}
+
+void ModSettings::NotifyListenersChanged(CName aGroupPath, CName aVarName) {
+  std::shared_lock _(listeners_lock);
+  for (auto &[id, listener] : this->listeners) {
+    if (listener) {
+      auto instance = listener.Lock();
+      auto func = instance->GetType()->GetFunction("OnVarChanged");
+    
+      if (func) {
+        RED4ext::StackArgs_t args;
+        RED4ext::CName groupPath = aGroupPath;
+        RED4ext::CName varName = aVarName;
+        args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &groupPath);
+        args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &varName);
+        RED4ext::ExecuteFunction(instance, func, nullptr, args);
+      }
+    } else {
+      // remove?
+    }
+  }
+}
+
+void ModSettings::NotifyListenersValidated(CName aGroupPath, CName aVarName) {
+  std::shared_lock _(listeners_lock);
+  for (auto &[id, listener] : this->listeners) {
+    if (listener) {
+      auto instance = listener.Lock();
+      auto func = instance->GetType()->GetFunction("OnVarValidated");
+    
+      if (func) {
+        RED4ext::StackArgs_t args;
+        RED4ext::CName groupPath = aGroupPath;
+        RED4ext::CName varName = aVarName;
+        args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &groupPath);
+        args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &varName);
+        RED4ext::ExecuteFunction(instance, func, nullptr, args);
+      }
     } else {
       // remove?
     }

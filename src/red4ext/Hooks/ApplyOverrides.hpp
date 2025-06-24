@@ -34,6 +34,7 @@ struct UserMapping {
     uint32_t unk28;
     uint32_t unk2C;
   };
+  RED4EXT_ASSERT_SIZE(Mapping, 0x30);
 
   struct MappingCollection {
     DynArray<Mapping> actions;
@@ -41,10 +42,11 @@ struct UserMapping {
 
   struct RawMappingCollection {
     DynArray<Mapping> mappings;
-    uint8_t has_update;
+    uint8_t needs_update;
   };
 
   RawMappingCollection * GetMappingCollection(CName);
+  void ClearRuntimeDataOnRawMappings();
 
 };
 
@@ -90,8 +92,18 @@ struct ContextManager {
   DynArray<void*> unk120;
 };
 
+struct OverridableMapping {
+
+};
+
 struct Manager {
-  bool Override(
+  enum OverrideStatus {
+    NotFound = 0,
+    NotReplaced = 1,
+    Replaced = 2
+  };
+
+  OverrideStatus Override(
     // set in XML with <context name="[contextName]">
     // uses separate "Settings*" context names, specifically for key binding in settings
     // goes into userSettings group name as "/key_bindings/[contextName]"
@@ -100,18 +112,27 @@ struct Manager {
     // needs to exist in [contextName], but not tied to it
     // (cannot override keys differently in different contexts)
     Overridable overridableUI, 
-    uint16_t inputKey);
+    uint16_t inputKey,
+    uint32_t callNumber);
     
-    void * __vftable;
-    void *managerBackend;
-    ContextManager *contextManager;
-    uint64_t unk18;
-    uint64_t contextMutex;
-    uint32_t unk28;
-    uint32_t lastOverrideStaus;
-    DynArray<void*> validators;
-    DynArray<void*> unk40;
-    uint64_t listener_id;
+  // bool CheckOverrideConflicts(
+  //   CName, 
+  //   unsigned short, 
+  //   DynArray<OverridableMapping> &) const;
+
+
+  void * __vftable;
+  void *managerBackend;
+  ContextManager *contextManager;
+  uint32_t unk18;
+  uint8_t unk1C;
+  uint8_t overrideSet;
+  uint64_t contextMutex;
+  uint32_t unk28;
+  int32_t lastOverrideStaus;
+  DynArray<void*> validators;
+  DynArray<void*> unk40;
+  uint64_t listener_id;
 };
 
 void ApplyOverrides(Manager * manager);
