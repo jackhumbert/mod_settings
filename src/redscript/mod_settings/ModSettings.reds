@@ -6,12 +6,19 @@ public native class ModSettings extends IScriptable {
     public native static func AcceptChanges() -> Void;
     public native static func RejectChanges() -> Void;
     public native static func RestoreDefaults(mod: CName) -> Void;
+
+    // update class variables when changes are made
     public native static func RegisterListenerToClass(self: ref<IScriptable>) -> Void;
     public native static func UnregisterListenerToClass(self: ref<IScriptable>) -> Void;
+
+    // listen for events through callbacks
+    // OnModVariableChangeRequested(groupPath: CName, varName: CName)
+    // OnModVariableChangeAccepted(groupPath: CName, varName: CName)
+    // OnModSettingsChange()
     public native static func RegisterListenerToModifications(self: ref<IScriptable>) -> Void;
     public native static func UnregisterListenerToModifications(self: ref<IScriptable>) -> Void;
 
-    public native let changeMade: Bool;
+    public native let changesRequested: Bool;
     
     public let isActive: Bool;
 }

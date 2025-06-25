@@ -133,7 +133,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   public final func CheckButtons() -> Void {
     // if !this.m_isDlcSettings && (this.m_settings.NeedsConfirmation() || this.m_settings.NeedsRestartToApply() || this.m_settings.NeedsLoadLastCheckpoint()) {
     let ms = ModSettings.GetInstance();
-    if ms.changeMade {
+    if ms.changesRequested {
       this.EnableApplyButton();
       this.EnableResetButton();
     } else {
@@ -142,7 +142,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     }
   }
 
-  public func OnVarChanged(groupPath: CName, varName: CName) -> Void {
+  public func OnModVariableChangeRequested(groupPath: CName, varName: CName) -> Void {
     let i: Int32;
     let item: ref<SettingsSelectorController>;
     let size: Int32;

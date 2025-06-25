@@ -16,8 +16,8 @@ struct IModConfigVar : RED4ext::IScriptable {
 
 template <typename T> struct ModConfigVar : IModConfigVar {
 public:
-  T GetValue() { return this->runtimeVar->valueInput; }
-  void SetValue(T value) { this->runtimeVar->UpdateValue(&value); }
+  T GetValue() { return this->runtimeVar->requestedValue; }
+  void SetValue(T value) { this->runtimeVar->SetRequestedValue(&value); }
   T GetDefaultValue() { return this->runtimeVar->defaultValue; }
   
   inline virtual void SetRuntime(ModSettings::IRuntimeVariable * runtime) override {
@@ -31,8 +31,8 @@ public:
 };
 
 template <typename T> struct ModConfigVarRange : IModConfigVar {
-  T GetValue() { return this->runtimeVar->valueInput; }
-  void SetValue(T value) { this->runtimeVar->UpdateValue(&value); }
+  T GetValue() { return this->runtimeVar->requestedValue; }
+  void SetValue(T value) { this->runtimeVar->SetRequestedValue(&value); }
   T GetDefaultValue() { return this->runtimeVar->defaultValue; }
   T GetMinValue() { return this->runtimeVar->minValue; }
   T GetMaxValue() { return this->runtimeVar->maxValue; }
@@ -99,7 +99,7 @@ struct ModConfigVarEnum : IModConfigVar {
     }
   }
 
-  int32_t GetValue() { return GetValueFor(reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->valueInput); }
+  int32_t GetValue() { return GetValueFor(reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->requestedValue); }
 
   int32_t GetDefaultValue() {
     return GetValueFor(reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->defaultValue);
@@ -126,11 +126,11 @@ struct ModConfigVarEnum : IModConfigVar {
     return index;
   }
 
-  int32_t GetIndex() { return reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->valueInput; }
+  int32_t GetIndex() { return reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->requestedValue; }
 
   int32_t GetDefaultIndex() { return reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->defaultValue; }
 
-  void SetIndex(int32_t index) { reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->UpdateValue(&index); }
+  void SetIndex(int32_t index) { reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar)->SetRequestedValue(&index); }
 
   RED4ext::CName GetDisplayValue(int32_t index) {
     auto varEnum = reinterpret_cast<ModSettings::RuntimeVariableEnum *>(this->runtimeVar);

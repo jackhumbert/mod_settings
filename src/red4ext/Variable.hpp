@@ -85,7 +85,7 @@ struct ModClass {
   void RegisterListener(const Handle<IScriptable> &listener);
   void UnregisterListener(const Handle<IScriptable> &listener);
   void RegisterCallback(std::shared_ptr<runtime_class_callback_t> &callback);
-  void UpdateDefault(CName propertyName, ScriptInstance* value) const;
+  void SetDefaultValue(CName propertyName, ScriptInstance* value) const;
   void NotifyListeners() const;
 
   constexpr operator CName() const noexcept {
@@ -119,7 +119,7 @@ public:
   ModSettingsVariable();
   ModSettingsVariable(ScriptProperty* prop, const CName scriptClass);
   
-  void UpdateValues();
+  void SetRequestedValues();
   Handle<user::SettingsVar> CreateConfigVar();
   void Write(std::ofstream& stream);
 

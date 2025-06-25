@@ -59,7 +59,7 @@ bool ModVariable::RestoreDefault() {
 
 void ModVariable::RejectChange() {
   if (this->runtimeVar->HasChange()) {
-    this->runtimeVar->RevertChange();
+    this->runtimeVar->RejectChange();
   }
 }
 
@@ -72,17 +72,17 @@ bool ModVariable::IsEnabled() const {
 
 bool ModVariable::IsInputEqualToString(const CString& other) const {
   CString str;
-  this->type->ToString(this->runtimeVar->GetInputValue(), str);
+  this->type->ToString(this->runtimeVar->GetRequestedValue(), str);
   return str == other;
 }
 
 void ModVariable::Write(std::ofstream& stream) const {
-  this->runtimeVar->ApplyChange();
+  this->runtimeVar->AcceptChange();
   if (this->runtimeVar->WasModifiedSinceLastSave()) {
-    this->runtimeVar->ChangeWasWritten();
+    this->runtimeVar->MarkAsSaved();
   }
   auto str = RED4ext::CString(new RED4ext::Memory::DefaultAllocator());
-  this->type->ToString(this->runtimeVar->GetValuePtr(), str);
+  this->type->ToString(this->runtimeVar->GetAcceptedValue(), str);
 
   stream << this->runtimeVar->name.ToString() << " = " << str.c_str() << "\n";
 }
@@ -128,28 +128,28 @@ bool ModVariable::CreateRuntimeVariable(const Variable &var) {
   // CString keyString;
   switch (var.type) {
     case CName("Bool"):
-      this->runtimeVar = new RuntimeVariableBool(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.b);
+      this->runtimeVar = new RuntimeVariableBool(var.modName, var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.b);
       return true;
     case CName("EInputKey"):
       // keyCls->ToString((ScriptInstance)var.defaultValue.u32, keyString);
-      this->runtimeVar = new RuntimeVariableKeyBinding(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, (EInputKey)var.defaultValue.u32); //CNamePool::Add(keyString));
+      this->runtimeVar = new RuntimeVariableKeyBinding(var.modName, var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, (EInputKey)var.defaultValue.u32); //CNamePool::Add(keyString));
       return true;
     // not supported in the UI yet
     case CName("CName"):
-      this->runtimeVar = new RuntimeVariableName(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.cname);
+      this->runtimeVar = new RuntimeVariableName(var.modName, var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.cname);
       return true;
     case CName("Int32"):
-      this->runtimeVar = new RuntimeVariableRange<int32_t>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.i32, var.stepValue.i32, var.minValue.i32, var.maxValue.i32);
+      this->runtimeVar = new RuntimeVariableRange<int32_t>(var.modName, var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.i32, var.stepValue.i32, var.minValue.i32, var.maxValue.i32);
       return true;
     case CName("Uint32"):
-      this->runtimeVar = new RuntimeVariableRange<uint32_t>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.u32, var.stepValue.u32, var.minValue.u32, var.maxValue.u32);
+      this->runtimeVar = new RuntimeVariableRange<uint32_t>(var.modName, var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.u32, var.stepValue.u32, var.minValue.u32, var.maxValue.u32);
       return true;
     case CName("Float"):
-      this->runtimeVar = new RuntimeVariableRange<float>(var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.f32, var.stepValue.f32, var.minValue.f32, var.maxValue.f32);
+      this->runtimeVar = new RuntimeVariableRange<float>(var.modName, var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.f32, var.stepValue.f32, var.minValue.f32, var.maxValue.f32);
       return true;
     default: 
       // if(this->type->GetType() == RED4ext::ERTTIType::Enum) {
-      //   this->runtimeVar = new RuntimeVariableEnum(var.className, var.propertyName, var.displayName, var.description, var.order, *var.defaultValue);
+      //   this->runtimeVar = new RuntimeVariableEnum(var.modName, var.className, var.propertyName, var.displayName, var.description, var.order, *var.defaultValue);
       //   return true;
       // } else {
         this->runtimeVar = nullptr;
@@ -212,7 +212,7 @@ void ModClass::RegisterCallback(std::shared_ptr<runtime_class_callback_t> &callb
   }
 }
 
-void ModClass::UpdateDefault(CName propertyName, ScriptInstance* value) const {
+void ModClass::SetDefaultValue(CName propertyName, ScriptInstance* value) const {
   if (this->type) {
       for (auto i = 0; i < this->type->defaults.keys.size; i++) {
         if (this->type->defaults.keys[i] == propertyName) {
@@ -228,8 +228,8 @@ void ModClass::NotifyListeners() const {
   if (this->type) {
     for (const auto &[categoryName, category] : this->categories) {
       for (const auto &[variableName, variable] : category->variables) {
-        auto valuePtr = variable->runtimeVar->GetValuePtr();
-        this->UpdateDefault(variableName, valuePtr);
+        auto valuePtr = variable->runtimeVar->GetAcceptedValue();
+        this->SetDefaultValue(variableName, valuePtr);
 
         std::shared_lock _(*this->listeners_lock);
 
@@ -247,7 +247,7 @@ void ModClass::NotifyListeners() const {
   // notify runtime listeners
   for (const auto &[categoryName, category] : this->categories) {
     for (const auto &[variableName, variable] : category->variables) {
-      auto valuePtr = variable->runtimeVar->GetValuePtr();
+      auto valuePtr = variable->runtimeVar->GetAcceptedValue();
       
       std::shared_lock _(*this->callbacks_lock);
       for (auto &callback : this->callbacks) {
@@ -372,10 +372,10 @@ template <> constexpr const CName ModSettingsVariable::GetTypeCName<float>() noe
   return 0xB64F4A0ACCC8A8C5;
 }
 
-void ModSettingsVariable::UpdateValues() {
+void ModSettingsVariable::SetRequestedValues() {
   auto classType = RED4ext::CRTTISystem::Get()->GetClass(className);
   if (classType) {
-    auto valuePtr = runtimeVar->GetValuePtr();
+    auto valuePtr = runtimeVar->GetAcceptedValue();
     for (auto i = 0; i < classType->defaults.keys.size; i++) {
       if (classType->defaults.keys[i] == runtimeVar->name) {
         sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", className.ToString(), runtimeVar->name.ToString());
@@ -404,13 +404,13 @@ Handle<RED4ext::user::SettingsVar> ModSettingsVariable::CreateConfigVar() {
 }
 
 void ModSettingsVariable::Write(std::ofstream& stream) {
-  this->runtimeVar->ApplyChange();
+  this->runtimeVar->AcceptChange();
   if (this->runtimeVar->WasModifiedSinceLastSave()) {
-    this->UpdateValues();
-    this->runtimeVar->ChangeWasWritten();
+    this->SetRequestedValues();
+    this->runtimeVar->MarkAsSaved();
   }
   auto str = RED4ext::CString(new RED4ext::Memory::DefaultAllocator());
-  this->type->ToString(this->runtimeVar->GetValuePtr(), str);
+  this->type->ToString(this->runtimeVar->GetAcceptedValue(), str);
 
   stream << this->runtimeVar->name.ToString() << " = " << str.c_str() << "\n";
 }
@@ -422,7 +422,7 @@ bool ModSettingsVariable::RestoreDefault() {
 
 void ModSettingsVariable::RejectChange() {
   if (this->runtimeVar->HasChange()) {
-    this->runtimeVar->RevertChange();
+    this->runtimeVar->RejectChange();
   }
 }
 

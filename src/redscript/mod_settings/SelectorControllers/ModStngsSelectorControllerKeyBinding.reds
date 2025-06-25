@@ -56,9 +56,9 @@ public func Refresh() -> Void {
       // inkTextRef.SetText(this.m_text, SettingsSelectorControllerKeyBinding.PrepareInputTag(varName.GetValue(), varName.GetGroup().GetName(), varName.GetName()));
       // let key = EnumInt(varName.GetValue());
       // if ((key - 136) <= 19) {
-        inkTextRef.SetText(this.m_text, "<Input key=\""+ NameToString(varName.GetValueName()) +"\"></>");
+        // inkTextRef.SetText(this.m_text, "<Input key=\""+ NameToString(varName.GetValueName()) +"\"></>");
       // } else {
-        // inkTextRef.SetText(this.m_text, SettingsSelectorControllerKeyBinding.PrepareInputTag(varName.GetValueName(), n"/key_bindings", varName.GetName()));
+        inkTextRef.SetText(this.m_text, SettingsSelectorControllerKeyBinding.PrepareInputTag(varName.GetValueName(), n"/key_bindings", varName.GetName()));
       // }
       this.TriggerActionFeedback();
     }

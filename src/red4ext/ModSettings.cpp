@@ -101,7 +101,7 @@ void __fastcall ModSettings::ProcessScriptData(const ScriptData *scriptData) {
             
             if (variable->SetRuntimeVariable(prop)) {
               category->variables[prop->name] = variable;
-              modClass->UpdateDefault(variable->name, variable->runtimeVar->GetValuePtr());
+              modClass->SetDefaultValue(variable->name, variable->runtimeVar->GetAcceptedValue());
               sdk->logger->InfoF(pluginHandle, "Loaded %s.%s", modClass->name.ToString(), variable->name.ToString());
             } else {
               sdk->logger->WarnF(pluginHandle, "%s.%s: type '%s' is not supported and was ignored", modClass->name.ToString(), prop->name.ToString(), prop->type->name.ToString());
@@ -151,7 +151,7 @@ void __fastcall ModSettings::ProcessScriptData(const ScriptData *scriptData) {
       if (variable->CreateRuntimeVariable(*var)) {
         category->variables[variableName] = variable;
         modClass->RegisterCallback(var->callback);
-        (*var->callback)(var->categoryName, var->propertyName, *(ModVariableType*)variable->runtimeVar->GetValuePtr());
+        (*var->callback)(var->categoryName, var->propertyName, *(ModVariableType*)variable->runtimeVar->GetAcceptedValue());
         sdk->logger->InfoF(pluginHandle, "Loaded '%s'.%s", var->modName, var->propertyName);
       } else {
         sdk->logger->ErrorF(pluginHandle, "Could not create runtime variable for {}", var->propertyName);
@@ -184,7 +184,7 @@ void __fastcall ModSettings::ProcessScriptData(const ScriptData *scriptData) {
 //   auto self = ModSettings::GetInstance();
 
 //   std::shared_lock _(self->variables_lock);
-//   variable->UpdateValues();
+//   variable->SetRequestedValues();
 //   self->variables.EmplaceBack(variable);
 
 //   auto modVars = self->variablesByMod.Get(variable->Mod());
@@ -302,7 +302,7 @@ void ModSettings::AddOverrides(Manager* manager) {
         for (const auto &[variableName, variable] : category->variables) {
           if (variable->type->GetName() == "EInputKey") {
             auto name = variable->name.ToString();
-            auto key = *(EInputKey*)variable->runtimeVar->GetValuePtr();
+            auto key = *(EInputKey*)variable->runtimeVar->GetAcceptedValue();
             if (manager->Override(name, (uint16_t)key, applyOverridesCallNumber) == Manager::OverrideStatus::NotFound) {
               sdk->logger->WarnF(pluginHandle, "overridableUI \"%s\" not found (%s, %s)", name, modName.ToString(), className.ToString());
             }
@@ -367,18 +367,18 @@ void ModSettings::AcceptChanges() {
   ModSettings::WriteToFile();
   if (gameinputManager != nullptr)
     ApplyOverrides(gameinputManager);
-  modSettings.changeMade = false;
+  modSettings.changesRequested = false;
   modSettings.NotifyListeners();
 }
 
 void ModSettings::RestoreDefaults(CName modName) {
   if (modSettings.mods.contains(modName)) {
     auto mod = modSettings.mods[modName];
-    modSettings.changeMade = false;
+    modSettings.changesRequested = false;
     for (auto [modClassName, modClass] : mod->classes) {
       for (auto [categoryName, category] : modClass->categories) {
         for (auto [variableName, variable] : category->variables) {
-          modSettings.changeMade |= variable->RestoreDefault();
+          modSettings.changesRequested |= variable->RestoreDefault();
         }
       }
     }
@@ -391,12 +391,12 @@ void ModSettings::RejectChanges() {
     for (auto [modClassName, modClass] : mod->classes) {
       for (auto [categoryName, category] : modClass->categories) {
         for (auto [variableName, variable] : category->variables) {
-          modSettings.changeMade |= variable->RestoreDefault();
+          modSettings.changesRequested |= variable->RestoreDefault();
         }
       }
     }
   }
-  modSettings.changeMade = false;
+  modSettings.changesRequested = false;
   modSettings.NotifyListeners();
 }
 
@@ -406,28 +406,14 @@ void ModSettings::NotifyListeners() {
     if (listener) {
       auto instance = listener.Lock();
       auto func = instance->GetType()->GetFunction("OnModSettingsChange");
-      if (func) 
-        RED4ext::ExecuteFunction(instance, func, nullptr);
-    } else {
-      // remove?
-    }
-  }
-}
-
-void ModSettings::NotifyListenersChanged(CName aGroupPath, CName aVarName) {
-  std::shared_lock _(listeners_lock);
-  for (auto &[id, listener] : this->listeners) {
-    if (listener) {
-      auto instance = listener.Lock();
-      auto func = instance->GetType()->GetFunction("OnVarChanged");
-    
       if (func) {
-        RED4ext::StackArgs_t args;
-        RED4ext::CName groupPath = aGroupPath;
-        RED4ext::CName varName = aVarName;
-        args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &groupPath);
-        args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &varName);
-        RED4ext::ExecuteFunction(instance, func, nullptr, args);
+        // if (func->fullName == "OnModSettingsChange;Bool") {
+        //   // RED4ext::StackArgs_t args;
+        //   // args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("Bool"), &changesRequested);
+        //   RED4ext::ExecuteFunction(instance, func, nullptr, changesRequested);
+        // } else {
+          RED4ext::ExecuteFunction(instance, func, nullptr);
+        // }
       }
     } else {
       // remove?
@@ -435,20 +421,41 @@ void ModSettings::NotifyListenersChanged(CName aGroupPath, CName aVarName) {
   }
 }
 
-void ModSettings::NotifyListenersValidated(CName aGroupPath, CName aVarName) {
+void ModSettings::NotifyListenersRequested(CName aGroupPath, CName aVarName) {
   std::shared_lock _(listeners_lock);
   for (auto &[id, listener] : this->listeners) {
     if (listener) {
       auto instance = listener.Lock();
-      auto func = instance->GetType()->GetFunction("OnVarValidated");
+      auto func = instance->GetType()->GetFunction("OnModVariableChangeRequested");
     
       if (func) {
-        RED4ext::StackArgs_t args;
-        RED4ext::CName groupPath = aGroupPath;
-        RED4ext::CName varName = aVarName;
-        args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &groupPath);
-        args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &varName);
-        RED4ext::ExecuteFunction(instance, func, nullptr, args);
+        // RED4ext::StackArgs_t args;
+        // RED4ext::CName groupPath = aGroupPath;
+        // RED4ext::CName varName = aVarName;
+        // args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &groupPath);
+        // args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &varName);
+        RED4ext::ExecuteFunction(instance, func, nullptr, aGroupPath, aVarName);
+      }
+    } else {
+      // remove?
+    }
+  }
+}
+
+void ModSettings::NotifyListenersAccepted(CName aGroupPath, CName aVarName) {
+  std::shared_lock _(listeners_lock);
+  for (auto &[id, listener] : this->listeners) {
+    if (listener) {
+      auto instance = listener.Lock();
+      auto func = instance->GetType()->GetFunction("OnModVariableChangeAccepted");
+    
+      if (func) {
+        // RED4ext::StackArgs_t args;
+        // RED4ext::CName groupPath = aGroupPath;
+        // RED4ext::CName varName = aVarName;
+        // args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &groupPath);
+        // args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &varName);
+        RED4ext::ExecuteFunction(instance, func, nullptr, aGroupPath, aVarName);
       }
     } else {
       // remove?
@@ -513,5 +520,5 @@ RTTI_DEFINE_CLASS(ModSettings::ModSettings, "ModSettings", {
   RTTI_METHOD(UnregisterListenerToClass);
   RTTI_METHOD(RegisterListenerToModifications);
   RTTI_METHOD(UnregisterListenerToModifications);
-  RTTI_PROPERTY(changeMade);
+  RTTI_PROPERTY(changesRequested);
 });

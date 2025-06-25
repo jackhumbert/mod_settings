@@ -12,35 +12,35 @@ template <typename T> struct RuntimeVariable : public IRuntimeVariable {
   RuntimeVariable(ScriptProperty *prop) : IRuntimeVariable(prop) {
     T _value, _defaultValue;
     prop->ReadDefaultValue(&_defaultValue);
-    UpdateDefault(&_defaultValue);
+    SetDefaultValue(&_defaultValue);
     _value = _defaultValue;
     ModSettings::ReadValueFromFile(prop, &_value);
-    UpdateAll(&_value);
+    LoadValue(&_value);
   }
 
-  RuntimeVariable(RED4ext::CName className, RED4ext::CName propertyName, RED4ext::CName displayName,
+  RuntimeVariable(RED4ext::CName modName, RED4ext::CName className, RED4ext::CName propertyName, RED4ext::CName displayName,
                   RED4ext::CName description, uint32_t order, T _defaultValue)
-      : IRuntimeVariable(className, propertyName, displayName, description, order) {
-    UpdateDefault(&_defaultValue);
+      : IRuntimeVariable(modName, className, propertyName, displayName, description, order) {
+    SetDefaultValue(&_defaultValue);
     T _value = _defaultValue;
     ModSettings::ReadValueFromFile(className, propertyName, &_value);
-    UpdateAll(&_value);
+    LoadValue(&_value);
   }
 
   // overrides
 
   virtual inline bool __fastcall WasModifiedSinceLastSave() override {
-    return importPolicy != RED4ext::user::EConfigVarImportPolicy::Ignore && valueWrittenToFile != valueValidated;
+    return importPolicy != RED4ext::user::EConfigVarImportPolicy::Ignore && savedValue != acceptedValue;
   }
 
-  virtual inline bool __fastcall HasChange() override { return valueInput != valueValidated; }
+  virtual inline bool __fastcall HasChange() override { return requestedValue != acceptedValue; }
 
   virtual inline bool __fastcall IsDefault() override {
     T value;
     if (HasChange()) {
-      value = valueInput;
+      value = requestedValue;
     } else {
-      value = valueValidated;
+      value = acceptedValue;
     }
     return value == defaultValue;
   }
@@ -53,14 +53,14 @@ template <typename T> struct RuntimeVariable : public IRuntimeVariable {
     if (((a1 - 2) & 0xFD) != 0) {
       if (((a1 - 1) & 0xFD) != 0) {
         if (!a1) {
-          UpdateValue(&defaultValue);
+          SetRequestedValue(&defaultValue);
           // UserSettings = GetUserSettings();
           // AddSettingsDataToSettings(UserSettings, a1);
         }
         return !wasDefault;
       }
     UpdateImmediately:
-      UpdateValue(&defaultValue);
+      SetRequestedValue(&defaultValue);
       // v9 = GetUserSettings();
       // sub_7FF62769C390(v9, a1);
       return !wasDefault;
@@ -71,17 +71,17 @@ template <typename T> struct RuntimeVariable : public IRuntimeVariable {
     case RED4ext::user::EConfigVarUpdatePolicy::Immediately:
       goto UpdateImmediately;
     case RED4ext::user::EConfigVarUpdatePolicy::ConfirmationRequired:
-      UpdateValue(&defaultValue);
+      SetRequestedValue(&defaultValue);
       // v8 = GetUserSettings();
       // SettingsConfirmChange_0(v8, a1);
       break;
     case RED4ext::user::EConfigVarUpdatePolicy::RestartRequired:
-      UpdateValue(&defaultValue);
+      SetRequestedValue(&defaultValue);
       // v7 = GetUserSettings();
       // SettingsRestartRequired_0(v7, a1);
       break;
     case RED4ext::user::EConfigVarUpdatePolicy::LoadLastCheckpointRequired:
-      UpdateValue(&defaultValue);
+      SetRequestedValue(&defaultValue);
       // v6 = GetUserSettings();
       // SettingsLoadLastCheckpoint_0(v6, a1);
       break;
@@ -94,49 +94,55 @@ template <typename T> struct RuntimeVariable : public IRuntimeVariable {
     return !wasDefault;
   }
 
-  virtual inline void __fastcall UpdateValue(void *value) override {
-    valueInput = *(T *)value;
+  virtual inline void __fastcall SetRequestedValue(void *value) override {
+    requestedValue = *(T *)value;
 
     auto ms = ModSettings::GetInstance();
-    ms->changeMade |= valueInput != valueValidated;
-    ms->NotifyListenersChanged(this->groupPath, this->name);
+    ms->changesRequested |= requestedValue != acceptedValue;
+    ms->NotifyListenersRequested(this->groupPath, this->name);
   }
 
-  virtual inline void __fastcall ApplyChange() override { 
-    valueValidated = valueInput;
+  virtual inline void __fastcall AcceptChange() override { 
+    acceptedValue = requestedValue;
 
     auto ms = ModSettings::GetInstance();
-    ms->NotifyListenersValidated(this->groupPath, this->name);
+    ms->NotifyListenersAccepted(this->groupPath, this->name);
   }
 
-  virtual inline void __fastcall RevertChange() override { valueInput = valueValidated; }
+  virtual inline void __fastcall RejectChange() override { 
+    requestedValue = acceptedValue;
+  }
 
-  virtual inline void __fastcall ChangeWasWritten() override { valueWrittenToFile = valueValidated; }
+  virtual inline void __fastcall MarkAsSaved() override { 
+    savedValue = acceptedValue;
+  }
 
-  virtual inline void __fastcall UpdateAll(void *value) override {
-    valueWrittenToFile = *(T *)value;
-    valueInput = *(T *)value;
-    valueValidated = *(T *)value;
+  virtual inline void __fastcall LoadValue(void *value) override {
+    savedValue = *(T *)value;
+    requestedValue = *(T *)value;
+    acceptedValue = *(T *)value;
   }
 
   // custom virtuals
 
   virtual void __fastcall GetValueToWrite(char *value) override;
 
-  virtual inline RED4ext::ScriptInstance *__fastcall GetInputValue() override {
-    return (RED4ext::ScriptInstance *)&valueInput;
+  virtual inline RED4ext::ScriptInstance *__fastcall GetRequestedValue() override {
+    return (RED4ext::ScriptInstance *)&requestedValue;
   }
 
-  virtual inline RED4ext::ScriptInstance *__fastcall GetValuePtr() override {
-    return (RED4ext::ScriptInstance *)&valueValidated;
+  virtual inline RED4ext::ScriptInstance *__fastcall GetAcceptedValue() override {
+    return (RED4ext::ScriptInstance *)&acceptedValue;
   }
 
-  virtual inline void __fastcall UpdateDefault(void *value) override { defaultValue = *(T *)value; }
+  virtual inline void __fastcall SetDefaultValue(void *value) override { 
+    defaultValue = *(T *)value;
+  }
 
-  T valueValidated;
+  T acceptedValue;
   T defaultValue;
-  T valueInput;
-  T valueWrittenToFile;
+  T requestedValue;
+  T savedValue;
 };
 
 template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
@@ -147,9 +153,9 @@ template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
     prop->ReadProperty("ModSettings.max", &this->maxValue, (T)10);
   }
   
-  inline RuntimeVariableRange(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+  inline RuntimeVariableRange(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
                              T defaultValue, T stepValue, T minValue, T maxValue)
-      : RuntimeVariable<T>(className, propertyName, displayName, description, order, defaultValue) {
+      : RuntimeVariable<T>(modName, className, propertyName, displayName, description, order, defaultValue) {
     this->type = RED4ext::user::EConfigVarType::Int;
     this->stepValue = stepValue;
     this->minValue = minValue;
@@ -163,9 +169,9 @@ template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
 
 template <typename T> struct RuntimeVariableList : public RuntimeVariable<uint32_t> {
   inline RuntimeVariableList(ScriptProperty *prop) : RuntimeVariable<uint32_t>(prop) {}
-  inline RuntimeVariableList(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+  inline RuntimeVariableList(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
                              uint32_t defaultValue)
-      : RuntimeVariable<uint32_t>(className, propertyName, displayName, description, order, defaultValue) {
+      : RuntimeVariable<uint32_t>(modName, className, propertyName, displayName, description, order, defaultValue) {
   }
   T value;
   RED4ext::DynArray<T> values;
@@ -176,9 +182,9 @@ struct RuntimeVariableBool : RuntimeVariable<bool> {
   inline RuntimeVariableBool(ScriptProperty *prop) : RuntimeVariable<bool>(prop) {
     this->type = RED4ext::user::EConfigVarType::Bool;
   }
-  inline RuntimeVariableBool(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+  inline RuntimeVariableBool(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
                              bool defaultValue)
-      : RuntimeVariable<bool>(className, propertyName, displayName, description, order, defaultValue) {
+      : RuntimeVariable<bool>(modName, className, propertyName, displayName, description, order, defaultValue) {
     this->type = RED4ext::user::EConfigVarType::Bool;
   }
 };
@@ -187,9 +193,9 @@ struct RuntimeVariableKeyBinding : RuntimeVariable<EInputKey> {
   inline RuntimeVariableKeyBinding(ScriptProperty *prop) : RuntimeVariable<EInputKey>(prop) {
     this->type = RED4ext::user::EConfigVarType::Name;
   }
-  inline RuntimeVariableKeyBinding(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+  inline RuntimeVariableKeyBinding(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
                              EInputKey defaultValue)
-      : RuntimeVariable<EInputKey>(className, propertyName, displayName, description, order, defaultValue) {
+      : RuntimeVariable<EInputKey>(modName, className, propertyName, displayName, description, order, defaultValue) {
     this->type = RED4ext::user::EConfigVarType::Name;
   }
 };
@@ -198,20 +204,20 @@ struct RuntimeVariableName : RuntimeVariable<CName> {
   inline RuntimeVariableName(ScriptProperty *prop) : RuntimeVariable<CName>(prop) {
     this->type = RED4ext::user::EConfigVarType::Name;
   }
-  inline RuntimeVariableName(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+  inline RuntimeVariableName(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
                              CName defaultValue)
-      : RuntimeVariable<CName>(className, propertyName, displayName, description, order, defaultValue) {
+      : RuntimeVariable<CName>(modName, className, propertyName, displayName, description, order, defaultValue) {
     this->type = RED4ext::user::EConfigVarType::Name;
   }
 };
 
 // i don't think these will matter here
 // RED4EXT_ASSERT_SIZE(RuntimeVariableBool, 0x4E);
-// RED4EXT_ASSERT_OFFSET(RuntimeVariable<bool>, valueValidated, 0x48);
+// RED4EXT_ASSERT_OFFSET(RuntimeVariable<bool>, acceptedValue, 0x48);
 // RED4EXT_ASSERT_OFFSET(RuntimeVariable<bool>, defaultValue, 0x49);
-// RED4EXT_ASSERT_OFFSET(RuntimeVariable<bool>, valueInput, 0x4A);
-// RED4EXT_ASSERT_OFFSET(RuntimeVariable<bool>, valueWrittenToFile, 0x4B);
-// char (*__kaboom)[offsetof(RuntimeVariableBool, valueValidated)] = 1;
+// RED4EXT_ASSERT_OFFSET(RuntimeVariable<bool>, requestedValue, 0x4A);
+// RED4EXT_ASSERT_OFFSET(RuntimeVariable<bool>, savedValue, 0x4B);
+// char (*__kaboom)[offsetof(RuntimeVariableBool, acceptedValue)] = 1;
 
 template <> inline RuntimeVariableRange<float>::RuntimeVariableRange(ScriptProperty *prop) : RuntimeVariable(prop) {
   this->type = RED4ext::user::EConfigVarType::Float;
@@ -220,9 +226,9 @@ template <> inline RuntimeVariableRange<float>::RuntimeVariableRange(ScriptPrope
   prop->ReadProperty("ModSettings.max", &this->maxValue, 1.0f);
 }
 
-template <> inline RuntimeVariableRange<float>::RuntimeVariableRange(CName className, CName propertyName, CName displayName, CName description, uint32_t order,
+template <> inline RuntimeVariableRange<float>::RuntimeVariableRange(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
                              float defaultValue, float stepValue, float minValue, float maxValue)
-      : RuntimeVariable<float>(className, propertyName, displayName, description, order, defaultValue) {
+      : RuntimeVariable<float>(modName, className, propertyName, displayName, description, order, defaultValue) {
     this->type = RED4ext::user::EConfigVarType::Float;
     this->stepValue = stepValue;
     this->minValue = minValue;
@@ -230,28 +236,28 @@ template <> inline RuntimeVariableRange<float>::RuntimeVariableRange(CName class
   }
 
 template <> inline void __fastcall RuntimeVariable<bool>::GetValueToWrite(char *value) {
-  sprintf(value, "%d", valueValidated);
+  sprintf(value, "%d", acceptedValue);
 }
 
 template <> inline void __fastcall RuntimeVariable<int32_t>::GetValueToWrite(char *value) {
-  sprintf(value, "%d", valueValidated);
+  sprintf(value, "%d", acceptedValue);
 }
 
 template <> inline void __fastcall RuntimeVariable<uint32_t>::GetValueToWrite(char *value) {
-  sprintf(value, "%d", valueValidated);
+  sprintf(value, "%d", acceptedValue);
 }
 
 template <> inline void __fastcall RuntimeVariable<float>::GetValueToWrite(char *value) {
-  sprintf(value, "%f", valueValidated);
+  sprintf(value, "%f", acceptedValue);
 }
 
 template <> inline void __fastcall RuntimeVariable<EInputKey>::GetValueToWrite(char *value) {
-  sprintf(value, "%u", valueValidated);
+  sprintf(value, "%u", acceptedValue);
 }
 
 // not suppported in the UI yet
 template <> inline void __fastcall RuntimeVariable<CName>::GetValueToWrite(char *value) {
-  sprintf(value, "%s", valueValidated.ToString());
+  sprintf(value, "%s", acceptedValue.ToString());
 }
 
 struct RuntimeVariableEnum : public RuntimeVariableList<int32_t> {

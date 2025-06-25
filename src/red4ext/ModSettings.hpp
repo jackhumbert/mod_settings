@@ -60,10 +60,10 @@ public:
 
 
   void NotifyListeners();
-  void NotifyListenersChanged(CName, CName);
-  void NotifyListenersValidated(CName, CName);
+  void NotifyListenersRequested(CName, CName);
+  void NotifyListenersAccepted(CName, CName);
 
-  bool changeMade = false;
+  bool changesRequested = false;
 
   static_assert(Detail::IsAllocator<Memory::RTTIAllocator>,
                 "Memory::RTTIAllocator"
