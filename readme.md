@@ -14,6 +14,35 @@ If you want to install the mod outside of a release (not recommended), the `buil
 
 Configuration is done through redscript classes. [See one example here](https://github.com/jackhumbert/in_world_navigation/blob/main/src/redscript/in_world_navigation/InWorldNavigation.reds). Variable & class names are limited to 1024 characters.
 
+## Listen for changes
+
+In Redscript, you can register the class (where you have your mod variables defined) as a listener to changes made in Mod Settings:
+
+```swift
+ModSettings.RegisterListenerToClass(this);
+...
+ModSettings.UnregisterListenerToClass(this);
+```
+
+The default values & runtime values will then be updated when settings are changed.
+
+You can also listen to things globally via:
+
+```swift
+ModSettings.RegisterListenerToModifications(this);
+```
+
+Which will fire callbacks that must be named/look like this:
+
+```swift
+public cb func OnModVariableChangeRequested(groupPath: CName, varName: CName) -> Void { }
+public cb func OnModVariableChangeAccepted(groupPath: CName, varName: CName) -> Void { }
+public cb func OnModSettingsChange() -> Void { }
+```
+
+`groupPath` is equal to `/mods/[ModName]/[ModClass]`, and `varName` is equal to the variable name.
+
+
 ## Keybinding Configuration
 
 Specify an .xml file to be processed by Input Loader like, defining a `overridableUI` attribute in a button inside of a mapping:
