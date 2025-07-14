@@ -479,23 +479,31 @@ void ModSettings::UnregisterListenerToModifications(const Handle<IScriptable> &l
 
 void ModSettings::RegisterListenerToClass(const Handle<IScriptable> &listener) {
   if (listener) {
-    auto className = listener->GetType()->GetName();
-    for (auto &[modName, mod] : modSettings.mods) {
-      if (mod->classes.contains(className)) {
-        mod->classes[className]->RegisterListener(listener);
+    auto type = listener->GetType();
+    do {
+      auto className = type->GetName();
+      for (auto &[modName, mod] : modSettings.mods) {
+        if (mod->classes.contains(className)) {
+          mod->classes[className]->RegisterListener(listener);
+        }
       }
-    }
+      type = type->parent;
+    } while (type);
   }
 }
 
 void ModSettings::UnregisterListenerToClass(const Handle<IScriptable> &listener) {
   if (listener) {
-    auto className = listener->GetType()->GetName();
-    for (auto &[modName, mod] : modSettings.mods) {
-      if (mod->classes.contains(className)) {
-        mod->classes[className]->UnregisterListener(listener);
+    auto type = listener->GetType();
+    do {
+      auto className = type->GetName();
+      for (auto &[modName, mod] : modSettings.mods) {
+        if (mod->classes.contains(className)) {
+          mod->classes[className]->UnregisterListener(listener);
+        }
       }
-    }
+      type = type->parent;
+    } while (type);
   }
 }
 
