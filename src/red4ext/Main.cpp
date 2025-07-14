@@ -10,7 +10,7 @@
 
 #include <RedLib.hpp>
 #include <ArchiveXL.hpp>
-#include <Registrar.hpp>
+#include <CyberpunkMod.hpp>
 #include <CNames.hpp>
 
 namespace ModSettings {
