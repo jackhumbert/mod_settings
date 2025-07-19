@@ -69,9 +69,11 @@ public:
                 "Memory::RTTIAllocator"
                 " is not a valid allocator type");
 private:
-  std::shared_mutex variables_lock;
+  // std::shared_mutex variables_lock;
+  RED4ext::SharedSpinLock variables_lock;
   std::map<uint32_t, WeakHandle<IScriptable>> listeners;
-  std::shared_mutex listeners_lock;
+  // std::shared_mutex listeners_lock;
+  RED4ext::SharedSpinLock listeners_lock;
   std::map<CName, Mod*> mods;
 };
 

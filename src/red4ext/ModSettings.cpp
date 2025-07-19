@@ -401,7 +401,8 @@ void ModSettings::RejectChanges() {
 }
 
 void ModSettings::NotifyListeners() {
-  std::shared_lock _(listeners_lock);
+  // std::shared_lock _(listeners_lock);
+  this->listeners_lock.LockShared();
   for (auto &[id, listener] : this->listeners) {
     if (listener) {
       auto instance = listener.Lock();
@@ -419,10 +420,12 @@ void ModSettings::NotifyListeners() {
       // remove?
     }
   }
+  this->listeners_lock.UnlockShared();
 }
 
 void ModSettings::NotifyListenersRequested(CName aGroupPath, CName aVarName) {
-  std::shared_lock _(listeners_lock);
+  // std::shared_lock _(listeners_lock);
+  this->listeners_lock.LockShared();
   for (auto &[id, listener] : this->listeners) {
     if (listener) {
       auto instance = listener.Lock();
@@ -440,10 +443,12 @@ void ModSettings::NotifyListenersRequested(CName aGroupPath, CName aVarName) {
       // remove?
     }
   }
+  this->listeners_lock.UnlockShared();
 }
 
 void ModSettings::NotifyListenersAccepted(CName aGroupPath, CName aVarName) {
-  std::shared_lock _(listeners_lock);
+  // std::shared_lock _(listeners_lock);
+  this->listeners_lock.LockShared();
   for (auto &[id, listener] : this->listeners) {
     if (listener) {
       auto instance = listener.Lock();
@@ -461,19 +466,24 @@ void ModSettings::NotifyListenersAccepted(CName aGroupPath, CName aVarName) {
       // remove?
     }
   }
+  this->listeners_lock.UnlockShared();
 }
 
 void ModSettings::RegisterListenerToModifications(const Handle<IScriptable> &listener) {
   if (listener) {
-    std::unique_lock _(modSettings.listeners_lock);
+    // std::unique_lock _(modSettings.listeners_lock);
+    modSettings.listeners_lock.Lock();
     modSettings.listeners[listener->unk28] = listener;
+    modSettings.listeners_lock.Unlock();
   }
 }
 
 void ModSettings::UnregisterListenerToModifications(const Handle<IScriptable> &listener) {
   if (listener) {
-    std::unique_lock _(modSettings.listeners_lock);
+    // std::unique_lock _(modSettings.listeners_lock);
+    modSettings.listeners_lock.Lock();
     modSettings.listeners.erase(listener->unk28);
+    modSettings.listeners_lock.Unlock();
   }
 }
 
