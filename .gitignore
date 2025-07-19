@@ -378,3 +378,4 @@ red4ext/deps/*
 *.zip
 build/mods/ModSettings/archives/ModSettings.archive
 build/mods/ModSettings/info.json
+call_stack.txt

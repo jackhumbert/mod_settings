@@ -5,4 +5,10 @@
   <Author />
   <Email />
   <Version />
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\settings\mod_settings_main.inkwidget</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\settings\settings_main.inkwidget</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\menu.inkmenu</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\main_menu\pregame_menu.inkmenu</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\menu.inkmenu</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\fullscreen\main_menu\pregame_menu.inkmenu</OpenProjectFiles>
 </CP77Mod>

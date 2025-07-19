@@ -19,6 +19,47 @@ struct Overridable {
   uint32_t m_hash;
 };
 
+struct ContextManager;
+
+struct UserMappingAxis {
+  struct RealAxisInput {
+    uint16_t key;
+    uint16_t unk02;
+    uint32_t unk04;
+  };
+
+  struct Unknown {
+    uint32_t unk00;
+    uint32_t unk04;
+    uint32_t unk08;
+  };
+  RED4EXT_ASSERT_SIZE(Unknown, 0xC);
+
+  struct Axis {  
+    DynArray<RealAxisInput> realAxisInput;
+    DynArray<Unknown> unk10;
+    uint8_t invert;
+    uint8_t unk21;
+    uint64_t unk28;
+  };
+  RED4EXT_ASSERT_SIZE(Axis, 0x30);
+
+  struct Pair {
+    CName name1;
+    CName name2;
+    CName name3;
+    void * axis;
+    uint64_t unk20;
+    CName name4;
+    float unk30;
+    uint32_t unk34;
+  };
+
+  HashMap<CName, Axis> axes;
+  HashMap<CName, float> floats;
+  DynArray<Pair *> pairs;
+};
+
 struct UserMapping {
   struct Mapping {
     uint8_t type;
@@ -45,8 +86,36 @@ struct UserMapping {
     uint8_t needs_update;
   };
 
+  struct MappingPreset {
+    CName name;
+    uint8_t axis;
+    uint8_t fakeAxis;
+    uint8_t relativeAxis;
+  };
+
   RawMappingCollection * GetMappingCollection(CName);
   void ClearRuntimeDataOnRawMappings();
+  
+  DynArray<void*> unk00; // 00
+  uint8_t sorted; // 10
+  DynArray<void*>  unk18; // 18
+  CString invalid_str; // 28
+  ContextManager * contextManager; // 48
+  void * buttons; // 50
+  void * buttonGroups; // 58
+  UserMappingAxis * axes; // 60
+  void * relativeAxes; // 68
+  Map<uint16_t, MappingCollection> keyMap; // 70
+  Map<CName, RawMappingCollection> rawMappings; // 98
+  HashMap<CString, EInputKey> stringToKey; // C0
+  HashMap<CString, EInputKey> inputKeyMap_F0; // F0
+  HashMap<EInputKey, CString> unk120; // 120
+  uint64_t unk150[4];
+  DynArray<MappingPreset*> mappingPresets;
+  uint8_t unk180;
+  uint8_t unk181;
+  uint64_t unk188;
+  uint64_t listener_id;
 
 };
 
@@ -84,12 +153,30 @@ struct ContextManager {
 
   void *__vftable;
   UserMapping * userMapping;
-  uint64_t unk10[3];
+  DynArray<void*> deferredListenerActions;
+  uint64_t deferredListenerActionsMutex;
   Map<CName, Action*> actions;
-  uint64_t un50[22];
+  uint32_t unk4C;
+  Map<CName, void*> mappingGroups;
+  uint32_t unk74;
+  Map<CName, void*> actionGroups;
+  uint32_t unk9C;
+  Map<CName, void*> unkA0;
+  uint64_t mappingGroup;
+  uint64_t unkD0[6];
   DynArray<CName> contexts;
   DynArray<void*> unk110;
   DynArray<void*> unk120;
+  DynArray<void*> unk130;
+  uint8_t unk140[8];
+  void *contextTransition;
+  uint8_t unk148[152];
+  CString unk14;
+  CName LeftStick;
+  CName RightStick;
+  uint64_t unk218;
+  uint64_t unk220;
+  uint8_t inputDeviceRelatedNot12;
 };
 
 struct OverridableMapping {

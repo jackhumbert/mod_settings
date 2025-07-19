@@ -545,6 +545,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     let currentSettingsItemType: ConfigVarType;
     let size: Int32 = ArraySize(options);
     let i: Int32 = 0;
+    //LogChannel(n"DEBUG", "Populating Options");
     while i < size {
       currentSettingsItem = options[i];
       if IsDefined(currentSettingsItem) {
@@ -576,7 +577,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
               currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorNameList").GetController() as SettingsSelectorController;
               break;
             default:
-              // LogUIWarning("Cannot create UI settings drawer for " + NameToString(currentSettingsItem.GetDisplayName()));
+              // LogChannel(n"DEBUG", "Cannot create UI settings drawer for " + ToString(currentSettingsItemType));
           };
           if IsDefined(currentItem) {
             currentItem.Setup(currentSettingsItem, this.m_isPreGame);
@@ -584,7 +585,9 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
             currentItem.RegisterToCallback(n"OnHoverOut", this, n"OnSettingHoverOut");
             // currentItem.Refresh();
             ArrayPush(this.m_settingsElements, currentItem);
-          };
+          } else {
+            // LogChannel(n"DEBUG", "currentItem undefined: " + NameToString(currentSettingsItem.GetDisplayName()));
+          }
         };
       };
       i += 1;
