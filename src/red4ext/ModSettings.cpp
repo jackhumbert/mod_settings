@@ -391,7 +391,7 @@ void ModSettings::RejectChanges() {
     for (auto [modClassName, modClass] : mod->classes) {
       for (auto [categoryName, category] : modClass->categories) {
         for (auto [variableName, variable] : category->variables) {
-          modSettings.changesRequested |= variable->RestoreDefault();
+          variable->RejectChange();
         }
       }
     }
