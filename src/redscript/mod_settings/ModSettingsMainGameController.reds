@@ -35,6 +35,8 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   private let m_resetSettingsRequest: Bool;
   private let m_isDlcSettings: Bool;
   private let m_selectorCtrl: wref<ListController>;
+  private let m_confirmationToken: ref<inkGameNotificationToken>;
+  private let m_pendingDefaultsMod: CName;
 
   protected cb func OnInitialize() -> Void {
     ModSettings.GetInstance().isActive = true;
@@ -98,6 +100,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     inkWidgetRef.GetControllerByType(this.m_defaultButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnDefaultButtonReleased");
 
     ModSettings.UnregisterListenerToModifications(this);
+    this.m_confirmationToken = null;
 
     //super.OnUninitialize();
   }
@@ -324,11 +327,41 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     this.m_menuEventDispatcher.SpawnEvent(n"OnCloseModSettingsScreen");
   }
 
+  // Asks before restoring defaults; only the currently selected mod is affected
   private final func RequestRestoreDefaults() -> Void {
     let index: Int32 = this.m_selectorCtrl.GetToggledIndex();
-    let mod: CName = this.m_data[index].label;
-    ModSettings.RestoreDefaults(mod);
+    if IsDefined(this.m_confirmationToken) || index < 0 || index >= ArraySize(this.m_data) {
+      return;
+    };
+    this.m_pendingDefaultsMod = this.m_data[index].label;
+    let modLabel: String = GetLocalizedTextByKey(this.m_pendingDefaultsMod);
+    if StrLen(modLabel) == 0 {
+      modLabel = ToString(this.m_pendingDefaultsMod);
+    };
+    let title: String = GetLocalizedTextByKey(n"UI-UserActions-RestoreDefaults");
+    if StrLen(title) == 0 {
+      title = "Restore Defaults";
+    };
+    this.m_confirmationToken = GenericMessageNotification.Show(this, title, "Restore the default settings for " + modLabel + "? Other mods are not affected.", GenericMessageNotificationType.YesNo);
+    this.m_confirmationToken.RegisterListener(this, n"OnRestoreDefaultsConfirmed");
     // this.m_settings.RequestRestoreDefaultDialog(this.m_isPreGame, false, groupPath);
+  }
+
+  protected cb func OnRestoreDefaultsConfirmed(data: ref<inkGameNotificationData>) -> Bool {
+    let result: ref<GenericMessageNotificationCloseData> = data as GenericMessageNotificationCloseData;
+    this.m_confirmationToken = null;
+    if IsDefined(result) && Equals(result.result, GenericMessageNotificationResult.Yes) {
+      ModSettings.RestoreDefaults(this.m_pendingDefaultsMod);
+    };
+  }
+
+  protected cb func OnResetConfirmed(data: ref<inkGameNotificationData>) -> Bool {
+    let result: ref<GenericMessageNotificationCloseData> = data as GenericMessageNotificationCloseData;
+    this.m_confirmationToken = null;
+    if IsDefined(result) && Equals(result.result, GenericMessageNotificationResult.Yes) {
+      this.m_resetSettingsRequest = true;
+      this.CheckSettings();
+    };
   }
 
   private final func CheckSettings() -> Void {
@@ -443,13 +476,14 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     };
   }
 
+  // Asks before discarding the unsaved changes
   private final func OnResetButton() -> Void {
-    if !this.IsResetButtonEnabled() {
+    if !this.IsResetButtonEnabled() || IsDefined(this.m_confirmationToken) {
       return;
     };
     // Log("OnResetButton");
-    this.m_resetSettingsRequest = true;
-    this.CheckSettings();
+    this.m_confirmationToken = GenericMessageNotification.Show(this, "Reset", "Discard the unsaved changes to your mod settings?", GenericMessageNotificationType.YesNo);
+    this.m_confirmationToken.RegisterListener(this, n"OnResetConfirmed");
   }
   
   protected func ScrollToMod(ratio: Float) {

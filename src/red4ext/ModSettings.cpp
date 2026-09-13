@@ -314,7 +314,22 @@ void ModSettings::AddOverrides(Manager* manager) {
   applyOverridesCallNumber++;
 }
 
+void ModSettings::BackupFile() {
+  std::error_code ec;
+  if (!std::filesystem::exists(configPath, ec)) {
+    return;
+  }
+  auto backupPath = configPath;
+  backupPath += ".bak";
+  if (std::filesystem::copy_file(configPath, backupPath, std::filesystem::copy_options::overwrite_existing, ec)) {
+    sdk->logger->InfoF(pluginHandle, "User settings backed up to: %s", backupPath.string().c_str());
+  } else {
+    sdk->logger->WarnF(pluginHandle, "Could not back up user settings to %s: %s", backupPath.string().c_str(), ec.message().c_str());
+  }
+}
+
 void ModSettings::WriteToFile() {
+  ModSettings::BackupFile();
   std::ofstream configFile(configPath);
   if (configFile.is_open()) {
     for (const auto &[modName, mod] : modSettings.mods) {

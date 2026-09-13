@@ -43,6 +43,7 @@ public:
   static void ClearVariables();
   // static void AddVariable(ModSettingsVariable *);
 
+  static void BackupFile();
   static void WriteToFile();
   static void ReadFromFile();
   static void AcceptChanges();
