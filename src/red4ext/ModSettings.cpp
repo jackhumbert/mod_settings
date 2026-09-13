@@ -17,11 +17,21 @@
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarListInt.hpp>
 #include <RedLib.hpp>
 #include <iostream>
+#include <cerrno>
+#include <cstring>
 #include <Hooks/ApplyOverrides.hpp>
 
 namespace ModSettings {
 
 INIReader reader;
+// set when user.ini exists but could not be opened or parsed; WriteToFile then
+// refuses to overwrite it so the user's settings are not replaced with defaults
+bool readFailed = false;
+
+static std::string ToLower(std::string str) {
+  std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+  return str;
+}
 
 const std::filesystem::path configPath = Utils::GetRootDir() / "red4ext" / "plugins" / "mod_settings" / "user.ini";
 
@@ -328,28 +338,99 @@ void ModSettings::BackupFile() {
   }
 }
 
+// Writes an entry read from user.ini back out unchanged
+static void WriteEntry(std::ofstream &stream, const INIReader::Entry &entry) {
+  stream << entry.name << " = ";
+  for (const auto c : entry.value) {
+    stream << c;
+    if (c == '\n') {
+      stream << "  "; // keep continuation lines parseable
+    }
+  }
+  stream << "\n";
+}
+
 void ModSettings::WriteToFile() {
-  ModSettings::BackupFile();
-  std::ofstream configFile(configPath);
-  if (configFile.is_open()) {
-    for (const auto &[modName, mod] : modSettings.mods) {
-      std::unique_lock _(*mod->classes_lock);
-      for (const auto &[className, modClass] : mod->classes) {
-        configFile << "[" << className.ToString() << "]\n";
-        for (const auto &[categoryName, category] : modClass->categories) {
-          for (const auto &[variableName, variable] : category->variables) {
-            configFile << *variable;
-          }
-        }
-        modClass->NotifyListeners();
-        configFile << "\n";
+  auto outputPath = configPath;
+  if (readFailed) {
+    outputPath += ".new";
+    sdk->logger->WarnF(pluginHandle, "User settings could not be read at startup; writing to %s instead of overwriting %s", outputPath.string().c_str(), configPath.string().c_str());
+  } else {
+    ModSettings::BackupFile();
+  }
+  std::ofstream configFile(outputPath);
+  if (!configFile.is_open()) {
+    sdk->logger->WarnF(pluginHandle, "Could not write to file: %s", outputPath.string().c_str());
+    return;
+  }
+
+  // registered classes by lower-case name (INIReader lookups are case-insensitive)
+  std::map<std::string, std::pair<Mod *, ModClass *>> registered;
+  for (const auto &[modName, mod] : modSettings.mods) {
+    std::shared_lock _(*mod->classes_lock);
+    for (const auto &[className, modClass] : mod->classes) {
+      registered[ToLower(className.ToString())] = {mod, modClass};
+    }
+  }
+
+  const auto &entries = reader.Entries();
+  uint32_t preservedSections = 0;
+  uint32_t preservedKeys = 0;
+
+  auto writeClass = [&](Mod *mod, ModClass *modClass, const std::string &lowerClassName) {
+    std::unique_lock _(*mod->classes_lock);
+    configFile << "[" << modClass->name.ToString() << "]\n";
+    std::set<std::string> writtenKeys;
+    for (const auto &[categoryName, category] : modClass->categories) {
+      for (const auto &[variableName, variable] : category->variables) {
+        configFile << *variable;
+        writtenKeys.insert(ToLower(variable->runtimeVar->name.ToString()));
       }
     }
-    configFile.close();
-    sdk->logger->InfoF(pluginHandle, "User settings written to file: %s", configPath.string().c_str());
-  } else {
-    sdk->logger->InfoF(pluginHandle, "Could not write to file: %s", configPath.string().c_str());
+    // keys of this class that were in the file but are not registered this session
+    for (const auto &entry : entries) {
+      if (ToLower(entry.section) == lowerClassName && !writtenKeys.contains(ToLower(entry.name))) {
+        WriteEntry(configFile, entry);
+        preservedKeys++;
+      }
+    }
+    modClass->NotifyListeners();
+    configFile << "\n";
+  };
+
+  // sections in the order they were read, so the file stays stable between sessions
+  std::set<std::string> written;
+  for (const auto &entry : entries) {
+    auto lowerSection = ToLower(entry.section);
+    if (written.contains(lowerSection)) {
+      continue;
+    }
+    written.insert(lowerSection);
+    auto found = registered.find(lowerSection);
+    if (found != registered.end()) {
+      writeClass(found->second.first, found->second.second, lowerSection);
+    } else {
+      // no mod registered this section (mod removed or disabled): carry it over untouched
+      configFile << "[" << entry.section << "]\n";
+      for (const auto &other : entries) {
+        if (ToLower(other.section) == lowerSection) {
+          WriteEntry(configFile, other);
+          preservedKeys++;
+        }
+      }
+      configFile << "\n";
+      preservedSections++;
+    }
   }
+  // classes registered this session that were not in the file yet
+  for (const auto &[lowerClassName, modAndClass] : registered) {
+    if (!written.contains(lowerClassName)) {
+      writeClass(modAndClass.first, modAndClass.second, lowerClassName);
+    }
+  }
+
+  configFile.close();
+  sdk->logger->InfoF(pluginHandle, "User settings written to file: %s (%u registered classes, %u unregistered sections and %u unregistered keys preserved)", outputPath.string().c_str(), (uint32_t)registered.size(), preservedSections, preservedKeys);
 }
 
 bool ModSettings::GetSettingString(CName className, CName propertyName, CString *value) {
@@ -371,11 +452,34 @@ void ModSettings::ReadValueFromFile(ScriptProperty *prop, ScriptInstance pointer
 }
 
 void ModSettings::ReadFromFile() {
-  reader = INIReader(configPath.string());
+  readFailed = false;
+  reader = INIReader();
 
-  if (reader.ParseError() != 0) {
+  std::error_code ec;
+  if (!std::filesystem::exists(configPath, ec)) {
+    sdk->logger->InfoF(pluginHandle, "No user settings file at %s, using defaults", configPath.string().c_str());
     return;
   }
+
+  // open with the wide path: fopen() with a narrow path fails when the game
+  // folder contains characters outside the system code page
+  auto file = _wfopen(configPath.c_str(), L"r");
+  if (!file) {
+    readFailed = true;
+    sdk->logger->WarnF(pluginHandle, "Could not open user settings file %s (%s); using defaults, it will not be overwritten", configPath.string().c_str(), std::strerror(errno));
+    return;
+  }
+  reader = INIReader(file);
+  fclose(file);
+
+  auto error = reader.ParseError();
+  if (error != 0) {
+    readFailed = true;
+    sdk->logger->WarnF(pluginHandle, "Parse error on line %d of %s; settings on other lines were loaded, the file will not be overwritten until it is fixed", error, configPath.string().c_str());
+  } else if (reader.Entries().empty()) {
+    sdk->logger->WarnF(pluginHandle, "User settings file %s is empty, using defaults", configPath.string().c_str());
+  }
+  sdk->logger->InfoF(pluginHandle, "Read user settings from %s: %u sections, %u keys", configPath.string().c_str(), (uint32_t)reader.Sections().size(), (uint32_t)reader.Entries().size());
 }
 
 void ModSettings::AcceptChanges() {

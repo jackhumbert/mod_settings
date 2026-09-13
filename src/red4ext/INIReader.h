@@ -306,14 +306,22 @@ inline int ini_parse(const char* filename, ini_handler handler, void* user)
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 
 // Read an INI file into easy-to-access name/value pairs. (Note that I've gone
 // for simplicity here rather than speed, but it should be pretty decent.)
 class INIReader
 {
 public:
+    // A name=value pair as it appeared in the file (original case, file order)
+    struct Entry {
+        std::string section;
+        std::string name;
+        std::string value;
+    };
+
     // Empty Constructor
-    INIReader() {};
+    INIReader() : _error(0) {};
 
     // Construct INIReader and parse given filename. See ini.h for more info
     // about the parsing.
@@ -329,6 +337,9 @@ public:
 
     // Return the list of sections found in ini file
     const std::set<std::string>& Sections() const;
+
+    // Return every name=value pair in the order it was read from the file
+    const std::vector<Entry>& Entries() const { return _entries; }
 
     // Get a string value from INI file, returning default_value if not found.
     std::string Get(const std::string& section, const std::string& name,
@@ -357,6 +368,7 @@ protected:
     int _error;
     std::map<std::string, std::string> _values;
     std::set<std::string> _sections;
+    std::vector<Entry> _entries;
     static std::string MakeKey(const std::string& section, const std::string& name);
     static int ValueHandler(void* user, const char* section, const char* name,
                             const char* value);
@@ -456,6 +468,13 @@ inline int INIReader::ValueHandler(void* user, const char* section, const char* 
         reader->_values[key] += "\n";
     reader->_values[key] += value;
     reader->_sections.insert(section);
+    // continuation lines (INI_ALLOW_MULTILINE) extend the previous entry
+    if (!reader->_entries.empty() && reader->_entries.back().section == section && reader->_entries.back().name == name) {
+        reader->_entries.back().value += "\n";
+        reader->_entries.back().value += value;
+    } else {
+        reader->_entries.push_back({section, name, value});
+    }
     return 1;
 }
 
