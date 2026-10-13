@@ -20,6 +20,9 @@
 #include <cerrno>
 #include <cstring>
 #include <Hooks/ApplyOverrides.hpp>
+#ifdef __APPLE__
+#include "MacShims.hpp"
+#endif
 
 namespace ModSettings {
 
@@ -33,7 +36,13 @@ static std::string ToLower(std::string str) {
   return str;
 }
 
+#ifdef __APPLE__
+// user.ini lives in the plugin folder, as on Windows (<root>/red4ext/plugins/mod_settings/user.ini). Found with dladdr, not by
+// rebuilding the path from the game root, so a plugin folder with another name still works.
+const std::filesystem::path configPath = Utils::GetPluginDir() / "user.ini";
+#else
 const std::filesystem::path configPath = Utils::GetRootDir() / "red4ext" / "plugins" / "mod_settings" / "user.ini";
+#endif
 
 ModSettings modSettings = ModSettings();
 
@@ -294,7 +303,11 @@ DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName category
     for (auto const variable : variables) {
       auto configVar = variable->ToConfigVar();
       if (configVar) {
+#ifdef __APPLE__
+        array.EmplaceBack(Handle<IScriptable>(static_cast<IScriptable*>(configVar))); // Handle<IModConfigVar> -> Handle<IScriptable> is ambiguous in the Mac SDK
+#else
         array.EmplaceBack(Handle(configVar));
+#endif
       }
     }
   }
@@ -303,8 +316,42 @@ DynArray<Handle<IScriptable>> ModSettings::GetVars(CName modName, CName category
 
 uint32_t applyOverridesCallNumber = 0;
 
+#ifdef __APPLE__
+// UserMapping the Mac body hook last saw (MODSETTINGS_MAC_APPLYOVERRIDES, on by default).
+static UserMapping * gameinputUserMapping = nullptr;
+
+void ModSettings::AddOverridesMac(UserMapping* userMapping) {
+  if (!kMacOverrideCallsReady || !MacUserMappingUsable(userMapping)) {
+    return; // MacUserMappingUsable logged why
+  }
+  gameinputUserMapping = userMapping;
+  for (const auto &[modName, mod] : modSettings.mods) {
+    std::unique_lock _(*mod->classes_lock);
+    for (const auto &[className, modClass] : mod->classes) {
+      for (const auto &[categoryName, category] : modClass->categories) {
+        for (const auto &[variableName, variable] : category->variables) {
+          if (variable->type->GetName() == "EInputKey") {
+            auto name = variable->name.ToString();
+            auto key = *(EInputKey*)variable->runtimeVar->GetAcceptedValue();
+            if (OverrideKeyMac(userMapping, name, (uint16_t)key, applyOverridesCallNumber) == Manager::OverrideStatus::NotFound) {
+              sdk->logger->WarnF(pluginHandle, "overridableUI \"%s\" not found (%s, %s)", name, modName.ToString(), className.ToString());
+            }
+          }
+        }
+      }
+    }
+  }
+  applyOverridesCallNumber++;
+}
+#endif
+
 void ModSettings::AddOverrides(Manager* manager) {
   gameinputManager = manager;
+#ifdef __APPLE__
+  // Not reached on the Mac: the hook is on the body, which gets a UserMapping (AddOverridesMac). Kept so the Windows function still builds.
+  ModSettingsMac::LogOnce("overrides-manager", "ModSettings::AddOverrides(Manager*) is not used on Mac (see AddOverridesMac)");
+  return;
+#endif
   for (const auto &[modName, mod] : modSettings.mods) {
     std::unique_lock _(*mod->classes_lock);
     for (const auto &[className, modClass] : mod->classes) {
@@ -486,6 +533,10 @@ void ModSettings::AcceptChanges() {
   ModSettings::WriteToFile();
   if (gameinputManager != nullptr)
     ApplyOverrides(gameinputManager);
+#ifdef __APPLE__
+  if (gameinputUserMapping != nullptr)
+    ApplyOverridesMac(gameinputUserMapping);
+#endif
   modSettings.changesRequested = false;
   modSettings.NotifyListeners();
 }
@@ -556,7 +607,15 @@ void ModSettings::NotifyListenersRequested(CName aGroupPath, CName aVarName) {
         // RED4ext::CName varName = aVarName;
         // args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &groupPath);
         // args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &varName);
+#ifdef __APPLE__
+        // The Mac SDK has no variadic ExecuteFunction on an instance: build the stack arguments (their types come from the function).
+        RED4ext::StackArgs_t args;
+        args.emplace_back(nullptr, &aGroupPath);
+        args.emplace_back(nullptr, &aVarName);
+        RED4ext::ExecuteFunction(instance.instance, func, nullptr, args);
+#else
         RED4ext::ExecuteFunction(instance, func, nullptr, aGroupPath, aVarName);
+#endif
       }
     } else {
       // remove?
@@ -579,7 +638,15 @@ void ModSettings::NotifyListenersAccepted(CName aGroupPath, CName aVarName) {
         // RED4ext::CName varName = aVarName;
         // args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &groupPath);
         // args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("CName"), &varName);
+#ifdef __APPLE__
+        // The Mac SDK has no variadic ExecuteFunction on an instance: build the stack arguments (their types come from the function).
+        RED4ext::StackArgs_t args;
+        args.emplace_back(nullptr, &aGroupPath);
+        args.emplace_back(nullptr, &aVarName);
+        RED4ext::ExecuteFunction(instance.instance, func, nullptr, args);
+#else
         RED4ext::ExecuteFunction(instance, func, nullptr, aGroupPath, aVarName);
+#endif
       }
     } else {
       // remove?

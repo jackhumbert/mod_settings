@@ -7,7 +7,23 @@
 
 using namespace RED4ext;
 
+#ifdef __APPLE__
+// CalcHash is inlined in the Mac game (R41b: the bindings XML loader 0x1D83A68 computes it inline at 0x1D853B4 and 0x1D853F4), so there is
+// no address. It is plain code: h = c + 31*h over the bytes taken as signed chars, from h = 0, 32-bit wrap, the same loop as the Windows
+// function 0x5C0BA0 (hash 2583235069). The result is compared with Mapping::overridableUI (Mapping +0x24), which the game fills with the
+// same loop.
+inline uint32_t CalcHash(const CString & aText) {
+  uint32_t h = 0;
+  const char * p = aText.c_str();
+  for (uint32_t i = 0, n = aText.Length(); i < n; ++i)
+    h = static_cast<uint32_t>(static_cast<int32_t>(static_cast<signed char>(p[i]))) + 31u * h;
+  return h;
+}
+// UserMapping::GetMappingCollection and ClearRuntimeDataOnRawMappings have Mac addresses now (ModSettingsSdkRows.inc, R41b).
+inline constexpr bool kMacOverrideCallsReady = true;
+#else
 const static UniversalRelocFunc<uint32_t (*)(const CString &)> CalcHash(2583235069);
+#endif
 
 struct Overridable {
   Overridable(const char* str) : m_hash(CalcHash(str)) { }
@@ -223,3 +239,15 @@ struct Manager {
 };
 
 void ApplyOverrides(Manager * manager);
+#ifdef __APPLE__
+// ApplyOverrides on the Mac. The Mac hook target is the BODY 0x1D792E4 (Windows 0x4A61C4), a real entry (R41b: it is in
+// LC_FUNCTION_STARTS, standard frame, no PC-relative instruction in its first four words). It receives the UserMapping*, not the Manager*
+// the Windows thunk takes. The Manager is not reachable from there, so the Manager-only side effects (overrideSet, lastOverrideStaus,
+// set only when callNumber > 1) are NOT set on this path: an accepted loss, logged once. The game's vtable slot is not patched.
+void ApplyOverridesMac(UserMapping * userMapping);
+// The body of Manager::Override on a UserMapping alone (no Manager fields). Same loop as Manager::Override.
+Manager::OverrideStatus OverrideKeyMac(UserMapping * userMapping, Overridable overridableUI, uint16_t inputKey, uint32_t callNumber);
+// Read-only check of the one field R41b could not verify: userMapping->contextManager (+0x48) must point back at it
+// (contextManager->userMapping == userMapping). False = the override feature is skipped for this mapping (logged once).
+bool MacUserMappingUsable(UserMapping * userMapping);
+#endif
