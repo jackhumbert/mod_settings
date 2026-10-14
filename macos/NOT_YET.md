@@ -23,6 +23,15 @@ Every Bool setting whose script default is `true` came out `false`: the game's B
 text. `ScriptProperty::FromString` now parses `true`/`false`/`1`/`0` itself on macOS (anything else still goes to the game's parser),
 and a definition with no default text gets a value-initialised default. `MODSETTINGS_MAC_DIAG=1` logs each Bool default and its result.
 
+## 0c. FromString's text argument (fixed 2026-10-13)
+
+The cause of 0b, and of a start-up crash: the Mac game's `FromString` (vtable slot +0x78) takes the text by value as a (pointer, 32-bit
+length) pair in x2 and x3, while the Mac SDK declares `FromString(ScriptInstance, const CString&)`. Called through the SDK declaration,
+x2 held the CString's address and x3 (the length) was never set. Defaults, min/max/step texts and saved values were parsed with a
+garbage length: key binding defaults came out as `IK_None`, and once `user.ini` held a key binding, reading it ran the enum parser off
+the end of the stack (crash at start-up). `Utils::FromString` now calls the same slot with the game's argument type. Tested in game with
+a `user.ini` that crashed the previous build: it starts, and a changed value is written, read back and seen by the mod.
+
 ## 1. Key-binding overrides: live, never run in game
 
 R41b gave the addresses: `UserMapping::GetMappingCollection` 0x1D796B4 and `ClearRuntimeDataOnRawMappings` 0x1D7923C are rows;
