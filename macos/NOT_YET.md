@@ -126,6 +126,8 @@ Not ported, because Mod Settings does not use the code:
 - No legacy-folder cleanup (`r6/scripts/mod_settings`, `archive/pc/mod/ModSettings.*`): no Mac install ever used them.
 - The scripts come from `<plugin folder>/Scripts/` (`packed.reds`, `module.reds`), compiled into the script cache by `cp2077-codeware/tools/build-cache.py`.
 - `user.ini` is `<plugin folder>/user.ini`, the folder found with `dladdr`.
+- `ModSettings::ReadFromFile` opens `user.ini` with `fopen` on macOS. macOS paths are UTF-8, so the narrow `fopen` opens any game folder; `_wfopen`, which the
+  Windows code uses so that non-ASCII folder names work, is Windows-only.
 - The fundamental types for `RedTypeFromString` are looked up by name (`Bool`, `Int32`, ...); the Windows fixed hashes (`RTTITYPE(hash)`) have no Mac address.
 - `AddVariable` is exported from the dylib, the runtime API other mods use. A Mac plugin that wants it (LTBF) calls `dlsym(RTLD_DEFAULT, "AddVariable")`;
   `__declspec(dllimport)` means nothing on the Mac. `modsettings_mac_pending` is a diagnostic export for the offline smoke test.
