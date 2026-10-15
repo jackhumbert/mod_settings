@@ -510,7 +510,12 @@ void ModSettings::ReadFromFile() {
 
   // open with the wide path: fopen() with a narrow path fails when the game
   // folder contains characters outside the system code page
+#ifdef __APPLE__
+  // macOS paths are UTF-8, so the narrow fopen() opens any game folder
+  auto file = fopen(configPath.c_str(), "r");
+#else
   auto file = _wfopen(configPath.c_str(), L"r");
+#endif
   if (!file) {
     readFailed = true;
     sdk->logger->WarnF(pluginHandle, "Could not open user settings file %s (%s); using defaults, it will not be overwritten", configPath.string().c_str(), std::strerror(errno));
