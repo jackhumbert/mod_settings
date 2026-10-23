@@ -48,6 +48,7 @@ struct ScriptDefinition {
 
   RED4ext::CName name;
   uint64_t unk10;
+  uint8_t unk18[0x28]; // added in 2.5
 };
 
 struct ScriptType : ScriptDefinition {
@@ -76,6 +77,7 @@ struct ScriptClass : ScriptDefinition {
   ScriptClass *parent;
   RED4ext::DynArray<ScriptProperty *> properties;
   RED4ext::DynArray<void *> overrides;
+  uint8_t unk70[0x20]; // added in 2.5
   RED4ext::DynArray<void *> functions;
   __unaligned __declspec(align(1)) RED4ext::HashMap<RED4ext::CName, RED4ext::CString> unk58;
   uint8_t visibility;
@@ -84,7 +86,10 @@ struct ScriptClass : ScriptDefinition {
   uint8_t unk8B;
   ScriptClassFlags flags;
 };
-RED4EXT_ASSERT_SIZE(ScriptClass, 0x90);
+RED4EXT_ASSERT_SIZE(ScriptClass, 0xD8);
+RED4EXT_ASSERT_OFFSET(ScriptClass, parent, 0x48);
+RED4EXT_ASSERT_OFFSET(ScriptClass, properties, 0x50);
+RED4EXT_ASSERT_OFFSET(ScriptClass, functions, 0x90);
 // char (*__kaboom)[offsetof(ScriptClass, rttiType)] = 1;
 
 }
