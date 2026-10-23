@@ -87,13 +87,13 @@ bool ModSettingsMac::IsGameScriptBundle(const void* aBundle, std::string& aWhy, 
     }
     const auto* bytes = static_cast<const uint8_t*>(aBundle);
 
-    // classes: DynArray<ScriptClass*> at +0xD0 (entries +0, capacity +8, size +0xC).
+    // classes: DynArray<ScriptClass*> at +0xD8 (2.5; 2.3.1 +0xD0) (entries +0, capacity +8, size +0xC).
     uint64_t entries = 0;
     uint32_t capacity = 0;
     uint32_t size = 0;
-    if (!SafeRead(bytes + 0xD0, entries) || !SafeRead(bytes + 0xD8, capacity) || !SafeRead(bytes + 0xDC, size))
+    if (!SafeRead(bytes + 0xD8, entries) || !SafeRead(bytes + 0xE0, capacity) || !SafeRead(bytes + 0xE4, size))
     {
-        aWhy = "classes (+0xD0) unreadable";
+        aWhy = "classes (+0xD8) unreadable";
         return false;
     }
     if (size < 1 || size > 200000 || capacity < size || entries == 0 || (entries & 7) != 0)
@@ -128,17 +128,17 @@ bool ModSettingsMac::IsGameScriptBundle(const void* aBundle, std::string& aWhy, 
             aWhy = Fail("classes[%u] name (+0x08) is not a printable string", i);
             return false;
         }
-        if (!SafeRead(reinterpret_cast<const void*>(ptr + 0x20), parent) || (parent != 0 && (parent & 7) != 0))
+        if (!SafeRead(reinterpret_cast<const void*>(ptr + 0x48), parent) || (parent != 0 && (parent & 7) != 0))
         {
-            aWhy = Fail("classes[%u] parent (+0x20)", i);
+            aWhy = Fail("classes[%u] parent (+0x48)", i);
             return false;
         }
-        if (!SafeRead(reinterpret_cast<const void*>(ptr + 0x89), flags))
+        if (!SafeRead(reinterpret_cast<const void*>(ptr + 0xD1), flags))
         {
-            aWhy = Fail("classes[%u] flags (+0x89)", i);
+            aWhy = Fail("classes[%u] flags (+0xD1)", i);
             return false;
         }
-        if (!SafeRead(reinterpret_cast<const void*>(ptr + 0x30), propCapacity) || !SafeRead(reinterpret_cast<const void*>(ptr + 0x34), propSize) ||
+        if (!SafeRead(reinterpret_cast<const void*>(ptr + 0x58), propCapacity) || !SafeRead(reinterpret_cast<const void*>(ptr + 0x5C), propSize) ||
             propSize > propCapacity || propSize > 1000000)
         {
             aWhy = Fail("classes[%u] properties (+0x28)", i);
@@ -152,17 +152,17 @@ bool ModSettingsMac::IsGameScriptBundle(const void* aBundle, std::string& aWhy, 
         }
     }
 
-    // definitionsByName: HashMap<CName, ScriptDefinition*> at +0 (indexTable +0, size +8, capacity +0xC). It must find the two roots.
+    // definitionsByName: HashMap<CName, ScriptDefinition*> at +8 (2.5; 2.3.1 +0) (indexTable +0, size +8, capacity +0xC). It must find the two roots.
     uint64_t indexTable = 0;
     uint32_t mapSize = 0;
     uint32_t mapCapacity = 0;
-    if (!SafeRead(bytes, indexTable) || !SafeRead(bytes + 8, mapSize) || !SafeRead(bytes + 12, mapCapacity) || indexTable == 0 || mapSize == 0 ||
+    if (!SafeRead(bytes + 8, indexTable) || !SafeRead(bytes + 16, mapSize) || !SafeRead(bytes + 20, mapCapacity) || indexTable == 0 || mapSize == 0 ||
         mapCapacity < mapSize)
     {
-        aWhy = "definitionsByName header (+0x00)";
+        aWhy = "definitionsByName header (+0x08)";
         return false;
     }
-    const auto* definitions = static_cast<const RED4ext::HashMap<RED4ext::CName, void*>*>(aBundle);
+    const auto* definitions = reinterpret_cast<const RED4ext::HashMap<RED4ext::CName, void*>*>(bytes + 8);
     if (!definitions->Get(RED4ext::CName("ISerializable")))
     {
         aWhy = "definitionsByName does not find ISerializable";
