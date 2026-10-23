@@ -48,6 +48,11 @@ struct ScriptDefinition {
 
   RED4ext::CName name;
   uint64_t unk10;
+#ifdef __APPLE__
+  // Game 2.5 (macOS): every script definition grew by 0x28 bytes after the name, and a script class has 0x20 more bytes before
+  // its functions (layout from psiberx/cp2077-codeware#63; Mac 2.5 class validator reads parent +0x48, properties +0x50, flags +0xD1).
+  uint8_t unk18_25[0x28];
+#endif
 };
 
 struct ScriptType : ScriptDefinition {
@@ -76,6 +81,9 @@ struct ScriptClass : ScriptDefinition {
   ScriptClass *parent;
   RED4ext::DynArray<ScriptProperty *> properties;
   RED4ext::DynArray<void *> overrides;
+#ifdef __APPLE__
+  uint8_t unk70_25[0x20];
+#endif
   RED4ext::DynArray<void *> functions;
   __unaligned __declspec(align(1)) RED4ext::HashMap<RED4ext::CName, RED4ext::CString> unk58;
   uint8_t visibility;
@@ -84,7 +92,14 @@ struct ScriptClass : ScriptDefinition {
   uint8_t unk8B;
   ScriptClassFlags flags;
 };
+#ifdef __APPLE__
+static_assert(offsetof(ScriptClass, parent) == 0x48);
+static_assert(offsetof(ScriptClass, properties) == 0x50);
+static_assert(offsetof(ScriptClass, functions) == 0x90);
+static_assert(offsetof(ScriptClass, unk89) == 0xD1);
+#else
 RED4EXT_ASSERT_SIZE(ScriptClass, 0x90);
+#endif
 // char (*__kaboom)[offsetof(ScriptClass, rttiType)] = 1;
 
 }

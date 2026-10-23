@@ -259,7 +259,12 @@ struct ScriptProperty : ScriptDefinition {
   RED4ext::HashMap<RED4ext::CName, RED4ext::CString> runtimeProperties;
   ScriptType *type;
 };
+#ifdef __APPLE__
+static_assert(offsetof(ScriptProperty, runtimeProperties) == 0x88);
+static_assert(offsetof(ScriptProperty, type) == 0xB8); // Mac 2.5 ValidateProperty 0x11a8f30: ldr x20, [x1, #0xb8]
+#else
 RED4EXT_ASSERT_SIZE(ScriptProperty, 0x98);
 RED4EXT_ASSERT_OFFSET(ScriptProperty, runtimeProperties, 0x60);
+#endif
 
 }
