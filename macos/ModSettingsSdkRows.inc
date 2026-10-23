@@ -26,6 +26,7 @@
         { 2715367827, 0x10B0C08 },  // ISerializable_sub_78. Mac: Handle(this, a1, a2 byte, a3, a4) with the Handle through x8 (the SDK signature models a hidden first argument). Windows 0x711A14.
         { 3978435378, 0x10b0b6c },  // ISerializable_sub_A0. The base default (GetType()->GetDefaultObject). The address table's Windows 0xB9A864 is a CResource override; the twin is 0x1247898.
         { 2149588021, 0x10b0b44 },  // ISerializable_sub_C0. The base default: the owning CResource's +0x30, returned in x0. The address table's Windows 0x81DA2C is unrelated; the twin is 0x4B0D9C.
+        { 3689484881, 0x10b0b44 },  // ISerializable_sub_C0: the 2.5 hash of the same function (upstream 0f5eba42a renamed it)
 
 // ---- No row on purpose ---------------------------------------------------------------------------------------------------------------
 //   3298233196  SkipKey. R40 matched Windows 0x21F01C0 to Mac 0x48026F0, but R41b found no reference to it of any kind (no bl, b, adr or data
