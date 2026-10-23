@@ -40,7 +40,7 @@ if(NOT APPLE)
 endif()
 
 option(MODSETTINGS_MAC_APPLYOVERRIDES
-    "Attach the ApplyOverrides hook on the body 0x1D792E4 (R41b: a real entry, void(UserMapping*)). OFF compiles it out; then also take 0x1d792e4 out of hook-offsets.txt."
+    "Attach the ApplyOverrides hook on the body 0x30A0D5C (R41b: a real entry, void(UserMapping*)). OFF compiles it out; then also take 0x30a0d5c out of hook-offsets.txt."
     ON)
 
 # Game-side symbols (the game's own functions) are bound by address at run time, not by name; the dylib has no unresolved C++ symbols
@@ -67,7 +67,7 @@ set(SDK_ROWS_INC "${CMAKE_CURRENT_SOURCE_DIR}/ModSettingsSdkRows.inc")
 set(SDK_OVERLAY "${CMAKE_CURRENT_BINARY_DIR}/sdk-overlay")
 file(READ "${SDK_RELOC}" SDK_RELOC_TEXT)
 file(READ "${SDK_ROWS_INC}" SDK_ROWS_TEXT)
-set(SDK_ROWS_MARKER "        { 4201325776, 0x21739E8 },  // CGlobalFunction_ctor\n")
+set(SDK_ROWS_MARKER "        { 4201325776, 0x109BAA8 },  // CGlobalFunction_ctor\n")
 string(FIND "${SDK_RELOC_TEXT}" "${SDK_ROWS_MARKER}" SDK_ROWS_POS)
 if(SDK_ROWS_POS EQUAL -1)
     message(FATAL_ERROR "the anchor row (CGlobalFunction_ctor) is not in ${SDK_RELOC}. Update the anchor in CMakeLists.txt.")

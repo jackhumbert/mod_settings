@@ -78,7 +78,7 @@ extern "C" __attribute__((visibility("default"))) void modsettings_registerNativ
     }
 
     // 3. The hooks, one attach attempt each, after Codeware has installed its own (it does that in its Main).
-    ModSettingsMac::Log("SkipKey is not hooked on the Mac: 0x48026F0 has no reference of any kind (R41b), gamepad-range keys are skipped as in vanilla");
+    ModSettingsMac::Log("SkipKey is not hooked on the Mac: 0x41E4340 has no reference of any kind (R41b), gamepad-range keys are skipped as in vanilla");
     ModModuleFactory::GetInstance().Load(sdk, handle);
 }
 
