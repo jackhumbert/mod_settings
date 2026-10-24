@@ -10,7 +10,11 @@ namespace ModSettings {
 
 template <typename T> struct RuntimeVariable : public IRuntimeVariable {
   RuntimeVariable(ScriptProperty *prop) : IRuntimeVariable(prop) {
+#ifdef __APPLE__
+    T _value{}, _defaultValue{}; // R43 (macOS): no stack garbage when the script definition has no default text
+#else
     T _value, _defaultValue;
+#endif
     prop->ReadDefaultValue(&_defaultValue);
     SetDefaultValue(&_defaultValue);
     _value = _defaultValue;

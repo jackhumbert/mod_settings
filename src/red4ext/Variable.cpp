@@ -160,7 +160,11 @@ bool ModVariable::CreateRuntimeVariable(const Variable &var) {
 
 IModConfigVar * ModVariable::ToConfigVar() const {
   if (this->runtimeVar) {
+#ifdef __APPLE__
+    auto configVar = reinterpret_cast<IModConfigVar*>(this->configVarType->CreateInstance());
+#else
     auto configVar = this->configVarType->CreateInstance<IModConfigVar*>();
+#endif
     configVar->SetRuntime(this->runtimeVar);
     return configVar;
   } else {
@@ -199,7 +203,14 @@ void ModClass::UnregisterListener(const Handle<IScriptable> &listener) {
   std::unique_lock _(*this->listeners_lock);
 
   if (listener && listener->ref && !listener->ref.Expired()) {
+#ifdef __APPLE__
+    // The Mac SDK has no operator== between WeakHandle<ISerializable> and WeakHandle<IScriptable>: compare the instances.
+    ISerializable * wanted = listener.instance;
+    auto position = std::find_if(this->listeners.begin(), this->listeners.end(),
+                                 [wanted](const WeakHandle<ISerializable> &other) { return other.instance == wanted; });
+#else
     auto position = std::find(this->listeners.begin(), this->listeners.end(), WeakHandle<IScriptable>(listener));
+#endif
     if (position != this->listeners.end())
       this->listeners.erase(position);
   }

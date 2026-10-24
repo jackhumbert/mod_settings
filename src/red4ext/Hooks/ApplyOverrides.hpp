@@ -7,7 +7,23 @@
 
 using namespace RED4ext;
 
+#ifdef __APPLE__
+// CalcHash is inlined in the Mac game (R41b: the bindings XML loader 0x1D83A68 computes it inline at 0x1D853B4 and 0x1D853F4), so there is
+// no address. It is plain code: h = c + 31*h over the bytes taken as signed chars, from h = 0, 32-bit wrap, the same loop as the Windows
+// function 0x5C0BA0 (hash 2583235069). The result is compared with Mapping::overridableUI (Mapping +0x24; 2.5 Mac +0x34), which the game fills with the
+// same loop.
+inline uint32_t CalcHash(const CString & aText) {
+  uint32_t h = 0;
+  const char * p = aText.c_str();
+  for (uint32_t i = 0, n = aText.Length(); i < n; ++i)
+    h = static_cast<uint32_t>(static_cast<int32_t>(static_cast<signed char>(p[i]))) + 31u * h;
+  return h;
+}
+// UserMapping::GetMappingCollection and ClearRuntimeDataOnRawMappings have Mac addresses now (ModSettingsSdkRows.inc, R41b).
+inline constexpr bool kMacOverrideCallsReady = true;
+#else
 const static UniversalRelocFunc<uint32_t (*)(const CString &)> CalcHash(2583235069);
+#endif
 
 struct Overridable {
   Overridable(const char* str) : m_hash(CalcHash(str)) { }
@@ -71,11 +87,19 @@ struct UserMapping {
     float val;
     float thresholdPress;
     float thresholdRelease;
+#ifdef __APPLE__
+    uint8_t unk24_25[0x34 - 0x24]; // 2.5: 0x10 new bytes before overridableUI (Mac ApplyOverrides 0x30A0F44 reads it at +0x34)
+#endif
     Overridable overridableUI;
     uint32_t unk28;
     uint32_t unk2C;
   };
+#ifdef __APPLE__
+  RED4EXT_ASSERT_SIZE(Mapping, 0x40); // 2.5 (the Mac loop 0x30A0F54 steps 0x40)
+  RED4EXT_ASSERT_OFFSET(Mapping, overridableUI, 0x34);
+#else
   RED4EXT_ASSERT_SIZE(Mapping, 0x30);
+#endif
 
   struct MappingCollection {
     DynArray<Mapping> actions;
@@ -105,8 +129,11 @@ struct UserMapping {
   void * buttonGroups; // 58
   UserMappingAxis * axes; // 60
   void * relativeAxes; // 68
-  Map<uint16_t, MappingCollection> keyMap; // 70
-  Map<CName, RawMappingCollection> rawMappings; // 98
+#ifdef __APPLE__
+  void * unk70_25; // 70 - 2.5: new member (the Mac ApplyOverrides body 0x30A0D5C destroys it); everything after moves by 8
+#endif
+  Map<uint16_t, MappingCollection> keyMap; // 70 (2.5 Mac: 78)
+  Map<CName, RawMappingCollection> rawMappings; // 98 (2.5 Mac: A0)
   HashMap<CString, EInputKey> stringToKey; // C0
   HashMap<CString, EInputKey> inputKeyMap_F0; // F0
   HashMap<EInputKey, CString> unk120; // 120
@@ -221,5 +248,21 @@ struct Manager {
   DynArray<void*> unk40;
   uint64_t listener_id;
 };
+#ifdef __APPLE__
+static_assert(offsetof(UserMapping, rawMappings) == 0xA0, "2.5 Mac: UserMapping::rawMappings");
+static_assert(offsetof(UserMapping, contextManager) == 0x48, "UserMapping::contextManager");
+#endif
 
 void ApplyOverrides(Manager * manager);
+#ifdef __APPLE__
+// ApplyOverrides on the Mac. The Mac hook target is the BODY 0x1D792E4 (Windows 0x4A61C4), a real entry (R41b: it is in
+// LC_FUNCTION_STARTS, standard frame, no PC-relative instruction in its first four words). It receives the UserMapping*, not the Manager*
+// the Windows thunk takes. The Manager is not reachable from there, so the Manager-only side effects (overrideSet, lastOverrideStaus,
+// set only when callNumber > 1) are NOT set on this path: an accepted loss, logged once. The game's vtable slot is not patched.
+void ApplyOverridesMac(UserMapping * userMapping);
+// The body of Manager::Override on a UserMapping alone (no Manager fields). Same loop as Manager::Override.
+Manager::OverrideStatus OverrideKeyMac(UserMapping * userMapping, Overridable overridableUI, uint16_t inputKey, uint32_t callNumber);
+// Read-only check of the one field R41b could not verify: userMapping->contextManager (+0x48) must point back at it
+// (contextManager->userMapping == userMapping). False = the override feature is skipped for this mapping (logged once).
+bool MacUserMappingUsable(UserMapping * userMapping);
+#endif
