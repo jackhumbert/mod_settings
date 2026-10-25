@@ -129,15 +129,20 @@ void __fastcall ModSettings::ProcessScriptData(const CScriptedDataEnvironment *s
       auto mod = self->mods[var->modName];
 
       auto modClassName = CNamePool::Add(var->className);
-      std::shared_lock _(*mod->classes_lock);
-      if (!mod->classes.contains(modClassName)) {
+      ModClass *modClass;
+      {
+        // exclusive from the start: upgrading a shared_lock to a unique_lock
+        // on the same thread deadlocks (SRW locks are not recursive), and
+        // release it before the callback below runs
         std::unique_lock _(*mod->classes_lock);
-        mod->classes[modClassName] = new ModClass {
-          .name = modClassName,
-          .mod = mod
-        };
+        if (!mod->classes.contains(modClassName)) {
+          mod->classes[modClassName] = new ModClass {
+            .name = modClassName,
+            .mod = mod
+          };
+        }
+        modClass = mod->classes[modClassName];
       }
-      auto &modClass = mod->classes[modClassName];
 
       auto categoryName = CNamePool::Add(var->categoryName);
       if (!modClass->categories.contains(categoryName)) {
@@ -522,7 +527,12 @@ void ModSettings::RejectChanges() {
 void ModSettings::NotifyListeners() {
   // std::shared_lock _(listeners_lock);
   this->listeners_lock.LockShared();
-  for (auto &[id, listener] : this->listeners) {
+  auto listeners = this->listeners;
+  this->listeners_lock.UnlockShared();
+  // call back outside the lock: a listener that (un)registers itself from
+  // the callback would otherwise take the exclusive lock on the thread that
+  // holds the shared one and spin forever
+  for (auto &[id, listener] : listeners) {
     if (listener) {
       auto instance = listener.Lock();
       auto func = instance->GetType()->GetFunction("OnModSettingsChange");
@@ -539,13 +549,17 @@ void ModSettings::NotifyListeners() {
       // remove?
     }
   }
-  this->listeners_lock.UnlockShared();
 }
 
 void ModSettings::NotifyListenersRequested(CName aGroupPath, CName aVarName) {
   // std::shared_lock _(listeners_lock);
   this->listeners_lock.LockShared();
-  for (auto &[id, listener] : this->listeners) {
+  auto listeners = this->listeners;
+  this->listeners_lock.UnlockShared();
+  // call back outside the lock: a listener that (un)registers itself from
+  // the callback would otherwise take the exclusive lock on the thread that
+  // holds the shared one and spin forever
+  for (auto &[id, listener] : listeners) {
     if (listener) {
       auto instance = listener.Lock();
       auto func = instance->GetType()->GetFunction("OnModVariableChangeRequested");
@@ -562,13 +576,17 @@ void ModSettings::NotifyListenersRequested(CName aGroupPath, CName aVarName) {
       // remove?
     }
   }
-  this->listeners_lock.UnlockShared();
 }
 
 void ModSettings::NotifyListenersAccepted(CName aGroupPath, CName aVarName) {
   // std::shared_lock _(listeners_lock);
   this->listeners_lock.LockShared();
-  for (auto &[id, listener] : this->listeners) {
+  auto listeners = this->listeners;
+  this->listeners_lock.UnlockShared();
+  // call back outside the lock: a listener that (un)registers itself from
+  // the callback would otherwise take the exclusive lock on the thread that
+  // holds the shared one and spin forever
+  for (auto &[id, listener] : listeners) {
     if (listener) {
       auto instance = listener.Lock();
       auto func = instance->GetType()->GetFunction("OnModVariableChangeAccepted");
@@ -585,7 +603,6 @@ void ModSettings::NotifyListenersAccepted(CName aGroupPath, CName aVarName) {
       // remove?
     }
   }
-  this->listeners_lock.UnlockShared();
 }
 
 void ModSettings::RegisterListenerToModifications(const Handle<IScriptable> &listener) {

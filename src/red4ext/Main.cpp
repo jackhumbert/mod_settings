@@ -64,7 +64,9 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
     ArchiveXL::RegisterArchive(aHandle, "ModSettings.archive");
+    aSdk->logger->Info(aHandle, "Attaching hooks");
     ModModuleFactory::GetInstance().Load(aSdk, aHandle);
+    aSdk->logger->Info(aHandle, "Mod Settings loaded");
     // Engine::RTTIRegistrar::RegisterPending();
 
     break;
