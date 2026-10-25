@@ -71,11 +71,17 @@ struct UserMapping {
     float val;
     float thresholdPress;
     float thresholdRelease;
+    // 2.5 grew Mapping from 0x30 to 0x40 and moved overridableUI from 0x24 to 0x34 (ContextManager::Override);
+    // key16 stayed at 0x2. Where the new 0x10 bytes sit before overridableUI is unknown, so the fields
+    // between them are unverified on 2.5 (nothing here reads them).
+    uint8_t unk24[0x10];
     Overridable overridableUI;
-    uint32_t unk28;
-    uint32_t unk2C;
+    uint32_t unk38;
+    uint32_t unk3C;
   };
-  RED4EXT_ASSERT_SIZE(Mapping, 0x30);
+  RED4EXT_ASSERT_SIZE(Mapping, 0x40);
+  RED4EXT_ASSERT_OFFSET(Mapping, key16, 0x2);
+  RED4EXT_ASSERT_OFFSET(Mapping, overridableUI, 0x34);
 
   struct MappingCollection {
     DynArray<Mapping> actions;
