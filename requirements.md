@@ -1,4 +1,4 @@
 ## Requirements
-* RED4ext 1.27.0+
-* ArchiveXL 1.23.0+
-* Redscript 0.5.28+
+* RED4ext 1.31.0+
+* ArchiveXL 1.28.0+
+* Redscript 0.5.32+

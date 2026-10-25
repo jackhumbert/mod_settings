@@ -11,7 +11,7 @@ namespace ModSettings {
 extern const Sdk *sdk;
 extern PluginHandle pluginHandle;
 
-struct ScriptData;
+struct CScriptedDataEnvironment;
 
 class ModSettings : public IScriptable {
 public:
@@ -25,9 +25,9 @@ public:
 
   static Handle<ModSettings> GetInstance();
 
-  static void ProcessScriptData(const ScriptData *scriptData);
+  static void ProcessScriptData(const CScriptedDataEnvironment *scriptData);
   static bool GetSettingString(CName, CName, CString *);
-  static void ReadValueFromFile(ScriptProperty *prop, ScriptInstance pointer);
+  static void ReadValueFromFile(CScriptedDataProperty *prop, ScriptInstance pointer);
 
   template <typename T>
   static void ReadValueFromFile(CName className, CName propertyName,

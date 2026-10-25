@@ -87,7 +87,7 @@ void ModVariable::Write(std::ofstream& stream) const {
   stream << this->runtimeVar->name.ToString() << " = " << str.c_str() << "\n";
 }
 
-bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
+bool ModVariable::SetRuntimeVariable(CScriptedDataProperty * prop) {
   if (!this->type) {
     return false;
   }
@@ -307,7 +307,7 @@ ModSettingsVariable::ModSettingsVariable() {
   this->listeners.Reserve(1000);
 }
 
-// ModSettingsVariable::ModSettingsVariable(ScriptProperty* prop, const CName scriptClass) : ModSettingsVariable() {
+// ModSettingsVariable::ModSettingsVariable(CScriptedDataProperty* prop, const CName scriptClass) : ModSettingsVariable() {
 //   prop->ReadProperty("ModSettings.mod", &this->mod);
 //   prop->ReadProperty("ModSettings.category", &this->category);
 //   this->type = RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
@@ -443,7 +443,7 @@ void ModSettingsVariable::UnregisterListener(Handle<RED4ext::IScriptable> handle
   }
 }
 
-bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
+bool ModVariable::SetRuntimeVariable(CScriptedDataProperty * prop) {
   switch (this->type->GetName()) {
     case CName("Bool"):
       this->runtimeVar = new RuntimeVariableBool(prop);

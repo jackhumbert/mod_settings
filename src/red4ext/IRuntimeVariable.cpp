@@ -12,7 +12,7 @@ IRuntimeVariable::IRuntimeVariable() {
   bitfield.canBeRestoredToDefault = true;
 }
 
-IRuntimeVariable::IRuntimeVariable(ScriptProperty* prop) : IRuntimeVariable() {
+IRuntimeVariable::IRuntimeVariable(CScriptedDataProperty* prop) : IRuntimeVariable() {
   this->updatePolicy = user::EConfigVarUpdatePolicy::ConfirmationRequired;
   this->name = prop->name;
 

@@ -15,7 +15,7 @@ namespace ModSettings {
 
 using namespace RED4ext;
 
-struct ScriptProperty;
+struct CScriptedDataProperty;
 
 struct Mod;
 struct ModClass;
@@ -39,7 +39,7 @@ struct ModVariable {
   }
 
   void Write(std::ofstream& stream) const;
-  bool SetRuntimeVariable(ScriptProperty * prop);
+  bool SetRuntimeVariable(CScriptedDataProperty * prop);
   bool CreateRuntimeVariable(const Variable &var);
   bool RestoreDefault();
   void RejectChange();
@@ -117,7 +117,7 @@ struct Mod {
 class ModSettingsVariable {
 public:
   ModSettingsVariable();
-  ModSettingsVariable(ScriptProperty* prop, const CName scriptClass);
+  ModSettingsVariable(CScriptedDataProperty* prop, const CName scriptClass);
   
   void SetRequestedValues();
   Handle<user::SettingsVar> CreateConfigVar();
@@ -140,7 +140,7 @@ public:
     return stream;
   }
 
-  bool SetRuntimeVariable(ScriptProperty * prop);
+  bool SetRuntimeVariable(CScriptedDataProperty * prop);
 
 private:
   template<typename VariableType>

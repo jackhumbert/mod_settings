@@ -55,7 +55,7 @@ void AddVariable(Variable* variable) {
   queuedVariables.emplace_back(variable);
 }
 
-void __fastcall ModSettings::ProcessScriptData(const ScriptData *scriptData) {
+void __fastcall ModSettings::ProcessScriptData(const CScriptedDataEnvironment *scriptData) {
   auto self = ModSettings::GetInstance();
   if (scriptData) {
     ModSettings::ReadFromFile();
@@ -71,7 +71,7 @@ void __fastcall ModSettings::ProcessScriptData(const ScriptData *scriptData) {
         //   if (found)
         //     continue;
         // }
-        if (prop->runtimeProperties.size) {
+        if (prop->attributes.size) {
           if (prop->IsValid()) {
             auto modName = prop->ReadProperty("ModSettings.mod");
             if (!self->mods.contains(modName)) {
@@ -444,7 +444,7 @@ bool ModSettings::GetSettingString(CName className, CName propertyName, CString 
   }
 }
 
-void ModSettings::ReadValueFromFile(ScriptProperty *prop, ScriptInstance pointer) {
+void ModSettings::ReadValueFromFile(CScriptedDataProperty *prop, ScriptInstance pointer) {
   CString settingFromFile;
   if (ModSettings::GetSettingString(prop->parent->name, prop->name, &settingFromFile)) {
     prop->FromString(pointer, settingFromFile);
