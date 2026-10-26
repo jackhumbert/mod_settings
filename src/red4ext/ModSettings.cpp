@@ -58,6 +58,18 @@ void AddVariable(Variable* variable) {
 void __fastcall ModSettings::ProcessScriptData(const CScriptedDataEnvironment *scriptData) {
   auto self = ModSettings::GetInstance();
   if (scriptData) {
+    // The game releases several script environments per launch (3 on 2.5, more
+    // with mod.io script mods) and only one holds the compiled mods. Keep the
+    // registry from that one instead of letting a later, empty one wipe it.
+    auto settingsProps = 0u;
+    for (const auto &scriptClass : scriptData->classes)
+      for (const auto &prop : scriptClass->properties)
+        if (prop->attributes.size && prop->IsValid())
+          settingsProps++;
+    sdk->logger->InfoF(pluginHandle, "Script data: %u classes, %u Mod Settings properties",
+                       scriptData->classes.size, settingsProps);
+    if (!settingsProps && !self->mods.empty())
+      return;
     ModSettings::ReadFromFile();
     ModSettings::ClearVariables();
     for (const auto &scriptClass : scriptData->classes) {
