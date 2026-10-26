@@ -39,7 +39,12 @@ public class MenuScenario_ModSettings extends MenuScenario_PreGameSubMenu {
         this.SwitchToScenario(this.m_prevScenario);
       };
     } else {
-      menuState.DispatchEvent(n"mod_settings_main", n"OnBack");
+      // Nothing takes the event when the page never came up (missing or
+      // overridden menu resources); close anyway so Back never strands the
+      // player on a blank screen.
+      if !menuState.DispatchEvent(n"mod_settings_main", n"OnBack") {
+        this.CloseSettings(true);
+      };
     };
   }
 

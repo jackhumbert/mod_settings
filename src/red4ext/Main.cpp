@@ -38,32 +38,42 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     auto ptr = GetModuleHandle(nullptr);
     aSdk->logger->InfoF(aHandle, "Base address: %p", ptr);
 
-    auto scriptsFolder = Utils::GetRootDir() / "r6" / "scripts" / "mod_settings";
-    if (std::filesystem::exists(scriptsFolder)) {
-      aSdk->logger->Info(aHandle, "Deleting old scripts folder");
-      std::filesystem::remove_all(scriptsFolder);
-    }
-    auto archive = Utils::GetRootDir() / "archive" / "pc" / "mod" / "ModSettings.archive";
-    if (std::filesystem::exists(archive)) {
-      aSdk->logger->Info(aHandle, "Deleting old archive");
-      std::filesystem::remove_all(archive);
-    }
-    auto archiveXL = Utils::GetRootDir() / "archive" / "pc" / "mod" / "ModSettings.archive.xl";
-    if (std::filesystem::exists(archiveXL)) {
-      aSdk->logger->Info(aHandle, "Deleting old archive.xl");
-      std::filesystem::remove_all(archiveXL);
-    }
-    auto XL = Utils::GetRootDir() / "archive" / "pc" / "mod" / "ModSettings.xl";
-    if (std::filesystem::exists(XL)) {
-      aSdk->logger->Info(aHandle, "Deleting old xl");
-      std::filesystem::remove_all(XL);
-    }
+    // Files from releases that installed outside the plugin folder. Only remove
+    // them when this release's own copies are present (a mod manager that moved
+    // ours there would otherwise lose the menu), and never throw out of Load on
+    // a locked or read-only file: RED4ext does not catch it.
+    wchar_t pluginPath[MAX_PATH + 1] = {0};
+    GetModuleFileNameW(aHandle, pluginPath, MAX_PATH);
+    auto pluginDir = std::filesystem::path(pluginPath).parent_path();
+    auto RemoveLegacy = [&](const std::filesystem::path &path, const std::filesystem::path &replacement) {
+      std::error_code ec;
+      if (!std::filesystem::exists(path, ec))
+        return;
+      if (!std::filesystem::exists(pluginDir / replacement, ec)) {
+        aSdk->logger->WarnF(aHandle, "Keeping %ls: %ls is missing from the plugin folder", path.c_str(),
+                            replacement.c_str());
+        return;
+      }
+      aSdk->logger->InfoF(aHandle, "Deleting old %ls", path.c_str());
+      std::filesystem::remove_all(path, ec);
+      if (ec)
+        aSdk->logger->WarnF(aHandle, "Could not delete %ls: %s", path.c_str(), ec.message().c_str());
+    };
+    auto modArchives = Utils::GetRootDir() / "archive" / "pc" / "mod";
+    RemoveLegacy(Utils::GetRootDir() / "r6" / "scripts" / "mod_settings", "packed.reds");
+    RemoveLegacy(modArchives / "ModSettings.archive", "ModSettings.archive");
+    RemoveLegacy(modArchives / "ModSettings.archive.xl", "ModSettings.archive.xl");
+    RemoveLegacy(modArchives / "ModSettings.xl", "ModSettings.archive.xl");
 
     Red::TypeInfoRegistrar::RegisterDiscovered();
 
-    aSdk->scripts->Add(aHandle, L"packed.reds");
-    aSdk->scripts->Add(aHandle, L"module.reds");
-    ArchiveXL::RegisterArchive(aHandle, "ModSettings.archive");
+    for (auto script : {L"packed.reds", L"module.reds"}) {
+      if (!aSdk->scripts->Add(aHandle, script))
+        aSdk->logger->ErrorF(aHandle, "Could not register %ls with redscript; the menu will be missing", script);
+    }
+    if (!ArchiveXL::RegisterArchive(aHandle, "ModSettings.archive"))
+      aSdk->logger->Error(aHandle, "Could not register ModSettings.archive (is ArchiveXL installed and the file present "
+                                   "in the plugin folder?); the menu will be missing or blank");
     aSdk->logger->Info(aHandle, "Attaching hooks");
     ModModuleFactory::GetInstance().Load(aSdk, aHandle);
     aSdk->logger->Info(aHandle, "Mod Settings loaded");

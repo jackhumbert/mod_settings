@@ -274,6 +274,9 @@ DynArray<CName> ModSettings::GetMods() {
 DynArray<CName> ModSettings::GetCategories(CName modName) {
   auto array = DynArray<CName>(new Memory::DefaultAllocator);
   std::vector<std::pair<CName, ModCategory*>> modCategories;
+  // mods[] would insert a null Mod for an unknown name and crash on it
+  if (!modSettings.mods.contains(modName))
+    return array;
   for (auto const &[modClassName, modClass] : modSettings.mods[modName]->classes) {
     for (auto itr = modClass->categories.begin(); itr != modClass->categories.end(); ++itr ) {
       modCategories.push_back(*itr); 
