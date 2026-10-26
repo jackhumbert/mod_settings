@@ -325,6 +325,7 @@ uint32_t applyOverridesCallNumber = 0;
 
 void ModSettings::AddOverrides(Manager* manager) {
   gameinputManager = manager;
+  uint32_t replaced = 0, unchanged = 0, notFound = 0;
   for (const auto &[modName, mod] : modSettings.mods) {
     std::unique_lock _(*mod->classes_lock);
     for (const auto &[className, modClass] : mod->classes) {
@@ -333,14 +334,23 @@ void ModSettings::AddOverrides(Manager* manager) {
           if (variable->type->GetName() == "EInputKey") {
             auto name = variable->name.ToString();
             auto key = *(EInputKey*)variable->runtimeVar->GetAcceptedValue();
-            if (manager->Override(name, (uint16_t)key, applyOverridesCallNumber) == Manager::OverrideStatus::NotFound) {
+            auto status = manager->Override(name, (uint16_t)key, applyOverridesCallNumber);
+            if (status == Manager::OverrideStatus::NotFound) {
+              notFound++;
               sdk->logger->WarnF(pluginHandle, "overridableUI \"%s\" not found (%s, %s)", name, modName.ToString(), className.ToString());
+            } else if (status & Manager::OverrideStatus::Replaced) {
+              replaced++;
+              sdk->logger->InfoF(pluginHandle, "overridableUI \"%s\" set to key %u", name, (uint32_t)key);
+            } else {
+              unchanged++;
             }
           }
         }
       }
     }
   }
+  sdk->logger->InfoF(pluginHandle, "Key binding overrides, call %u on thread %u: %u mods, %u replaced, %u unchanged, %u not found",
+                     applyOverridesCallNumber, GetCurrentThreadId(), (uint32_t)modSettings.mods.size(), replaced, unchanged, notFound);
   applyOverridesCallNumber++;
 }
 
@@ -506,6 +516,8 @@ void ModSettings::AcceptChanges() {
   ModSettings::WriteToFile();
   if (gameinputManager != nullptr)
     ApplyOverrides(gameinputManager);
+  else
+    sdk->logger->Warn(pluginHandle, "Key binding changes not applied: the game's input manager was not captured");
   modSettings.changesRequested = false;
   modSettings.NotifyListeners();
 }
