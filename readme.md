@@ -117,6 +117,18 @@ This example will produce the following results for enum values:
 _For the mod to work with REDmod deployments, the following mod is required:_
 * [cybercmd](https://github.com/jac3km4/cybercmd)
 
+## Compatibility
+
+If the Mod Settings entry is missing from the pause menu, check `r6/logs/redscript_rCURRENT.log` first. When any redscript mod fails to compile (usually `UNRESOLVED_REF`, with the offending file named), the game drops every script mod, Mod Settings included. The other common cause is a mod manager that never deployed `red4ext/plugins/mod_settings/`.
+
+Mods reported alongside a missing menu or crashes on game 2.5, checked against Mod Settings 0.2.27:
+
+| Mod | Verdict |
+| --- | --- |
+| [ReFRACT](https://www.nexusmods.com/cyberpunk2077/mods/34858) | No conflict with 1.5.0 (built for 2.5): tested in game, the entry shows, its page opens and Apply works. ReFRACT is a RED4ext plugin that uses Mod Settings for its options; 1.4.0 and older were built for 2.31 and their author expected them to break on 2.5. Update ReFRACT. |
+| [Blur Begone](https://www.nexusmods.com/cyberpunk2077/mods/8105) | No conflict with 2.6.0 (built for 2.5): tested in game together with ReFRACT. Since 2.0.0 it is a RED4ext plugin with Mod Settings options, and 2.5.0 and older were built for 2.31. The 1.x versions were mesh and material replacer archives. Update Blur Begone, and update it together with ReFRACT. |
+| [Better Vehicle First Person](https://www.nexusmods.com/cyberpunk2077/mods/2202) | No overlap: it is a Cyber Engine Tweaks Lua mod with no redscript, archives or RED4ext parts, so it cannot hide the menu. It has not been updated since 2024 and is reported to crash 2.5 by itself. Remove it, or switch to a maintained replacement. |
+
 ## Development
 
 Running `tools/ModStngs.1sc` on `mod_settings_main.inkwidget` will toggle between using a custom class (`ModStngs` replacing `Settings` in `SettingsMainGameController` and `SettingsSelectorController*`) so the file can be opened & edited in Wolvenkit. If you keep the file open in Wolvenkit, you won't need to convert back, and only run the script after you've saved it in Wolvenkit, before packing.
