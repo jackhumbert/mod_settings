@@ -188,10 +188,26 @@ void ModClass::RegisterListener(const Handle<IScriptable> &listener) {
   //   }
   // }
 
-  std::unique_lock _(*this->listeners_lock);
+  if (!listener || !listener->ref || listener->ref.Expired())
+    return;
 
-  if (listener && listener->ref && !listener->ref.Expired()) {
+  {
+    std::unique_lock _(*this->listeners_lock);
     this->listeners.emplace_back(listener);
+  }
+
+  // The listener may have been created before user.ini was applied to the
+  // class defaults (game 2.5 creates ScriptableServices first), so give it
+  // the current values now instead of waiting for the next accepted change
+  if (this->type) {
+    for (const auto &[categoryName, category] : this->categories) {
+      for (const auto &[variableName, variable] : category->variables) {
+        auto prop = this->type->propsByName.Get(variable->name);
+        if (prop && *prop) {
+          (*prop)->SetValue(listener.instance, variable->runtimeVar->GetAcceptedValue());
+        }
+      }
+    }
   }
 }
 

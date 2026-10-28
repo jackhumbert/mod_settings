@@ -76,6 +76,13 @@ private:
   // std::shared_mutex listeners_lock;
   RED4ext::SharedSpinLock listeners_lock;
   std::map<CName, Mod*> mods;
+  // every RegisterListenerToClass listener, kept so the ones registered before
+  // the script data is processed (ScriptableService.OnLoad on game 2.5) are
+  // attached once the classes exist, and again after the registry is rebuilt
+  std::mutex classListeners_lock;
+  std::vector<WeakHandle<IScriptable>> classListeners;
+
+  static uint32_t AttachClassListener(const Handle<IScriptable> &listener);
 };
 
 } // namespace ModSettings

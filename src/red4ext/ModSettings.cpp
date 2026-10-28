@@ -204,6 +204,18 @@ void __fastcall ModSettings::ProcessScriptData(const CScriptedDataEnvironment *s
         }
       }
     }
+    // the registry was rebuilt: attach listeners registered before it existed
+    std::vector<WeakHandle<IScriptable>> classListeners;
+    {
+      std::unique_lock _(self->classListeners_lock);
+      classListeners = self->classListeners;
+    }
+    for (auto &weak : classListeners) {
+      if (auto listener = weak.Lock()) {
+        auto matched = AttachClassListener(listener);
+        sdk->logger->InfoF(pluginHandle, "Listener %s attached to %u classes", listener->GetType()->GetName().ToString(), matched);
+      }
+    }
   }
 }
 
@@ -650,23 +662,47 @@ void ModSettings::UnregisterListenerToModifications(const Handle<IScriptable> &l
   }
 }
 
+// Registers the listener with each registered class in its hierarchy, which
+// also gives it the current values; returns how many classes matched
+uint32_t ModSettings::AttachClassListener(const Handle<IScriptable> &listener) {
+  uint32_t matched = 0;
+  auto type = listener->GetType();
+  do {
+    auto className = type->GetName();
+    for (auto &[modName, mod] : modSettings.mods) {
+      if (mod->classes.contains(className)) {
+        mod->classes[className]->RegisterListener(listener);
+        matched++;
+      }
+    }
+    type = type->parent;
+  } while (type);
+  return matched;
+}
+
 void ModSettings::RegisterListenerToClass(const Handle<IScriptable> &listener) {
   if (listener) {
-    auto type = listener->GetType();
-    do {
-      auto className = type->GetName();
-      for (auto &[modName, mod] : modSettings.mods) {
-        if (mod->classes.contains(className)) {
-          mod->classes[className]->RegisterListener(listener);
-        }
-      }
-      type = type->parent;
-    } while (type);
+    {
+      std::unique_lock _(modSettings.classListeners_lock);
+      std::erase_if(modSettings.classListeners, [&](const WeakHandle<IScriptable> &other) {
+        return other.Expired() || other.instance == listener.instance;
+      });
+      modSettings.classListeners.emplace_back(listener);
+    }
+    if (!AttachClassListener(listener))
+      sdk->logger->InfoF(pluginHandle, "Listener %s registered before its class; attached once the script data is processed",
+                         listener->GetType()->GetName().ToString());
   }
 }
 
 void ModSettings::UnregisterListenerToClass(const Handle<IScriptable> &listener) {
   if (listener) {
+    {
+      std::unique_lock _(modSettings.classListeners_lock);
+      std::erase_if(modSettings.classListeners, [&](const WeakHandle<IScriptable> &other) {
+        return other.Expired() || other.instance == listener.instance;
+      });
+    }
     auto type = listener->GetType();
     do {
       auto className = type->GetName();
