@@ -6,7 +6,7 @@ The rules for every mod (languages, native design, layout, build, release, comme
 
 ## Layout
 
-- `src/red4ext/` - plugin. `Main.cpp` = entry. `Hooks/` = 2 hooked game functions plus 1 direct call, all by RED4ext address hash (`REGISTER_HOOK_HASH` / `UniversalRelocFunc`). `Scripting/`, `ScriptDefinitions/` = the script-facing API.
+- `src/red4ext/` - plugin. `Main.cpp` = entry. `Hooks/` = 3 hooked game functions plus 3 direct calls, all by RED4ext address hash (`REGISTER_HOOK_HASH` / `UniversalRelocFunc`), named `<Class>_<Method>` after the game function. `docs/history.md` = decisions and findings. `Scripting/`, `ScriptDefinitions/` = the script-facing API.
 - `src/redscript/mod_settings/` - the UI and API redscript; packed into `packed.reds` + `module.reds`. Other mods compile against this folder (LTBF and In-World Navigation vendor this repo as a submodule for that).
 - `src/wolvenkit/` - Wolvenkit project; the built `ModSettings.archive` under `packed/` is committed and only copied by CMake.
 - `deps/` - submodules: `red4ext.sdk` (jackhumbert fork, branch `new-types`), `cpcmake` (jackhumbert/cyberpunk_cmake, the CMake framework), `red_lib` (fork, branch `jack`), `archive_xl` (headers only), `spdlog`, `detours`.
@@ -38,7 +38,7 @@ Game version for the release name comes from the installed `Cyberpunk2077.exe`, 
    - A plugin not built for the current patch can crash startup right after RED4ext logs "Loading plugin from ..." for it. Rule it out with `ignored = ["<plugin folder>"]` in `red4ext/config.ini`.
 4. Tag.
 
-State on 2026-09-13: v0.2.21 (built for 2.30) loads and works on game 2.31 unchanged; pins bumped to the 2.31 SDK so the next tag reads "for 2.31".
+Past patch-day states are in `docs/history.md`.
 
 ## Releases
 

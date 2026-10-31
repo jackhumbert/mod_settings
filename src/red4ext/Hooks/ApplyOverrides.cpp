@@ -3,16 +3,19 @@
 #include <RED4ext/HashMap.hpp>
 #include <ModSettings.hpp>
 
+// game::input::UserMapping::RawMappingCollection * game::input::UserMapping::GetMappingCollection(CName)
 UserMapping::RawMappingCollection * UserMapping::GetMappingCollection(CName mapName) {
   static UniRelocFunc<decltype(&UserMapping::GetMappingCollection)> call(3702071356);
   return call(this, mapName);
 }
 
-void UserMapping::ClearRuntimeDataOnRawMappings() {
-  static UniRelocFunc<decltype(&UserMapping::ClearRuntimeDataOnRawMappings)> call(4196866905);
+// void game::input::UserMapping::ClearRuntimeDataOnRawMappings_Expensive() const
+void UserMapping::ClearRuntimeDataOnRawMappings_Expensive() {
+  static UniRelocFunc<decltype(&UserMapping::ClearRuntimeDataOnRawMappings_Expensive)> call(4196866905);
   return call(this);
 }
 
+// bool game::input::Manager::CheckOverrideConflicts(CName, unsigned short, DynArray<game::input::OverridableMapping> &) const
 // bool Manager::CheckOverrideConflicts(CName contextName, unsigned short key, DynArray<OverridableMapping> & conflicts) const {
 //   static UniRelocFunc<decltype(&Manager::CheckOverrideConflicts)> call(1600530764);
 //   return call(this, contextName, key, conflicts);
@@ -26,7 +29,7 @@ Manager::OverrideStatus Manager::Override(
 ) {
   uint32_t status = NotFound;
   // CheckForOverrideConflicts
-  this->contextManager->userMapping->ClearRuntimeDataOnRawMappings();
+  this->contextManager->userMapping->ClearRuntimeDataOnRawMappings_Expensive();
   for (const auto & action : this->contextManager->actions.values) {
     for (const auto & mapName : action->data.mapNames) {
       auto mappingCollection = this->contextManager->userMapping->GetMappingCollection(mapName);
@@ -56,34 +59,40 @@ Manager::OverrideStatus Manager::Override(
   return (Manager::OverrideStatus)status;
 }
 
-decltype(&ApplyOverrides) ApplyOverrides_Original;
-ModModuleHookHash s_ApplyOverrides_Hook("ApplyOverrides", 1773342692, reinterpret_cast<void*>(&ApplyOverrides), reinterpret_cast<void**>(&ApplyOverrides_Original)); 
+decltype(&Manager_ApplyOverrides) Manager_ApplyOverrides_Original;
+ModModuleHookHash s_Manager_ApplyOverrides_Hook("Manager_ApplyOverrides", 1773342692, reinterpret_cast<void*>(&Manager_ApplyOverrides), reinterpret_cast<void**>(&Manager_ApplyOverrides_Original));
 
-void ApplyOverrides(Manager * manager) {
+// void game::input::Manager::ApplyOverrides()
+void Manager_ApplyOverrides(Manager * manager) {
   ModSettings::ModSettings::AddOverrides(manager);
-  ApplyOverrides_Original(manager);
+  Manager_ApplyOverrides_Original(manager);
 }
 
-// REGISTER_HOOK_HASH(bool, 1120015283, Override, ContextManager* cm, CName name, unsigned int ui, unsigned short key) {
-//   return Override_Original(cm, name, ui, key);
+// bool game::input::ContextManager::Override(CName, unsigned int, unsigned short)
+// REGISTER_HOOK_HASH(bool, 1120015283, ContextManager_Override, ContextManager* cm, CName name, unsigned int ui, unsigned short key) {
+//   return ContextManager_Override_Original(cm, name, ui, key);
 // }
 
+// bool ink::SkipKey(EInputKey)
 REGISTER_HOOK_HASH(bool, 3298233196, SkipKey, uint32_t key) {
   return SkipKey_Original(key) && !((key - (uint32_t)EInputKey::IK_Pad_First) <= 0x13);
 }
 
 // #include <RED4ext/Scripting/Natives/Generated/ink/SettingsSelectorControllerKeyBinding.hpp>
 
-// REGISTER_HOOK_HASH(void, 1256790244, ListenForInput, ink::SettingsSelectorControllerKeyBinding * self) {
-//   ListenForInput_Original(self);
+// void ink::SettingsSelectorControllerKeyBinding::ListenForInput()
+// REGISTER_HOOK_HASH(void, 1256790244, SettingsSelectorControllerKeyBinding_ListenForInput, ink::SettingsSelectorControllerKeyBinding * self) {
+//   SettingsSelectorControllerKeyBinding_ListenForInput_Original(self);
 //   return;
 // }
 
-// REGISTER_HOOK_HASH(void, 1693129953, UnregisterRawInputLambda, ink::SettingsSelectorControllerKeyBinding * self) {
-//   UnregisterRawInputLambda_Original(self);
+// void ink::SettingsSelectorControllerKeyBinding::UnregisterRawInputLambda()
+// REGISTER_HOOK_HASH(void, 1693129953, SettingsSelectorControllerKeyBinding_UnregisterRawInputLambda, ink::SettingsSelectorControllerKeyBinding * self) {
+//   SettingsSelectorControllerKeyBinding_UnregisterRawInputLambda_Original(self);
 //   return;
 // }
 
+// not named yet in IDA_Cyberpunk_2077
 // REGISTER_HOOK_HASH(uint64_t, 3729004759, ListenForInputCallback, 
 //   WeakHandle<ink::SettingsSelectorControllerKeyBinding> self, 
 //   EInputKey key, // EInputKey

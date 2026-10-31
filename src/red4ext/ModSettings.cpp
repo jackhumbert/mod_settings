@@ -527,7 +527,7 @@ void ModSettings::ReadFromFile() {
 void ModSettings::AcceptChanges() {
   ModSettings::WriteToFile();
   if (gameinputManager != nullptr)
-    ApplyOverrides(gameinputManager);
+    Manager_ApplyOverrides(gameinputManager);
   else
     sdk->logger->Warn(pluginHandle, "Key binding changes not applied: the game's input manager was not captured");
   modSettings.changesRequested = false;

@@ -7,6 +7,7 @@
 
 using namespace RED4ext;
 
+// uint32_t red::String::CalcHash() const
 const static UniversalRelocFunc<uint32_t (*)(const CString &)> CalcHash(2583235069);
 
 struct Overridable {
@@ -100,7 +101,7 @@ struct UserMapping {
   };
 
   RawMappingCollection * GetMappingCollection(CName);
-  void ClearRuntimeDataOnRawMappings();
+  void ClearRuntimeDataOnRawMappings_Expensive();
   
   DynArray<void*> unk00; // 00
   uint8_t sorted; // 10
@@ -228,4 +229,4 @@ struct Manager {
   uint64_t listener_id;
 };
 
-void ApplyOverrides(Manager * manager);
+void Manager_ApplyOverrides(Manager * manager);
