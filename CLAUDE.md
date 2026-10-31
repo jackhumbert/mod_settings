@@ -29,7 +29,17 @@ Game version for the release name comes from the installed `Cyberpunk2077.exe`, 
 1. `check_hashes.py` (shared game tools, see `CLAUDE.local.md`) - checks the 3 address hashes against the game's shipped `bin/x64/cyberpunk2077_addresses.json`. Present = resolves at runtime.
 2. Bump `deps/red4ext.sdk` to the fork commit that knows the patch (must exist in `GameVersions.json` and `Api/v0/Runtime.hpp`), and `deps/cpcmake` for the requirement floors. Do the SDK work in the `flight_control` checkout and reuse the commit here.
 3. Build, install, launch, confirm `red4ext/logs/mod_settings-*.log` shows the hooks attaching and settings loading.
-   - Install, launch and test only through `../cp2077_tools` (`game.py run ... --install --launch -- <test>`, then `bridge.py`): the one way to test, see `E:\src\CLAUDE.md` and `../cp2077_tools/README.md`. Other sessions share the game install and Jack plays on it; never start, kill or install into the game around it.
+   - Install, launch and test only through `../cp2077_tools`: the one way to test, see `E:\src\CLAUDE.md` and `../cp2077_tools/README.md`. Other sessions share the game install and Jack plays on it; never start, kill or install into the game around it. The smoke test:
+
+     ```
+     python ../cp2077_tools/game.py run "<title>" --purpose "mod_settings smoke" --install --launch --scripts ../cp2077_tools/mods/mod_settings --protect red4ext/plugins/mod_settings/user.ini -- python ../cp2077_tools/mods/mod_settings/smoke.py --out <dir>
+     ```
+
+     It checks that the log shows the hooks attached and the settings loaded, and that a test settings class
+     is listed with its defaults. It checks that a change accepted through the API reaches the variables and
+     a `RegisterListenerToClass` instance, and that the pause menu's Mod Settings page shows the test mod (with
+     a screenshot). `--protect` puts Jack's `user.ini` back as it was. Leave out `--install` to test what is
+     installed.
    - RED4ext mods load however the game is started; the 2.5 menu's "Mods" entry and its "sign into your CD PROJEKT RED account" popup belong to CDPR's mod.io browser, not to us.
    - A plugin not built for the current patch can crash startup right after RED4ext logs "Loading plugin from ..." for it. Rule it out with `ignored = ["<plugin folder>"]` in `red4ext/config.ini`.
 4. Tag.
