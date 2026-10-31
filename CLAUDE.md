@@ -2,7 +2,7 @@
 
 Cyberpunk 2077 mod: adds a redscript-configurable "Mod Settings" page to the main/pause menu that other mods add sections to. RED4ext C++ plugin + redscript + ArchiveXL archive, all shipped under `red4ext/plugins/mod_settings/`.
 
-Sibling repos with the same build/release shape: `../flight_control` (Let There Be Flight, the most documented one; read its CLAUDE.md for the full picture), `../in_world_navigation`, `../input_loader`.
+The rules for every mod (languages, native design, layout, build, release, comments, docs, tests) are in `../cp2077_tools/docs/mod_standard.md`; this file has only what is particular to Mod Settings. Sibling repos: `../let_there_be_flight`, `../in_world_navigation`, `../input_loader`.
 
 ## Layout
 
@@ -14,20 +14,14 @@ Sibling repos with the same build/release shape: `../flight_control` (Let There 
 
 ## Build
 
-MSVC 2022 + Ninja + CMake 3.24+ (VS dev shell). Same commands as LTBF:
-
-```
-cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja
-cmake --build build
-cmake --install build        # copies game_dir(+debug) into CYBERPUNK_2077_GAME_DIR
-```
+Standard (section 6): `cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja`, then `python ../cp2077_tools/game.py build "<title>"`; install only through `game.py run --install`.
 
 Game version for the release name comes from the installed `Cyberpunk2077.exe`, or in CI from the last entry of `deps/red4ext.sdk/cmake/GameVersions.json`.
 
 ## Updating for a game patch
 
 1. `check_hashes.py` (shared game tools, see `CLAUDE.local.md`) - checks the 3 address hashes against the game's shipped `bin/x64/cyberpunk2077_addresses.json`. Present = resolves at runtime.
-2. Bump `deps/red4ext.sdk` to the fork commit that knows the patch (must exist in `GameVersions.json` and `Api/v0/Runtime.hpp`), and `deps/cpcmake` for the requirement floors. Do the SDK work in the `flight_control` checkout and reuse the commit here.
+2. Bump `deps/red4ext.sdk` to the fork commit that knows the patch (must exist in `GameVersions.json` and `Api/v0/Runtime.hpp`), and `deps/cpcmake` for the requirement floors (standard, section 5).
 3. Build, install, launch, confirm `red4ext/logs/mod_settings-*.log` shows the hooks attaching and settings loading.
    - Install, launch and test only through `../cp2077_tools`: the one way to test, see `E:\src\CLAUDE.md` and `../cp2077_tools/README.md`. Other sessions share the game install and Jack plays on it; never start, kill or install into the game around it. The smoke test:
 
@@ -48,11 +42,4 @@ State on 2026-09-13: v0.2.21 (built for 2.30) loads and works on game 2.31 uncha
 
 ## Releases
 
-Push a `vX.Y.Z` tag. `.github/workflows/release.yaml` builds, runs git-cliff over conventional commits (`feat:`/`fix:` show up; `chore:`/`ci:` are skipped), publishes the GitHub release, then uploads the zip to Nexus mod 4885 (file id 2608471) with the changelog through `Nexus-Mods/upload-action`. The Nexus step needs the repo secret `NEXUSMODS_API_KEY` and resolves the v3 mod id from the site id first. Checkout is full-depth on purpose; a shallow clone gives git-cliff no history and an empty changelog.
-
-Push submodule commits to their own repos before tagging; CI clones them over HTTPS.
-
-## Conventions
-
-- No em-dashes anywhere.
-- Don't commit `build/`, `game_dir*/`, `compile_commands.json`, or Wolvenkit `.projectFiles` churn.
+The standard release flow (section 5). Nexus mod 4885, file id 2608471.
