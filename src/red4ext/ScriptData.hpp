@@ -27,5 +27,8 @@ RED4EXT_ASSERT_OFFSET(CScriptedDataEnvironment, typeRefsByName, 0x68);
 RED4EXT_ASSERT_OFFSET(CScriptedDataEnvironment, files, 0x98);
 RED4EXT_ASSERT_OFFSET(CScriptedDataEnvironment, classes, 0xD8);
 RED4EXT_ASSERT_OFFSET(CScriptedDataEnvironment, typeRefs, 0xE8);
+#ifdef __APPLE__
+static_assert(offsetof(CScriptedDataEnvironment, classes) == 0xD8);
+#endif
 
 }

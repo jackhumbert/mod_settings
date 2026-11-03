@@ -1,0 +1,7 @@
+# Image-relative offsets Mod Settings hooks (RED4EXT_GUM_HOOK_OFFSETS allowlist entries). One per line; # starts a comment.
+# RED4ext-macos installs a detour only for an offset on the allowlist; any other Attach reports success and does nothing.
+# Kept in step with the hooks of the build by tools/build-all.sh, which merges the plugin lists into builds/release/GUM_OFFSETS.txt.
+# 0x21ecfd8 is also in Codeware's list (ScriptBundle_dtor): one hook per target, Mod Settings joins Codeware's hook chain (MacShims.cpp).
+0x111cc00  # ScriptBundle_dtor = ReleaseScriptData (shared with Codeware)
+0x30a0d5c  # ApplyOverrides body, void(UserMapping*) (R41b: a real entry). Leave it out of the list when the build has -DMODSETTINGS_MAC_APPLYOVERRIDES=OFF.
+# SkipKey (0x48026f0) is not hooked on the Mac: R41b found no reference to it.

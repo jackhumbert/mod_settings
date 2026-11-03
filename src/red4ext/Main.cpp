@@ -2,7 +2,11 @@
 #include "Red/TypeInfo/Registrar.hpp"
 #include "Utils.hpp"
 #include <RED4ext/Common.hpp>
+#ifndef __APPLE__
 #include <Windows.h>
+#else
+#include "MacShims.hpp"
+#endif
 #include <stdio.h>
 
 
@@ -18,6 +22,7 @@ const RED4ext::Sdk *sdk;
 RED4ext::PluginHandle pluginHandle;
 } // namespace ModSettings
 
+#ifndef __APPLE__
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
   switch (fdwReason) {
   case DLL_PROCESS_ATTACH:
@@ -26,6 +31,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
   }
   return true;
 }
+#endif
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk *aSdk) {
@@ -33,11 +39,20 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
   case RED4ext::EMainReason::Load: {
     ModSettings::sdk = aSdk;
     ModSettings::pluginHandle = aHandle;
+#ifdef __APPLE__
+    ModSettingsMac::Init(aSdk, aHandle);
+#endif
 
     aSdk->logger->Info(aHandle, "Starting up Mod Settings " MOD_VERSION_STR);
+#ifdef __APPLE__
+    // The Mach-O header of the game executable, not GetModuleHandle(nullptr) (image 0 can be an inserted library).
+    aSdk->logger->InfoF(aHandle, "Base address: %p", reinterpret_cast<void *>(ModSettingsMac::GameBase()));
+#else
     auto ptr = GetModuleHandle(nullptr);
     aSdk->logger->InfoF(aHandle, "Base address: %p", ptr);
+#endif
 
+#ifndef __APPLE__
     // Files from releases that installed outside the plugin folder. Only remove
     // them when this release's own copies are present (a mod manager that moved
     // ours there would otherwise lose the menu), and never throw out of Load on
@@ -65,8 +80,22 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     RemoveLegacy(modArchives / "ModSettings.archive.xl", "ModSettings.archive.xl");
     RemoveLegacy(modArchives / "ModSettings.xl", "ModSettings.archive.xl");
 
-    Red::TypeInfoRegistrar::RegisterDiscovered();
+#endif // __APPLE__: the removals above clean up old Windows install locations (r6/scripts, archive/pc/mod); no Mac install ever used them
 
+#ifndef __APPLE__
+    Red::TypeInfoRegistrar::RegisterDiscovered();
+#endif
+
+#ifdef __APPLE__
+    // No aSdk->scripts->Add on the Mac: it looks for packed.reds and module.reds at the plugin root, which does not exist here ("Could not find path
+    // relative to plugin"). The Mac scripts are in <plugin folder>/Scripts/ and are compiled offline into the script cache by
+    // cp2077-codeware/tools/build-cache.py.
+    ModSettingsMac::Log("scripts: not added through RED4ext; they are compiled from <plugin folder>/Scripts/ into the offline script cache");
+    // The rest of the Windows Load (register the RedLib types, register the ArchiveXL archive, attach the hooks) runs later on the Mac, from
+    // modsettings_registerNatives (macos/MacEntry.cpp): the game never calls the RTTI register callbacks there, and Codeware has to have
+    // installed its hooks before ReleaseScriptData can join them.
+    ModSettingsMac::Log("loaded; waiting for modsettings_registerNatives (called at script initialisation, after every plugin's Main)");
+#else
     for (auto script : {L"packed.reds", L"module.reds"}) {
       if (!aSdk->scripts->Add(aHandle, script))
         aSdk->logger->ErrorF(aHandle, "Could not register %ls with redscript; the menu will be missing", script);
@@ -75,8 +104,11 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       aSdk->logger->Error(aHandle, "Could not register ModSettings.archive (is ArchiveXL installed and the file present "
                                    "in the plugin folder?); the menu will be missing or blank");
     aSdk->logger->Info(aHandle, "Attaching hooks");
+#endif
+#ifndef __APPLE__
     ModModuleFactory::GetInstance().Load(aSdk, aHandle);
     aSdk->logger->Info(aHandle, "Mod Settings loaded");
+#endif
     // Engine::RTTIRegistrar::RegisterPending();
 
     break;

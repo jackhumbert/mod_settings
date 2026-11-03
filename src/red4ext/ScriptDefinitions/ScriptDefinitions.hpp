@@ -127,5 +127,13 @@ RED4EXT_ASSERT_OFFSET(CScriptedDataClass, functions, 0x90);
 RED4EXT_ASSERT_OFFSET(CScriptedDataClass, attributes, 0xA0);
 RED4EXT_ASSERT_OFFSET(CScriptedDataClass, visibility, 0xD0);
 RED4EXT_ASSERT_OFFSET(CScriptedDataClass, flags, 0xD1);
+#ifdef __APPLE__
+// RED4EXT_ASSERT_OFFSET is empty under clang, so these keep the 2.5 offsets checked on the Mac (Mac 2.5 class validator reads base
+// +0x48, properties +0x50, flags +0xD1).
+static_assert(offsetof(CScriptedDataClass, base) == 0x48);
+static_assert(offsetof(CScriptedDataClass, properties) == 0x50);
+static_assert(offsetof(CScriptedDataClass, functions) == 0x90);
+static_assert(offsetof(CScriptedDataClass, flags) == 0xD1);
+#endif
 
 }

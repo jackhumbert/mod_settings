@@ -1,6 +1,11 @@
 #pragma once
 
 #include "Variable.hpp"
+#include "Utils.hpp"
+#ifdef __APPLE__
+#include "MacShims.hpp"
+#include <cctype>
+#endif
 #include <RED4ext/InstanceType.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
@@ -45,10 +50,32 @@ struct CScriptedDataProperty : IScriptDataObject {
   }
 
   void FromString(RED4ext::ScriptInstance pointer, const RED4ext::CString& str) const {
+#ifdef __APPLE__
+    auto *type = this->GetType();
+    if (type && type->GetName() == RED4ext::CName("Bool")) {
+      // R43 (macOS): a Bool default came out false for every LTBF switch whose script default is true (all flight modes off, the
+      // flight HUD off), so the car got no flight force. Parse the usual spellings here; anything else still goes to the game.
+      std::string text(str.c_str());
+      trim(text);
+      for (auto &ch : text)
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+      const bool known = text == "true" || text == "1" || text == "false" || text == "0";
+      if (known)
+        *reinterpret_cast<bool *>(pointer) = text == "true" || text == "1";
+      else
+        Utils::FromString(type, pointer, str);
+      if (ModSettingsMac::DiagEnabled())
+        ModSettingsMac::Log("[diag] Bool %s default text '%s' -> %d (%s)", this->name.ToString(), str.c_str(),
+                            *reinterpret_cast<bool *>(pointer) ? 1 : 0, known ? "parsed" : "game parser");
+      return;
+    }
+    Utils::FromString(type, pointer, str);
+#else
     RED4ext::RawBuffer buffer;
     buffer.data = (void*)str.c_str();
     buffer.size = str.Length();
     this->GetType()->FromString(pointer, buffer);
+#endif
   }
 
   // ReadProperty(CName)
@@ -75,10 +102,7 @@ struct CScriptedDataProperty : IScriptDataObject {
     auto str = this->attributes.Get(name);
     if (str) {
       uint32_t value;
-      RED4ext::RawBuffer buffer;
-      buffer.data = (void*)str->c_str();
-      buffer.size = str->length;
-      RED4ext::CRTTISystem::Get()->GetType("Uint32")->FromString(&value, buffer);
+      Utils::FromString(RED4ext::CRTTISystem::Get()->GetType("Uint32"), &value, *str);
       return value;
     } else {
       return 0;
@@ -89,10 +113,7 @@ struct CScriptedDataProperty : IScriptDataObject {
     auto str = this->attributes.Get(name);
     if (str) {
       int32_t value;
-      RED4ext::RawBuffer buffer;
-      buffer.data = (void*)str->c_str();
-      buffer.size = str->length;
-      RED4ext::CRTTISystem::Get()->GetType("Int32")->FromString(&value, buffer);
+      Utils::FromString(RED4ext::CRTTISystem::Get()->GetType("Int32"), &value, *str);
       return value;
     } else {
       return 0;
@@ -146,20 +167,14 @@ struct CScriptedDataProperty : IScriptDataObject {
   template <> void ReadProperty<uint32_t>(const RED4ext::CName &name, uint32_t *pointer) const {
     auto str = this->attributes.Get(name);
     if (str && pointer) {
-      RED4ext::RawBuffer buffer;
-      buffer.data = (void*)str->c_str();
-      buffer.size = str->length;
-      RED4ext::CRTTISystem::Get()->GetType("Uint32")->FromString(pointer, buffer);
+      Utils::FromString(RED4ext::CRTTISystem::Get()->GetType("Uint32"), pointer, *str);
     }
   }
 
   template <> void ReadProperty<int32_t>(const RED4ext::CName &name, int32_t *pointer) const {
     auto str = this->attributes.Get(name);
     if (str && pointer) {
-      RED4ext::RawBuffer buffer;
-      buffer.data = (void*)str->c_str();
-      buffer.size = str->length;
-      RED4ext::CRTTISystem::Get()->GetType("Int32")->FromString(pointer, buffer);
+      Utils::FromString(RED4ext::CRTTISystem::Get()->GetType("Int32"), pointer, *str);
     }
   }
 
@@ -177,10 +192,7 @@ struct CScriptedDataProperty : IScriptDataObject {
   template <> void ReadProperty<float>(const RED4ext::CName &name, float *pointer) const {
     auto str = this->attributes.Get(name);
     if (str && pointer) {
-      RED4ext::RawBuffer buffer;
-      buffer.data = (void*)str->c_str();
-      buffer.size = str->length;
-      RED4ext::CRTTISystem::Get()->GetType("Float")->FromString(pointer, buffer);
+      Utils::FromString(RED4ext::CRTTISystem::Get()->GetType("Float"), pointer, *str);
     }
   }
 
@@ -230,6 +242,12 @@ struct CScriptedDataProperty : IScriptDataObject {
     if (this->defaultValues.size) {
       this->FromString(pointer, this->defaultValues[0]);
     }
+#ifdef __APPLE__
+    else if (ModSettingsMac::DiagEnabled()) {
+      ModSettingsMac::Log("[diag] %s (%s): no default text in the script definition", this->name.ToString(),
+                          this->type ? this->type->name.ToString() : "?");
+    }
+#endif
   }
 
   RED4ext::CProperty *rttiProperty;                              // 40
@@ -252,5 +270,9 @@ RED4EXT_ASSERT_OFFSET(CScriptedDataProperty, visibility, 0x80);
 RED4EXT_ASSERT_OFFSET(CScriptedDataProperty, attributes, 0x88);
 RED4EXT_ASSERT_OFFSET(CScriptedDataProperty, type, 0xB8);
 RED4EXT_ASSERT_OFFSET(CScriptedDataProperty, hint, 0xC0);
+#ifdef __APPLE__
+static_assert(offsetof(CScriptedDataProperty, attributes) == 0x88);
+static_assert(offsetof(CScriptedDataProperty, type) == 0xB8); // Mac 2.5 ValidateProperty 0x11a8f30: ldr x20, [x1, #0xb8]
+#endif
 
 }

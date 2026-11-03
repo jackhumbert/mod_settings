@@ -5,6 +5,9 @@
 #include <RED4ext/Common.hpp>
 
 struct Manager;
+#ifdef __APPLE__
+struct UserMapping;
+#endif
 
 namespace ModSettings {
 
@@ -58,6 +61,10 @@ public:
   static DynArray<CName> GetCategories(CName modName);
   static DynArray<Handle<IScriptable>> GetVars(CName modName, CName categoryName);
   static void AddOverrides(Manager* manager);
+#ifdef __APPLE__
+  // Mac body hook (MODSETTINGS_MAC_APPLYOVERRIDES): the game hands over the UserMapping, not the Manager.
+  static void AddOverridesMac(UserMapping* userMapping);
+#endif
 
 
   void NotifyListeners();

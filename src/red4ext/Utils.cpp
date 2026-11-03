@@ -1,5 +1,8 @@
 #include "stdafx.hpp"
 #include "Utils.hpp"
+#ifdef __APPLE__
+#include "MacShims.hpp"
+#endif
 
 //#include <spdlog/sinks/basic_file_sink.h>
 //#include <spdlog/sinks/stdout_color_sinks.h>
@@ -25,6 +28,11 @@
 
 std::filesystem::path Utils::GetRootDir()
 {
+#ifdef __APPLE__
+    // The game root (the folder with red4ext/, r6/, archive/ and Cyberpunk2077.app): three folders above this dylib,
+    // <root>/red4ext/plugins/mod_settings/mod_settings.dylib. Windows takes the same folder from the exe path (bin/x64/).
+    return ModSettingsMac::GameRoot();
+#else
     constexpr auto pathLength = MAX_PATH + 1;
 
     // Try to get the executable path until we can fit the length of the path.
@@ -47,14 +55,28 @@ std::filesystem::path Utils::GetRootDir()
                        .parent_path(); // Resolve to game root directory.
 
     return rootDir;
+#endif
 }
+
+#ifdef __APPLE__
+// The folder of this plugin, where user.ini lives (on Windows: <root>/red4ext/plugins/mod_settings/).
+std::filesystem::path Utils::GetPluginDir()
+{
+    return ModSettingsMac::PluginDir();
+}
+#endif
 
 std::wstring Utils::ToWString(const char* aText)
 {
+#ifdef __APPLE__
+    // UTF-8 in, UTF-32 wchar_t out (mbstowcs depends on the C locale, which is "C" and not UTF-8 inside the game).
+    return ModSettingsMac::Utf8ToWide(aText);
+#else
     auto length = strlen(aText);
 
     std::wstring result(L"", length);
     mbstowcs(result.data(), aText, length);
 
     return result;
+#endif
 }
