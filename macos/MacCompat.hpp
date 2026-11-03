@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <pthread.h>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -73,6 +74,14 @@
         return ENUMTYPE(~((std::underlying_type_t<ENUMTYPE>)a));                                                               \
     }
 #endif
+
+// processthreadsapi.h, used in a log line (ModSettings::AddOverrides). The low 32 bits of the Mach thread id, like the Windows DWORD.
+inline uint32_t GetCurrentThreadId()
+{
+    uint64_t tid = 0;
+    pthread_threadid_np(nullptr, &tid);
+    return static_cast<uint32_t>(tid);
+}
 
 // The SDK headers include each other in a circle (RTTISystem.hpp -> RTTITypes.hpp -> NativeTypes-inl.hpp uses CRTTISystem). They
 // only compile when the umbrella header comes first, so every translation unit gets it first (the Windows stdafx.hpp precompiled

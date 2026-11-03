@@ -17,6 +17,8 @@ Tested on 2.3.1 with Let There Be Flight for macOS, in automated in-world runs:
 - Bool settings keep their script defaults (fixed on macOS: every `true` default used to come out `false`, see `NOT_YET.md` 0b).
 - Rebased onto `main` on 2026-10-14. The runs above were made on the v0.2.21 base. The rebased build (`main` e904815 plus the Mac commits)
   loads, lists the settings and reads the existing `user.ini` (the menu was opened by hand on 2026-10-14).
+- Merged with `main` `26d6715` (upstream's game 2.5 fixes) on 2026-11-03. The merged build compiles for the Mac; it has not been run in
+  game yet.
 
 Key-binding overrides (`ApplyOverrides`) are wired but have not been exercised in game; see `NOT_YET.md`.
 

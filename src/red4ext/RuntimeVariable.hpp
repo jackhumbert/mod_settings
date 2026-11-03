@@ -9,7 +9,7 @@
 namespace ModSettings {
 
 template <typename T> struct RuntimeVariable : public IRuntimeVariable {
-  RuntimeVariable(ScriptProperty *prop) : IRuntimeVariable(prop) {
+  RuntimeVariable(CScriptedDataProperty *prop) : IRuntimeVariable(prop) {
 #ifdef __APPLE__
     T _value{}, _defaultValue{}; // R43 (macOS): no stack garbage when the script definition has no default text
 #else
@@ -150,7 +150,7 @@ template <typename T> struct RuntimeVariable : public IRuntimeVariable {
 };
 
 template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
-  inline RuntimeVariableRange(ScriptProperty *prop) : RuntimeVariable<T>(prop) {
+  inline RuntimeVariableRange(CScriptedDataProperty *prop) : RuntimeVariable<T>(prop) {
     this->type = RED4ext::user::EConfigVarType::Int;
     prop->ReadProperty("ModSettings.step", &this->stepValue, (T)1);
     prop->ReadProperty("ModSettings.min", &this->minValue, (T)0);
@@ -172,7 +172,7 @@ template <typename T> struct RuntimeVariableRange : RuntimeVariable<T> {
 };
 
 template <typename T> struct RuntimeVariableList : public RuntimeVariable<uint32_t> {
-  inline RuntimeVariableList(ScriptProperty *prop) : RuntimeVariable<uint32_t>(prop) {}
+  inline RuntimeVariableList(CScriptedDataProperty *prop) : RuntimeVariable<uint32_t>(prop) {}
   inline RuntimeVariableList(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
                              uint32_t defaultValue)
       : RuntimeVariable<uint32_t>(modName, className, propertyName, displayName, description, order, defaultValue) {
@@ -183,7 +183,7 @@ template <typename T> struct RuntimeVariableList : public RuntimeVariable<uint32
 };
 
 struct RuntimeVariableBool : RuntimeVariable<bool> {
-  inline RuntimeVariableBool(ScriptProperty *prop) : RuntimeVariable<bool>(prop) {
+  inline RuntimeVariableBool(CScriptedDataProperty *prop) : RuntimeVariable<bool>(prop) {
     this->type = RED4ext::user::EConfigVarType::Bool;
   }
   inline RuntimeVariableBool(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
@@ -194,7 +194,7 @@ struct RuntimeVariableBool : RuntimeVariable<bool> {
 };
 
 struct RuntimeVariableKeyBinding : RuntimeVariable<EInputKey> {
-  inline RuntimeVariableKeyBinding(ScriptProperty *prop) : RuntimeVariable<EInputKey>(prop) {
+  inline RuntimeVariableKeyBinding(CScriptedDataProperty *prop) : RuntimeVariable<EInputKey>(prop) {
     this->type = RED4ext::user::EConfigVarType::Name;
   }
   inline RuntimeVariableKeyBinding(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
@@ -205,7 +205,7 @@ struct RuntimeVariableKeyBinding : RuntimeVariable<EInputKey> {
 };
 
 struct RuntimeVariableName : RuntimeVariable<CName> {
-  inline RuntimeVariableName(ScriptProperty *prop) : RuntimeVariable<CName>(prop) {
+  inline RuntimeVariableName(CScriptedDataProperty *prop) : RuntimeVariable<CName>(prop) {
     this->type = RED4ext::user::EConfigVarType::Name;
   }
   inline RuntimeVariableName(CName modName, CName className, CName propertyName, CName displayName, CName description, uint32_t order,
@@ -223,7 +223,7 @@ struct RuntimeVariableName : RuntimeVariable<CName> {
 // RED4EXT_ASSERT_OFFSET(RuntimeVariable<bool>, savedValue, 0x4B);
 // char (*__kaboom)[offsetof(RuntimeVariableBool, acceptedValue)] = 1;
 
-template <> inline RuntimeVariableRange<float>::RuntimeVariableRange(ScriptProperty *prop) : RuntimeVariable(prop) {
+template <> inline RuntimeVariableRange<float>::RuntimeVariableRange(CScriptedDataProperty *prop) : RuntimeVariable(prop) {
   this->type = RED4ext::user::EConfigVarType::Float;
   prop->ReadProperty("ModSettings.step", &this->stepValue, 0.05f);
   prop->ReadProperty("ModSettings.min", &this->minValue, 0.0f);
@@ -265,7 +265,7 @@ template <> inline void __fastcall RuntimeVariable<CName>::GetValueToWrite(char 
 }
 
 struct RuntimeVariableEnum : public RuntimeVariableList<int32_t> {
-  RuntimeVariableEnum(ScriptProperty *prop) : RuntimeVariableList<int32_t>(prop) {
+  RuntimeVariableEnum(CScriptedDataProperty *prop) : RuntimeVariableList<int32_t>(prop) {
     this->type = RED4ext::user::EConfigVarType::IntList;
 
     values = RED4ext::DynArray<int32_t>(new RED4ext::Memory::DefaultAllocator());
@@ -277,7 +277,7 @@ struct RuntimeVariableEnum : public RuntimeVariableList<int32_t> {
 
       for (const auto &value : e->hashList) {
         const auto displayValueAttr = RED4ext::FNV1a64(value.ToString(), displayValuesPrefix);
-        const auto displayValue = prop->runtimeProperties.Get(displayValueAttr);
+        const auto displayValue = prop->attributes.Get(displayValueAttr);
         if (displayValue) {
           RED4ext::CNamePool::Add(displayValue->c_str());
           displayValues.EmplaceBack(displayValue->c_str());

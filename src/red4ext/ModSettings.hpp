@@ -14,7 +14,7 @@ namespace ModSettings {
 extern const Sdk *sdk;
 extern PluginHandle pluginHandle;
 
-struct ScriptData;
+struct CScriptedDataEnvironment;
 
 class ModSettings : public IScriptable {
 public:
@@ -28,9 +28,9 @@ public:
 
   static Handle<ModSettings> GetInstance();
 
-  static void ProcessScriptData(const ScriptData *scriptData);
+  static void ProcessScriptData(const CScriptedDataEnvironment *scriptData);
   static bool GetSettingString(CName, CName, CString *);
-  static void ReadValueFromFile(ScriptProperty *prop, ScriptInstance pointer);
+  static void ReadValueFromFile(CScriptedDataProperty *prop, ScriptInstance pointer);
 
   template <typename T>
   static void ReadValueFromFile(CName className, CName propertyName,
@@ -83,6 +83,13 @@ private:
   // std::shared_mutex listeners_lock;
   RED4ext::SharedSpinLock listeners_lock;
   std::map<CName, Mod*> mods;
+  // every RegisterListenerToClass listener, kept so the ones registered before
+  // the script data is processed (ScriptableService.OnLoad on game 2.5) are
+  // attached once the classes exist, and again after the registry is rebuilt
+  std::mutex classListeners_lock;
+  std::vector<WeakHandle<IScriptable>> classListeners;
+
+  static uint32_t AttachClassListener(const Handle<IScriptable> &listener);
 };
 
 } // namespace ModSettings

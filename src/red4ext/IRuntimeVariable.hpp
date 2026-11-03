@@ -5,12 +5,12 @@
 
 namespace ModSettings {
 
-struct ScriptProperty;
+struct CScriptedDataProperty;
 
 class IRuntimeVariable : public RED4ext::user::RuntimeSettingsVar {
 public:
   IRuntimeVariable();
-  IRuntimeVariable(ScriptProperty* prop);
+  IRuntimeVariable(CScriptedDataProperty* prop);
   IRuntimeVariable(RED4ext::CName modName, RED4ext::CName className, RED4ext::CName propertyName, RED4ext::CName displayName, RED4ext::CName description, uint32_t order);
 
   // custom virtuals

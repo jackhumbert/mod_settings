@@ -87,7 +87,7 @@ void ModVariable::Write(std::ofstream& stream) const {
   stream << this->runtimeVar->name.ToString() << " = " << str.c_str() << "\n";
 }
 
-bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
+bool ModVariable::SetRuntimeVariable(CScriptedDataProperty * prop) {
   if (!this->type) {
     return false;
   }
@@ -192,10 +192,26 @@ void ModClass::RegisterListener(const Handle<IScriptable> &listener) {
   //   }
   // }
 
-  std::unique_lock _(*this->listeners_lock);
+  if (!listener || !listener->ref || listener->ref.Expired())
+    return;
 
-  if (listener && listener->ref && !listener->ref.Expired()) {
+  {
+    std::unique_lock _(*this->listeners_lock);
     this->listeners.emplace_back(listener);
+  }
+
+  // The listener may have been created before user.ini was applied to the
+  // class defaults (game 2.5 creates ScriptableServices first), so give it
+  // the current values now instead of waiting for the next accepted change
+  if (this->type) {
+    for (const auto &[categoryName, category] : this->categories) {
+      for (const auto &[variableName, variable] : category->variables) {
+        auto prop = this->type->propsByName.Get(variable->name);
+        if (prop && *prop) {
+          (*prop)->SetValue(listener.instance, variable->runtimeVar->GetAcceptedValue());
+        }
+      }
+    }
   }
 }
 
@@ -318,7 +334,7 @@ ModSettingsVariable::ModSettingsVariable() {
   this->listeners.Reserve(1000);
 }
 
-// ModSettingsVariable::ModSettingsVariable(ScriptProperty* prop, const CName scriptClass) : ModSettingsVariable() {
+// ModSettingsVariable::ModSettingsVariable(CScriptedDataProperty* prop, const CName scriptClass) : ModSettingsVariable() {
 //   prop->ReadProperty("ModSettings.mod", &this->mod);
 //   prop->ReadProperty("ModSettings.category", &this->category);
 //   this->type = RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
@@ -454,7 +470,7 @@ void ModSettingsVariable::UnregisterListener(Handle<RED4ext::IScriptable> handle
   }
 }
 
-bool ModVariable::SetRuntimeVariable(ScriptProperty * prop) {
+bool ModVariable::SetRuntimeVariable(CScriptedDataProperty * prop) {
   switch (this->type->GetName()) {
     case CName("Bool"):
       this->runtimeVar = new RuntimeVariableBool(prop);
