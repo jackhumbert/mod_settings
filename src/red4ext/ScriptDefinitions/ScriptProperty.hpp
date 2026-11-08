@@ -216,6 +216,17 @@ struct CScriptedDataProperty : IScriptDataObject {
     }
   }
 
+  // A number attribute (ModSettings.order) read as its own type: the generic one above parses with the field's type
+  // (a Bool or Float field), which left a row's order wrong and the rows out of order.
+  template <> void ReadProperty<uint32_t>(const RED4ext::CName &name, uint32_t *pointer, const uint32_t fallback) const {
+    if (!pointer)
+      return;
+    if (this->attributes.Get(name))
+      this->ReadProperty<uint32_t>(name, pointer);
+    else
+      *pointer = fallback;
+  }
+
   template <>
   void ReadProperty<RED4ext::CName>(const RED4ext::CName &name, RED4ext::CName *pointer, const RED4ext::CName fallback) const {
     auto str = this->attributes.Get(name);

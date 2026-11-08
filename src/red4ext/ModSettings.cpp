@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "INIReader.h"
 #include "ModConfigVar.hpp"
 #include "Red/TypeInfo/Macros/Definition.hpp"
@@ -106,11 +107,13 @@ void __fastcall ModSettings::ProcessScriptData(const CScriptedDataEnvironment *s
             if (!modClass->categories.contains(categoryName)) {
               modClass->categories[categoryName] = new ModCategory {
                 .name = categoryName,
-                .order = prop->ReadProperty<uint32_t>("ModSettings.category.order"),
                 .modClass = modClass
               };
             }
             auto category = modClass->categories[categoryName];
+            // the category's order from the first of its fields in this class that gives one
+            if (category->order == ModCategory::kUnordered)
+              prop->ReadProperty<uint32_t>("ModSettings.category.order", &category->order, ModCategory::kUnordered);
 
             auto variable = new ModVariable {
               .name = prop->name,
@@ -294,9 +297,18 @@ DynArray<CName> ModSettings::GetCategories(CName modName) {
       modCategories.push_back(*itr); 
     }
   }
-  sort(modCategories.begin(), modCategories.end(), [=](std::pair<CName, ModCategory*>& a, std::pair<CName, ModCategory*>& b) {
-      return a.second->order < b.second->order;
-  });
+  // a category can be in several classes (a mod's script fields and the variables it adds from C++, which give none):
+  // its order is the lowest any of them gives, and those with none keep the order they were found in, last
+  std::map<CName, uint32_t> orderOf;
+  for (auto const &[categoryName, category] : modCategories) {
+    auto [it, added] = orderOf.emplace(categoryName, category->order);
+    if (!added)
+      it->second = std::min(it->second, category->order);
+  }
+  std::stable_sort(modCategories.begin(), modCategories.end(),
+                   [&](const std::pair<CName, ModCategory *> &a, const std::pair<CName, ModCategory *> &b) {
+                     return orderOf[a.first] < orderOf[b.first];
+                   });
   for (auto const &[categoryName, category] : modCategories) {
     if (categoryName != "None" && !category->variables.empty()) {
       auto position = std::find(array.begin(), array.end(), categoryName);

@@ -67,8 +67,11 @@ struct ModCategory {
     return this->name;
   }
 
+  // a category no class gives an order (ModSettings.category.order) lists after those that have one
+  static constexpr uint32_t kUnordered = (uint32_t)-1;
+
   CName name;
-  uint32_t order;
+  uint32_t order = kUnordered;
   std::map<CName, ModVariable *> variables;
   ModClass * modClass;
 };
