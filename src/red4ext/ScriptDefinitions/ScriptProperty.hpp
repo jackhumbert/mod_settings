@@ -4,6 +4,7 @@
 #include <RED4ext/InstanceType.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
+#include "DependencyString.hpp"
 #include <RED4ext/Scripting/Natives/Generated/EInputKey.hpp>
 
 namespace ModSettings {
@@ -99,38 +100,17 @@ struct CScriptedDataProperty : IScriptDataObject {
     }
   }
 
-  ModSettingDependency* ReadDependency(const RED4ext::CName scriptClass) {
-    auto dependency = (ModSettingDependency *)calloc(sizeof(ModSettingDependency), sizeof(char*));
+  // ModSettings.dependency (DependencyString.hpp); without a class it names a property of scriptClass
+  ModSettingDependency ReadDependency(const RED4ext::CName scriptClass) const {
+    ModSettingDependency dependency{};
     auto str = this->attributes.Get("ModSettings.dependency");
-    if (str) {
-      std::string depends(str->c_str());
-      trim(depends);
-      if (!depends.empty()) {
-        auto period = depends.find(".");
-        auto equals = depends.find("=");
-        if (equals != std::string::npos) {
-          auto value = depends.substr(equals, depends.length());
-          trim(value);
-          if (value.length()) {
-            dependency->value = value;
-          }
-        } else {
-          equals = depends.length();
-          dependency->value = "true";
-        }
-        if (period != std::string::npos) {
-          auto className = depends.substr(0, period);
-          auto propertyName = depends.substr(period+1, equals);
-          trim(className);
-          trim(propertyName);
-          dependency->propertyName = RED4ext::CNamePool::Add(propertyName.c_str());
-          dependency->className = RED4ext::CNamePool::Add(className.c_str());
-        } else {
-          dependency->className = scriptClass;
-          dependency->propertyName = RED4ext::CNamePool::Add(depends.c_str());
-        }
-      }
+    DependencyString parsed;
+    if (!str || !ParseDependency(str->c_str(), parsed)) {
+      return dependency;
     }
+    dependency.className = parsed.className.empty() ? scriptClass : RED4ext::CNamePool::Add(parsed.className.c_str());
+    dependency.propertyName = RED4ext::CNamePool::Add(parsed.propertyName.c_str());
+    dependency.value = parsed.value.c_str();
     return dependency;
   }
 

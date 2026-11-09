@@ -49,6 +49,7 @@ public:
   static void AcceptChanges();
   static void RestoreDefaults(CName modName);
   static void RejectChanges();
+  static bool HasChanges();
   static void RegisterListenerToModifications(const Handle<IScriptable>& listener);
   static void UnregisterListenerToModifications(const Handle<IScriptable>& listener);
   static void RegisterListenerToClass(const Handle<IScriptable>& listener);

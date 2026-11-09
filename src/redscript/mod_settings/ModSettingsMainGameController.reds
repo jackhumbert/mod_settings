@@ -1,3 +1,6 @@
+// queued by OnModVariableChangeRequested: the rows a mod lists may have changed (ModSettings.dependency)
+public class ModStngsRowsChangedEvent extends Event {}
+
 public class ModStngsMainGameController extends gameuiSettingsMenuGameController {
 
   private let m_scrollPanel: inkWidgetRef;
@@ -160,6 +163,34 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
       };
       i += 1;
     };
+    // the change can show or hide rows that depend on it; rebuilt a frame later, not under the row's own callback
+    this.QueueEvent(new ModStngsRowsChangedEvent());
+  }
+
+  protected cb func OnRowsChanged(evt: ref<ModStngsRowsChangedEvent>) -> Bool {
+    let idx = this.m_selectorCtrl.GetToggledIndex();
+    if idx < 0 || idx >= ArraySize(this.m_data) {
+      return false;
+    }
+    let shown = ModStngsMainGameController.RowKeys(this.m_data[idx]);
+    this.PopulateSettingsData();
+    if idx < ArraySize(this.m_data) && NotEquals(ModStngsMainGameController.RowKeys(this.m_data[idx]), shown) {
+      this.PopulateCategorySettingsOptions(idx);
+    }
+  }
+
+  // the rows a page lists, "group/name" joined, to tell whether a change showed or hid one
+  private static func RowKeys(category: SettingsCategory) -> String {
+    let out = "";
+    for v in category.options {
+      out += NameToString(v.GetGroupPath()) + "/" + NameToString(v.GetName()) + ";";
+    }
+    for sub in category.subcategories {
+      for v in sub.options {
+        out += NameToString(v.GetGroupPath()) + "/" + NameToString(v.GetName()) + ";";
+      }
+    }
+    return out;
   }
 
   // public final func WarnAboutEmptyKeyBindingValue() -> Void {
@@ -319,7 +350,6 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     // if !StatusEffectSystem.ObjectHasStatusEffectWithTag(this.GetPlayerControlledObject(), n"LockInHubMenu") {
       this.m_closeSettingsRequest = true;
       this.CheckSettings();
-      ModSettings.AcceptChanges();
     // };
   }
 
@@ -639,6 +669,10 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     inkWidgetRef.SetVisible(this.m_descriptionText, false);
     if idx < 0 {
       idx = this.m_selectorCtrl.GetToggledIndex();
+    };
+    // no mod registers settings, or the list is not toggled yet
+    if idx < 0 || idx >= ArraySize(this.m_data) {
+      return;
     };
     settingsCategory = this.m_data[idx];
     this.PopulateOptions(settingsCategory.options);

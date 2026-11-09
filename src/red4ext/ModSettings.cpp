@@ -119,7 +119,7 @@ void __fastcall ModSettings::ProcessScriptData(const CScriptedDataEnvironment *s
               .name = prop->name,
               .type = CRTTISystem::Get()->GetType(prop->type->name),
               .configVarType = CRTTISystem::Get()->GetClass(ToConfigVar(prop->type->name)),
-              .dependency = *prop->ReadDependency(scriptClass->name),
+              .dependency = prop->ReadDependency(scriptClass->name),
               .category = category,
               .implicitOrder = (uint32_t)category->variables.size()
             };
@@ -536,8 +536,26 @@ void ModSettings::ReadFromFile() {
   sdk->logger->InfoF(pluginHandle, "Read user settings from %s: %u sections, %u keys", configPath.string().c_str(), (uint32_t)reader.Sections().size(), (uint32_t)reader.Entries().size());
 }
 
+// whether any variable of any mod has a requested value it has not accepted
+bool ModSettings::HasChanges() {
+  for (const auto &[modName, mod] : modSettings.mods) {
+    std::shared_lock _(*mod->classes_lock);
+    for (const auto &[modClassName, modClass] : mod->classes) {
+      for (const auto &[categoryName, category] : modClass->categories) {
+        for (const auto &[variableName, variable] : category->variables) {
+          if (variable->runtimeVar->HasChange())
+            return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 void ModSettings::AcceptChanges() {
-  ModSettings::WriteToFile();
+  // nothing to save: rewriting would also replace user.ini.bak with a copy of user.ini
+  if (HasChanges())
+    ModSettings::WriteToFile();
   if (gameinputManager != nullptr)
     Manager_ApplyOverrides(gameinputManager);
   else
@@ -549,14 +567,15 @@ void ModSettings::AcceptChanges() {
 void ModSettings::RestoreDefaults(CName modName) {
   if (modSettings.mods.contains(modName)) {
     auto mod = modSettings.mods[modName];
-    modSettings.changesRequested = false;
     for (auto [modClassName, modClass] : mod->classes) {
       for (auto [categoryName, category] : modClass->categories) {
         for (auto [variableName, variable] : category->variables) {
-          modSettings.changesRequested |= variable->RestoreDefault();
+          variable->RestoreDefault();
         }
       }
     }
+    // other mods' unsaved changes still count
+    modSettings.changesRequested = HasChanges();
     modSettings.NotifyListeners();
   }
 }

@@ -4,6 +4,33 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-09 Dependencies with a value, saving, Defaults, Back in the pause menu
+
+- `ModSettings.dependency "[Class.]prop=value"` never matched (#21): the value kept its `=` and the property name kept
+  `=value`. `ReadDependency` returns the dependency by value now, so it no longer leaks a `calloc` per field.
+- Back saved twice (`OnBack` called `AcceptChanges` after `CheckSettings` had), and every save backs up `user.ini`
+  first, so `user.ini.bak` always held the file just written. `AcceptChanges` now writes only when a variable has an
+  unaccepted change, and a save accepts (and so notifies listeners about) only the variables that changed.
+- Defaults on one mod reset the global `changesRequested`, hiding Apply and Reset for other mods' pending changes;
+  it is recomputed from every variable (`ModSettings::HasChanges`).
+- Rows that depend on a setting show or hide when it changes, not only after Apply: a change queues
+  `ModStngsRowsChangedEvent` and the page is rebuilt a frame later if its rows differ. The page returns early when no
+  mod has settings, instead of reading `m_data[0]` of an empty array.
+- Back in Mod Settings opened from the pause menu never saved: the game's `MenuScenario_PauseMenu.GoBack` hands
+  `OnBack` to `settings_main` only and switches straight to `pause_menu` for any other page, so unapplied changes
+  stayed pending and were lost at exit. `MenuScenario_PauseMenu.OnBack` is wrapped to hand it to
+  `mod_settings_main`, which saves and asks to close (`OnCloseModSettingsScreen`, now handled there too). The main
+  menu's `MenuScenario_ModSettings` already did this. Older than these changes: the smoke test's new Back step
+  found it.
+- The dependency parsing is in `DependencyString.hpp`, plain `std::string`, with the repo's first offline tests
+  (`tests/`, `ctest --test-dir build`, run by `build.yaml`).
+- In game, the smoke test passed 11 of 11, twice: both dependency forms, Defaults on a second mod, a save with nothing
+  changed leaving `user.ini` and `user.ini.bak` byte for byte, one accepted notification for one changed variable,
+  and on the open page "Shown at 7" listed after requesting `testNumber=7` without Apply, then Esc saving once
+  (`user.ini.bak` the file from before) and returning to the pause menu. The menu step's earlier misses were the
+  pause menu not opening right after the load (`../cp2077_tools/docs/mod_tests_plan.md`). Not seen in the game: the
+  empty-page guard (it needs a run with no mod registering settings) and Back from the main menu's page.
+
 ## 2026-11-08 Categories and rows in the order a mod gives
 
 - Rows ignored `ModSettings.order`: the three-argument `ReadProperty` parsed the attribute with the field's own type

@@ -77,7 +77,9 @@ bool ModVariable::IsInputEqualToString(const CString& other) const {
 }
 
 void ModVariable::Write(std::ofstream& stream) const {
-  this->runtimeVar->AcceptChange();
+  // only a changed variable is accepted: accepting notifies the mod's listeners
+  if (this->runtimeVar->HasChange())
+    this->runtimeVar->AcceptChange();
   if (this->runtimeVar->WasModifiedSinceLastSave()) {
     this->runtimeVar->MarkAsSaved();
   }
@@ -420,7 +422,8 @@ Handle<RED4ext::user::SettingsVar> ModSettingsVariable::CreateConfigVar() {
 }
 
 void ModSettingsVariable::Write(std::ofstream& stream) {
-  this->runtimeVar->AcceptChange();
+  if (this->runtimeVar->HasChange())
+    this->runtimeVar->AcceptChange();
   if (this->runtimeVar->WasModifiedSinceLastSave()) {
     this->SetRequestedValues();
     this->runtimeVar->MarkAsSaved();
