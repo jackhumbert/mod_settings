@@ -45,6 +45,20 @@ target_link_libraries(${MOD_SLUG}.dll
 
 target_compile_definitions(${MOD_SLUG}.dll PRIVATE MOD_SETTINGS_DLLDIR_EX)
 
+# Unit tests for the parts of the plugin that need no game (tests/): ctest --test-dir build, or run
+# build/mod_settings_tests.exe. They include the plugin's headers only, so the test exe needs no game or SDK.
+option(MOD_SETTINGS_TESTS "Build the unit tests" ON)
+if(MOD_SETTINGS_TESTS)
+  enable_testing()
+  add_executable(mod_settings_tests
+    tests/main.cpp
+    tests/dependency_tests.cpp
+  )
+  target_include_directories(mod_settings_tests PRIVATE src/red4ext)
+  target_compile_features(mod_settings_tests PRIVATE cxx_std_20)
+  add_test(NAME mod_settings_tests COMMAND mod_settings_tests)
+endif()
+
 configure_archives(src/wolvenkit/packed/archive/pc/mod/ModSettings.archive src/archiveXL/ModSettings.archive.xl)
 
 configure_redscript(src/redscript)

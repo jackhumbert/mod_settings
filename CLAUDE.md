@@ -31,9 +31,10 @@ Game version for the release name comes from the installed `Cyberpunk2077.exe`, 
 
      It checks that the log shows the hooks attached and the settings loaded, and that a test settings class
      is listed with its defaults. It checks that a change accepted through the API reaches the variables and
-     a `RegisterListenerToClass` instance, and that the pause menu's Mod Settings page shows the test mod (with
-     a screenshot). `--protect` puts Jack's `user.ini` back as it was. Leave out `--install` to test what is
-     installed.
+     a `RegisterListenerToClass` instance, dependencies, Defaults and saving, and that the pause menu's Mod
+     Settings page shows the test mod, rebuilds its dependent rows and saves on Back (with screenshots).
+     `--protect` puts Jack's `user.ini` back as it was. Leave out `--install` to test what is installed.
+   - Offline unit tests (`tests/`): `ctest --test-dir build` after a build.
    - RED4ext mods load however the game is started; the 2.5 menu's "Mods" entry and its "sign into your CD PROJEKT RED account" popup belong to CDPR's mod.io browser, not to us.
    - A plugin not built for the current patch can crash startup right after RED4ext logs "Loading plugin from ..." for it. Rule it out with `ignored = ["<plugin folder>"]` in `red4ext/config.ini`.
 4. Tag.
