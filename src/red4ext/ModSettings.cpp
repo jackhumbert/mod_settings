@@ -20,6 +20,8 @@
 #include <iostream>
 #include <cerrno>
 #include <cstring>
+#include <set>
+#include <string>
 #include <Hooks/ApplyOverrides.hpp>
 
 namespace ModSettings {
@@ -361,7 +363,20 @@ void ModSettings::AddOverrides(Manager* manager) {
             auto status = manager->Override(name, (uint16_t)key, applyOverridesCallNumber);
             if (status == Manager::OverrideStatus::NotFound) {
               notFound++;
-              sdk->logger->WarnF(pluginHandle, "overridableUI \"%s\" not found (%s, %s)", name, modName.ToString(), className.ToString());
+              // A mod may read an EInputKey setting itself (an Input/Key callback) and have no overridableUI
+              // mapping on purpose, so a miss is not an error. Said once per setting, then only at debug,
+              // since the game runs this pass many times a session (issue #36).
+              static std::set<std::string> reportedMisses;
+              auto missKey = std::string(modName.ToString()) + "." + className.ToString() + "." + name;
+              if (reportedMisses.insert(missKey).second) {
+                sdk->logger->InfoF(pluginHandle,
+                                   "overridableUI \"%s\" not found (%s, %s): no Input Loader mapping uses it, so the "
+                                   "key is only what the mod reads itself",
+                                   name, modName.ToString(), className.ToString());
+              } else {
+                sdk->logger->DebugF(pluginHandle, "overridableUI \"%s\" not found (%s, %s)", name, modName.ToString(),
+                                    className.ToString());
+              }
             } else if (status & Manager::OverrideStatus::Replaced) {
               replaced++;
               sdk->logger->InfoF(pluginHandle, "overridableUI \"%s\" set to key %u", name, (uint32_t)key);
