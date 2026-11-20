@@ -149,14 +149,14 @@ bool ModVariable::CreateRuntimeVariable(const Variable &var) {
     case CName("Float"):
       this->runtimeVar = new RuntimeVariableRange<float>(var.modName, var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.f32, var.stepValue.f32, var.minValue.f32, var.maxValue.f32);
       return true;
-    default: 
-      // if(this->type->GetType() == RED4ext::ERTTIType::Enum) {
-      //   this->runtimeVar = new RuntimeVariableEnum(var.modName, var.className, var.propertyName, var.displayName, var.description, var.order, *var.defaultValue);
-      //   return true;
-      // } else {
-        this->runtimeVar = nullptr;
-        return false;
-      // }
+    default:
+      // an enum type's name: a list of its values, the default an index into them (RuntimeVariableEnum)
+      if (this->type && this->type->GetType() == RED4ext::ERTTIType::Enum) {
+        this->runtimeVar = new RuntimeVariableEnum(var.modName, var.className, var.propertyName, CNamePool::Add(var.displayName), CNamePool::Add(var.description), var.order, var.defaultValue.u32, static_cast<const RED4ext::CEnum *>(this->type));
+        return true;
+      }
+      this->runtimeVar = nullptr;
+      return false;
   }
 }
 

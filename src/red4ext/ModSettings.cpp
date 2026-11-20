@@ -58,6 +58,8 @@ void AddVariable(Variable* variable) {
   queuedVariables.emplace_back(variable);
 }
 
+uint32_t ApiVersion() { return 1; }
+
 void __fastcall ModSettings::ProcessScriptData(const CScriptedDataEnvironment *scriptData) {
   auto self = ModSettings::GetInstance();
   if (scriptData) {
@@ -186,7 +188,7 @@ void __fastcall ModSettings::ProcessScriptData(const CScriptedDataEnvironment *s
         (*var->callback)(var->categoryName, var->propertyName, *(ModVariableType*)variable->runtimeVar->GetAcceptedValue());
         sdk->logger->InfoF(pluginHandle, "Loaded '%s'.%s", var->modName, var->propertyName);
       } else {
-        sdk->logger->ErrorF(pluginHandle, "Could not create runtime variable for {}", var->propertyName);
+        sdk->logger->ErrorF(pluginHandle, "Could not create runtime variable for %s (a type this Mod Settings does not know)", var->propertyName);
       }
     }
     // resolve dependencies

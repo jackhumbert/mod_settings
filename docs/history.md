@@ -4,6 +4,20 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-20 Lists from C++ (enum variables), ApiVersion
+
+- Let There Be Flight's Land at Destination became a three-way list registered from C++, and `AddVariable` had no
+  enum path (the case was commented out). `AddVariable` now takes an enum type's name as `type`: a list of its values
+  in order, each shown as the localization key `<displayName>-<value name>`, the value and default an index. No change
+  to the `Variable` struct, so plugins built against the old header still work.
+- Saved text is a value's name (as `Write` writes it, through the enum type) or an index. A Bool saved under the same
+  name carries over as the list's first or second value: `Write` saves Bools as `false` / `true` (Jack's file has
+  `landAtDestination = true`), so those are read as 0 and 1. LTBF relies on this.
+- `ApiVersion()` (exported, 1) tells a plugin lists are there; older releases lack the export. A type it does not know
+  is logged with the variable's name (the format string was `{}` in a printf-style call).
+- Checked in game through LTBF (its `wheel_landing.py`, this build's dll put in for the run): the list registered,
+  showed and set by index through `ModConfigVarEnum`, and saved as the value's name.
+
 ## 2026-11-09 Dependencies with a value, saving, Defaults, Back in the pause menu
 
 - `ModSettings.dependency "[Class.]prop=value"` never matched (#21): the value kept its `=` and the property name kept

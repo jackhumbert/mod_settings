@@ -53,6 +53,7 @@ if(MOD_SETTINGS_TESTS)
   add_executable(mod_settings_tests
     tests/main.cpp
     tests/dependency_tests.cpp
+    tests/enum_text_tests.cpp
   )
   target_include_directories(mod_settings_tests PRIVATE src/red4ext)
   target_compile_features(mod_settings_tests PRIVATE cxx_std_20)

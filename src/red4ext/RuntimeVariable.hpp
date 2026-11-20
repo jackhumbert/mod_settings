@@ -5,6 +5,9 @@
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/userRuntimeSettingsVar.hpp>
+#include "EnumText.hpp"
+#include <string>
+#include <vector>
 
 namespace ModSettings {
 
@@ -288,6 +291,34 @@ struct RuntimeVariableEnum : public RuntimeVariableList<int32_t> {
 
       bitfield.listHasDisplayValues = true;
     }
+  }
+
+  // A list registered from C++ (AddVariable with an enum type's name, ModSettings.hpp): the enum's values in order,
+  // each shown as the localization key <displayName>-<value name>. The value is the index into them. The saved text is
+  // a value's name (as ModVariable::Write writes it) or an index, and a Bool saved before under the name (false or
+  // true, as Write writes a Bool; or 0 or 1) reads as the first or second value.
+  RuntimeVariableEnum(CName modName, CName className, CName propertyName, CName displayName, CName description,
+                      uint32_t order, uint32_t defaultIndex, const RED4ext::CEnum *e)
+      : RuntimeVariableList<int32_t>(modName, className, propertyName, displayName, description, order, defaultIndex) {
+    this->type = RED4ext::user::EConfigVarType::IntList;
+    values = RED4ext::DynArray<int32_t>(new RED4ext::Memory::DefaultAllocator());
+    displayValues = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator());
+    const std::string prefix = std::string(displayName.ToString()) + "-";
+    for (const auto &value : e->hashList)
+      displayValues.EmplaceBack(RED4ext::CNamePool::Add((prefix + value.ToString()).c_str()));
+    for (const auto &value : e->valueList)
+      values.EmplaceBack((int32_t)value);
+    bitfield.listHasDisplayValues = true;
+
+    uint32_t index = defaultIndex < values.size ? defaultIndex : 0;
+    CString saved;
+    if (ModSettings::GetSettingString(className, propertyName, &saved)) {
+      std::vector<std::string> names;
+      for (const auto &value : e->hashList)
+        names.emplace_back(value.ToString());
+      index = EnumIndexFromText(saved.c_str(), names, index);
+    }
+    LoadValue(&index);
   }
 };
 
