@@ -193,7 +193,7 @@ void __fastcall ModSettings::ProcessScriptData(const CScriptedDataEnvironment *s
     }
     // resolve dependencies
     for (auto &[_, mod] : self->mods) {
-      std::shared_lock _(*mod->classes_lock);
+      std::shared_lock classesLock(*mod->classes_lock);
       for (auto &[_, modClass] : mod->classes) {
         for (auto &[_, category] : modClass->categories) {
           for (auto &[_, variable] : category->variables) {
