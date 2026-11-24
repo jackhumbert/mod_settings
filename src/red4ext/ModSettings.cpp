@@ -570,14 +570,17 @@ bool ModSettings::HasChanges() {
 }
 
 void ModSettings::AcceptChanges() {
-  // nothing to save: rewriting would also replace user.ini.bak with a copy of user.ini
-  if (HasChanges())
-    ModSettings::WriteToFile();
+  // Back accepts on every close, changes or not. With nothing changed there is nothing to save (rewriting would also
+  // replace user.ini.bak with a copy of user.ini), no key binding to apply, and no listener to call: mods react to
+  // OnModSettingsChange (one re-applied its cyberware capacity and unequipped cyberware on merely opening the page).
+  modSettings.changesRequested = false;
+  if (!HasChanges())
+    return;
+  ModSettings::WriteToFile();
   if (gameinputManager != nullptr)
     Manager_ApplyOverrides(gameinputManager);
   else
     sdk->logger->Warn(pluginHandle, "Key binding changes not applied: the game's input manager was not captured");
-  modSettings.changesRequested = false;
   modSettings.NotifyListeners();
 }
 
