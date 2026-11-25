@@ -4,6 +4,34 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-25 Search across every mod's settings
+
+- A search bar above the mod list filters the page to the settings, from every mod, whose name, description, mod or
+  category hold all the words typed (case ignored, two characters minimum: one letter matches nearly every setting and
+  spawns a row for each). Results are the live rows under a `Mod · Category` header each (the mod alone for its
+  uncategorised settings), so Apply, Reset, Back and dependent rows work as on a mod's page. The `·` renders in the
+  page's font (raj). Picking a mod clears the search; Defaults and its hint are hidden while searching.
+- The bar is the 2.5 mod.io browser's (`base\gameplay\gui\fullscreen\main_menu\modio_browser_menu.inkwidget`,
+  `searchBarCanvas`), copied into `mod_settings_main.inkwidget` as the first child of `mod_settings` (renamed
+  `search_bar`, `search_input`, `search_placeholder`; its `ModMenuSearchBarController` and list-item controller
+  dropped, as they need the browser's game controller). The copy was made on WolvenKit 10 JSON: the file's handles
+  are numbered across both copies of the tree (`package` and the cooked `packageData`), so the subtree went into both
+  and the whole file was renumbered.
+- The controller finds the bar's widgets by path. Script fields added to the widget's `gameController` did not bind
+  (the cooked copy held the names once, not in both trees), so the page's own fields stay those of the game's
+  settings controller. The placeholder is the game's `UI-Modio-FiltersSorting-Search`; the no-results line is our
+  `UI-ModSettings-NoResults`.
+- Input: X on a pad (and on the keyboard) focuses the bar through `controller_settings`, the settings menu's spare
+  button, which this page hides (`focus_search_bar` exists only in the mod browser's input context). While the bar
+  has focus the page's shortcuts are ignored, the rows are not interactive (a hovered row takes A/D as its own), a
+  click elsewhere leaves the bar, and Back leaves the bar before it closes the page.
+- While results show, the mod list greys out: each entry goes to its `Default` state (no `Selected` highlight on the
+  open mod) and its label's `tintColor` and `opacity` bindings are swapped for `MainColors.Grey` at 0.4, then put back
+  (`MenuLabel.MainColor`, `MenuLabel.MainOpacity`). The label's style-bound opacity wins over opacity set on the entry,
+  `mods` or `mod_flex` (none showed), and the HDR red faded alone only from 255 to 177 in a screenshot.
+- The smoke test puts text in through a helper calling `OnSearchTextChanged`: the bridge's keys are game input, which
+  a text field does not take as typing. Typing on a real keyboard was checked by hand.
+
 ## 2026-11-25 The menu entries are added at load, not shipped as copies of the game's menu files
 
 - `ModSettings.archive` carried full copies of `menu.inkmenu` and `pregame_menu.inkmenu` with the page's entry (and

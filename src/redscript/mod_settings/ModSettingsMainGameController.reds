@@ -41,6 +41,17 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   private let m_confirmationToken: ref<inkGameNotificationToken>;
   private let m_pendingDefaultsMod: CName;
 
+  // the search bar above the mod list, copied from 2.5's mod.io browser (modio_browser_menu.inkwidget)
+  // (found by path: the page's widget binds only the fields of the game's own settings controller)
+  private let m_searchBar: wref<inkWidget>;
+  private let m_searchInput: wref<inkTextInput>;
+  private let m_searchPlaceholder: wref<inkText>;
+  private let m_searchFocused: Bool;
+  // the click that focused the bar also reaches OnButtonRelease, which would unfocus it again
+  private let m_ignoreNextUnfocus: Bool;
+  // the lowercased words of the search, all of which a setting must match; empty when not searching
+  private let m_searchTerms: array<String>;
+
   protected cb func OnInitialize() -> Void {
     ModSettings.GetInstance().isActive = true;
     inkWidgetRef.SetVisible(this.m_hdrButton, false);
@@ -64,6 +75,11 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     this.m_selectorCtrl = inkWidgetRef.GetController(this.m_selectorWidget) as ListController;
     this.m_selectorCtrl.RegisterToCallback(n"OnItemActivated", this, n"OnMenuChanged");
     this.m_buttonHintsController = this.SpawnFromExternal(inkWidgetRef.Get(this.m_buttonHintsManagerRef), r"base\\gameplay\\gui\\common\\buttonhints.inkwidget", n"Root").GetController() as ButtonHints;
+    this.FindSearchWidgets();
+    this.m_searchPlaceholder.SetText(GetLocalizedText("UI-Modio-FiltersSorting-Search"));
+    this.m_searchInput.SetMaxChars(40u);
+    this.m_searchInput.RegisterToCallback(n"OnTextChanged", this, n"OnSearchTextChanged");
+    this.m_searchBar.RegisterToCallback(n"OnRelease", this, n"OnSearchBarRelease");
     this.PopulateHints();
     this.PopulateSettingsData();
     // this.PopulateCategories(this.m_settings.GetMenuIndex());
@@ -101,6 +117,8 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     inkWidgetRef.GetControllerByType(this.m_resetButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnResetButtonReleased");
     inkWidgetRef.GetControllerByType(this.m_controllerButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnControllerButtonReleased");
     inkWidgetRef.GetControllerByType(this.m_defaultButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnDefaultButtonReleased");
+    this.m_searchInput.UnregisterFromCallback(n"OnTextChanged", this, n"OnSearchTextChanged");
+    this.m_searchBar.UnregisterFromCallback(n"OnRelease", this, n"OnSearchBarRelease");
 
     ModSettings.UnregisterListenerToModifications(this);
     this.m_confirmationToken = null;
@@ -168,6 +186,14 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   protected cb func OnRowsChanged(evt: ref<ModStngsRowsChangedEvent>) -> Bool {
+    if this.IsSearching() {
+      let found = this.SearchKeys();
+      this.PopulateSettingsData();
+      if NotEquals(this.SearchKeys(), found) {
+        this.PopulateCategorySettingsOptions(-1);
+      }
+      return false;
+    }
     let idx = this.m_selectorCtrl.GetToggledIndex();
     if idx < 0 || idx >= ArraySize(this.m_data) {
       return false;
@@ -347,6 +373,11 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   protected cb func OnBack(userData: ref<IScriptable>) -> Bool {
+    // Back first leaves the search bar, as in the mod.io browser; the next one closes the page
+    if this.m_searchFocused {
+      this.LoseSearchFocus();
+      return true;
+    }
     // if !StatusEffectSystem.ObjectHasStatusEffectWithTag(this.GetPlayerControlledObject(), n"LockInHubMenu") {
       this.m_closeSettingsRequest = true;
       this.CheckSettings();
@@ -454,6 +485,8 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
 
   protected cb func OnMenuChanged(index: Int32, target: ref<ListItemController>) -> Bool {
     this.PlaySound(n"Button", n"OnPress");
+    // picking a mod leaves the search for that mod's page
+    this.ClearSearch();
     this.PopulateCategorySettingsOptions(index);
     (inkWidgetRef.GetController(this.m_scrollPanel) as inkScrollController).SetScrollPosition(0.00);
     // this.m_settings.SetMenuIndex(index);
@@ -488,7 +521,11 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     this.m_buttonHintsController.ClearButtonHints();
     this.m_buttonHintsController.AddButtonHint(n"select", "UI-UserActions-Select");
     this.m_buttonHintsController.AddButtonHint(n"back", "Common-Access-Close");
-    if !this.m_isDlcSettings {
+    if !this.m_searchFocused {
+      this.m_buttonHintsController.AddButtonHint(n"controller_settings", "UI-Modio-FiltersSorting-Search");
+    };
+    // Defaults resets the selected mod, which is unclear while the results span several
+    if !this.m_isDlcSettings && !this.IsSearching() {
       this.m_buttonHintsController.AddButtonHint(n"restore_default_settings", "UI-UserActions-RestoreDefaults");
     };
   }
@@ -527,7 +564,20 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   protected cb func OnButtonRelease(evt: ref<inkPointerEvent>) -> Bool {
     let currentToggledIndex: Int32;
     let listSize: Int32 = this.m_selectorCtrl.Size();
-    if evt.IsAction(n"prior_menu") {
+    if this.m_searchFocused {
+      // keys typed into the bar are not the page's shortcuts; a click elsewhere leaves the bar
+      if (evt.IsAction(n"click") || evt.IsAction(n"tap")) && evt.GetCurrentTarget() != this.m_searchInput {
+        if this.m_ignoreNextUnfocus {
+          this.m_ignoreNextUnfocus = false;
+        } else {
+          this.LoseSearchFocus();
+        };
+      };
+      return false;
+    };
+    if evt.IsAction(n"controller_settings") {
+      this.FocusSearch(false);
+    } else if evt.IsAction(n"prior_menu") {
       currentToggledIndex = this.m_selectorCtrl.GetToggledIndex();
       if currentToggledIndex < 1 {
         this.m_selectorCtrl.SetToggledIndex(listSize - 1);
@@ -548,7 +598,9 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
         };
       } else {
         if evt.IsAction(n"restore_default_settings") {
-          this.RequestRestoreDefaults();
+          if !this.IsSearching() {
+            this.RequestRestoreDefaults();
+          };
         } else {
             return false;
         };
@@ -667,6 +719,10 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     inkCompoundRef.RemoveAllChildren(this.m_settingsOptionsList);
     inkTextRef.SetText(this.m_descriptionText, "");
     inkWidgetRef.SetVisible(this.m_descriptionText, false);
+    if this.IsSearching() {
+      this.PopulateSearchResults();
+      return;
+    };
     if idx < 0 {
       idx = this.m_selectorCtrl.GetToggledIndex();
     };
@@ -687,6 +743,215 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
       i += 1;
     };
     this.m_selectorCtrl.SetSelectedIndex(idx);
+  }
+
+  // Search: every mod's settings whose name, description, mod or category hold all the words typed, under a
+  // "Mod · Category" header each, as live rows (changes go through Apply, Reset and Back as on a mod's page).
+
+  public final func IsSearching() -> Bool = ArraySize(this.m_searchTerms) > 0;
+
+  public final func IsSearchFocused() -> Bool = this.m_searchFocused;
+
+  private final func FindSearchWidgets() -> Void {
+    let root = this.GetRootCompoundWidget();
+    this.m_searchBar = root.GetWidget(n"mod_settings/search_bar");
+    this.m_searchInput = root.GetWidget(n"mod_settings/search_bar/SearchContent/TextContent/search_input") as inkTextInput;
+    this.m_searchPlaceholder = root.GetWidget(n"mod_settings/search_bar/SearchContent/TextContent/search_placeholder") as inkText;
+  }
+
+  protected cb func OnSearchBarRelease(evt: ref<inkPointerEvent>) -> Bool {
+    if evt.IsAction(n"click") || evt.IsAction(n"tap") {
+      this.FocusSearch(true);
+    };
+  }
+
+  private final func FocusSearch(fromClick: Bool) -> Void {
+    if this.m_searchFocused {
+      return;
+    };
+    if !IsDefined(this.m_searchInput) {
+      this.FindSearchWidgets();
+    };
+    this.m_searchInput.RequestFocus();
+    this.m_searchFocused = true;
+    this.m_ignoreNextUnfocus = fromClick;
+    this.m_searchPlaceholder.SetVisible(false);
+    // a hovered row takes A/D and the arrows as its own shortcuts: none while typing
+    inkWidgetRef.SetInteractive(this.m_settingsOptionsList, false);
+    this.PopulateHints();
+    this.PlaySound(n"Button", n"OnPress");
+  }
+
+  private final func LoseSearchFocus() -> Void {
+    if !this.m_searchFocused {
+      return;
+    };
+    this.m_searchInput.RequestUnfocus();
+    this.m_searchFocused = false;
+    this.m_ignoreNextUnfocus = false;
+    this.m_searchPlaceholder.SetVisible(StrLen(this.SearchText()) == 0);
+    inkWidgetRef.SetInteractive(this.m_settingsOptionsList, true);
+    this.PopulateHints();
+  }
+
+  private final func SearchText() -> String = this.m_searchInput.GetText();
+
+  // empties the bar and goes back to the mod pages
+  private final func ClearSearch() -> Void {
+    this.LoseSearchFocus();
+    if StrLen(this.SearchText()) > 0 {
+      this.m_searchInput.SetText("");
+    };
+    this.m_searchPlaceholder.SetVisible(true);
+    this.SetSearchTerms([]);
+  }
+
+  protected cb func OnSearchTextChanged(text: String) -> Bool {
+    let terms: array<String>;
+    if !this.m_searchFocused {
+      this.m_searchPlaceholder.SetVisible(StrLen(text) == 0);
+    };
+    // one letter matches nearly every setting and spawns a row for each: results start at two
+    if StrLen(text) >= 2 {
+      for word in StrSplit(StrLower(text), " ") {
+        if StrLen(word) > 0 {
+          ArrayPush(terms, word);
+        };
+      };
+    };
+    this.SetSearchTerms(terms);
+  }
+
+  private final func SetSearchTerms(terms: array<String>) -> Void {
+    let wasSearching = this.IsSearching();
+    if Equals(ModStngsMainGameController.Joined(terms), ModStngsMainGameController.Joined(this.m_searchTerms)) {
+      return;
+    };
+    this.m_searchTerms = terms;
+    // Defaults resets the selected mod, which is unclear while the results span several
+    inkWidgetRef.SetVisible(this.m_defaultButton, !this.IsSearching());
+    if NotEquals(wasSearching, this.IsSearching()) {
+      this.PopulateHints();
+      this.DimModList(this.IsSearching());
+    };
+    this.PopulateCategorySettingsOptions(-1);
+    (inkWidgetRef.GetController(this.m_scrollPanel) as inkScrollController).SetScrollPosition(0.00);
+  }
+
+  // While results show, the mod list stands aside: no entry looks like the open page (SettingsCategoryItem's
+  // "Selected" state), and the names turn grey and fade. A name's colour and opacity are bound to the style
+  // (MenuLabel.MainColor and MainOpacity in hub_menu_style.inkstyle), which wins over opacity set on the entry, the
+  // list or its scroll area, and its HDR red still read bright at 0.3: the bindings are swapped while searching and
+  // put back after, as the game's own sliders rebind their colours.
+  private final func DimModList(dim: Bool) -> Void {
+    let list = this.GetRootCompoundWidget().GetWidget(n"mod_settings/mod_flex/mod_scroller/mods") as inkCompoundWidget;
+    if !IsDefined(list) {
+      return;
+    };
+    let toggled = this.m_selectorCtrl.GetToggledIndex();
+    let i = 0;
+    while i < list.GetNumChildren() {
+      let item = list.GetWidgetByIndex(i) as inkCompoundWidget;
+      item.SetState(!dim && i == toggled ? n"Selected" : n"Default");
+      let name = item.GetWidget(n"txtValueHighlight");
+      if dim {
+        name.BindProperty(n"tintColor", n"MainColors.Grey");
+        name.UnbindProperty(n"opacity");
+        name.SetOpacity(0.4);
+      } else {
+        name.BindProperty(n"tintColor", n"MenuLabel.MainColor");
+        name.BindProperty(n"opacity", n"MenuLabel.MainOpacity");
+      };
+      i += 1;
+    };
+  }
+
+  private static func Joined(words: array<String>) -> String {
+    let out = "";
+    for word in words {
+      out += word + " ";
+    };
+    return out;
+  }
+
+  // a name or key as the page shows it: its localized text, or the name itself when it is not a key
+  private static func Shown(label: CName) -> String {
+    let text = GetLocalizedTextByKey(label);
+    return StrLen(text) > 0 ? text : NameToString(label);
+  }
+
+  private final func Matches(v: ref<ConfigVar>, context: String) -> Bool {
+    if !IsDefined(v) || !v.IsVisible() {
+      return false;
+    };
+    let description = Equals(v.GetDescription(), n"None") ? "" : ModStngsMainGameController.Shown(v.GetDescription());
+    let text = StrLower(ModStngsMainGameController.Shown(v.GetDisplayName()) + " " + description + " " + context);
+    for term in this.m_searchTerms {
+      if StrFindFirst(text, term) < 0 {
+        return false;
+      };
+    };
+    return true;
+  }
+
+  private final func Found(options: array<ref<ConfigVar>>, context: String) -> array<ref<ConfigVar>> {
+    let out: array<ref<ConfigVar>>;
+    for v in options {
+      if this.Matches(v, context) {
+        ArrayPush(out, v);
+      };
+    };
+    return out;
+  }
+
+  private final func AddResultsHeader(label: String) -> Void {
+    let header = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsCategory").GetController() as SettingsCategoryController;
+    if IsDefined(header) {
+      // not a localization key, so the page's SettingsCategoryController shows it as it is
+      header.Setup(StringToName(label));
+    };
+  }
+
+  private final func PopulateSearchResults() -> Void {
+    let count = 0;
+    for mod in this.m_data {
+      let modLabel = ModStngsMainGameController.Shown(mod.label);
+      let found = this.Found(mod.options, modLabel);
+      if ArraySize(found) > 0 {
+        this.AddResultsHeader(modLabel);
+        this.PopulateOptions(found);
+        count += ArraySize(found);
+      };
+      for sub in mod.subcategories {
+        let subLabel = ModStngsMainGameController.Shown(sub.label);
+        found = this.Found(sub.options, modLabel + " " + subLabel);
+        if ArraySize(found) > 0 {
+          this.AddResultsHeader(modLabel + " · " + subLabel);
+          this.PopulateOptions(found);
+          count += ArraySize(found);
+        };
+      };
+    };
+    if count == 0 {
+      this.AddResultsHeader(GetLocalizedText("UI-ModSettings-NoResults"));
+    };
+  }
+
+  // the rows the search lists, "group/name" joined, to tell whether a change showed or hid one
+  private final func SearchKeys() -> String {
+    let out = "";
+    for mod in this.m_data {
+      let modLabel = ModStngsMainGameController.Shown(mod.label);
+      for v in this.Found(mod.options, modLabel) {
+        out += NameToString(v.GetGroupPath()) + "/" + NameToString(v.GetName()) + ";";
+      };
+      for sub in mod.subcategories {
+        for v in this.Found(sub.options, modLabel + " " + ModStngsMainGameController.Shown(sub.label)) {
+          out += NameToString(v.GetGroupPath()) + "/" + NameToString(v.GetName()) + ";";
+        };
+      };
+    };
+    return out;
   }
 
 }
