@@ -4,6 +4,21 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-25 The menu entries are added at load, not shipped as copies of the game's menu files
+
+- `ModSettings.archive` carried full copies of `menu.inkmenu` and `pregame_menu.inkmenu` with the page's entry (and
+  the pregame `MenuScenario_ModSettings`) added. Copies go stale with every patch that adds a menu: the 2.3 copies on
+  2.5 lacked `glamdoc` and five others, and the Glamdoc screen came up empty (fixed by rebuilding them in 0.2.27, and
+  again offered by a third-party archive and #34). Two mods shipping copies of one file also leave only one working.
+- Now `Hooks/ResourceSerializer_OnDependenciesReady.cpp` adds them when the game loads either file: a copy of the
+  game's `settings_main` entry with our name and widget, and the scenario name. It skips a file that already has the
+  entry (an old archive). The hook is the one ArchiveXL's resource patching uses (hash 3892979844, finished objects
+  at 0x230); ArchiveXL's own patching does not cover `inkMenuResource`, and Codeware's `Resource/PostLoad` would have
+  added a requirement. The loader has already fetched the entries' widgets at this point, so ours is loaded here.
+- Checked in game with an archive holding only the widget and localization: both files came through the hook at
+  startup with vanilla's 35 and 60 entries and got ours; the smoke test passed, the page opening from the pause menu
+  and, in a new step, from the main menu (the added scenario).
+
 ## 2026-11-20 Lists from C++ (enum variables), ApiVersion
 
 - Let There Be Flight's Land at Destination became a three-way list registered from C++, and `AddVariable` had no

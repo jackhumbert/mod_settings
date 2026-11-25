@@ -6,9 +6,9 @@ The rules for every mod (languages, native design, layout, build, release, comme
 
 ## Layout
 
-- `src/red4ext/` - plugin. `Main.cpp` = entry. `Hooks/` = 3 hooked game functions plus 3 direct calls, all by RED4ext address hash (`REGISTER_HOOK_HASH` / `UniversalRelocFunc`), named `<Class>_<Method>` after the game function. `docs/history.md` = decisions and findings. `Scripting/`, `ScriptDefinitions/` = the script-facing API.
+- `src/red4ext/` - plugin. `Main.cpp` = entry. `Hooks/` = 4 hooked game functions plus 3 direct calls, all by RED4ext address hash (`REGISTER_HOOK_HASH` / `UniversalRelocFunc`), named `<Class>_<Method>` after the game function. `docs/history.md` = decisions and findings. `Scripting/`, `ScriptDefinitions/` = the script-facing API.
 - `src/redscript/mod_settings/` - the UI and API redscript; packed into `packed.reds` + `module.reds`. Other mods compile against this folder (LTBF and In-World Navigation vendor this repo as a submodule for that).
-- `src/wolvenkit/` - Wolvenkit project; the built `ModSettings.archive` under `packed/` is committed and only copied by CMake.
+- `src/wolvenkit/` - Wolvenkit project (the page's widget and localization); the built `ModSettings.archive` under `packed/` is committed and only copied by CMake. The page's entries in the game's menu registries are added at load (`Hooks/ResourceSerializer_OnDependenciesReady.cpp`), not shipped as copies of the menu files.
 - `deps/` - submodules: `red4ext.sdk` (jackhumbert fork, branch `new-types`), `cpcmake` (jackhumbert/cyberpunk_cmake, the CMake framework), `red_lib` (fork, branch `jack`), `archive_xl` (headers only), `spdlog`, `detours`.
 - `game_dir/` build output in game-folder layout, `game_dir_debug/` PDBs; both zipped for release. `requirements.md` is regenerated at configure time from the Find modules in cpcmake.
 
@@ -20,7 +20,7 @@ Game version for the release name comes from the installed `Cyberpunk2077.exe`, 
 
 ## Updating for a game patch
 
-1. `check_hashes.py` (shared game tools, see `CLAUDE.local.md`) - checks the 3 address hashes against the game's shipped `bin/x64/cyberpunk2077_addresses.json`. Present = resolves at runtime.
+1. `check_hashes.py` (shared game tools, see `CLAUDE.local.md`) - checks the address hashes against the game's shipped `bin/x64/cyberpunk2077_addresses.json`. Present = resolves at runtime.
 2. Bump `deps/red4ext.sdk` to the fork commit that knows the patch (must exist in `GameVersions.json` and `Api/v0/Runtime.hpp`), and `deps/cpcmake` for the requirement floors (standard, section 5).
 3. Build, install, launch, confirm `red4ext/logs/mod_settings-*.log` shows the hooks attaching and settings loading.
    - Install, launch and test only through `../cp2077_tools`: the one way to test, see `E:\src\CLAUDE.md` and `../cp2077_tools/README.md`. Other sessions share the game install and Jack plays on it; never start, kill or install into the game around it. The smoke test:
