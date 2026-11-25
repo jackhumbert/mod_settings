@@ -4,6 +4,16 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-25 Dependencies on a class declared in a module
+
+- `ModSettings.dependency "Module.Class.prop"` never resolved (#37): the parser split class from property at the first
+  period, giving class `Module`, and the row always showed. A class in a module is registered under its full name
+  (the game's log has `Loaded ClaudeModSettingsModule.ClaudeModuleSettings.moduleSwitch`), and property names hold no
+  period, so the split is at the last one. The value is cut off at `=` before this, so `scale=1.5` is unaffected.
+- Offline test `module_qualified_class`. The smoke test got a test mod with a class in a module and a row depending on
+  it from outside (`../cp2077_tools/mods/mod_settings/mod_settings_module.reds`); its step has not run in the game yet
+  (two launches failed while another job held the GPU), only the class's registered name was seen in the log.
+
 ## 2026-11-25 Search across every mod's settings
 
 - A search bar above the mod list filters the page to the settings, from every mod, whose name, description, mod or

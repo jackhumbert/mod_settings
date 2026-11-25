@@ -74,3 +74,10 @@ TEST(nothing_to_depend_on) {
   Parse("=true", false);
   Parse("MySettings.", false);
 }
+
+TEST(module_qualified_class) {
+  auto d = Parse("MyMod.MySettings.enabled=false");
+  CHECK(d.className == "MyMod.MySettings");
+  CHECK(d.propertyName == "enabled");
+  CHECK(d.value == "false");
+}

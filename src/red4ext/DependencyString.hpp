@@ -1,7 +1,7 @@
 #pragma once
 
-// Parsing of the ModSettings.dependency attribute, "[Class.]property[=value]", kept apart from the engine types so
-// tests/ can link it without the game.
+// Parsing of the ModSettings.dependency attribute, "[[Module.]Class.]property[=value]", kept apart from the engine
+// types so tests/ can link it without the game.
 
 #include <algorithm>
 #include <cctype>
@@ -32,7 +32,7 @@ inline bool ParseDependency(std::string depends, DependencyString &out) {
     TrimSpaces(out.value);
   }
   TrimSpaces(depends);
-  auto period = depends.find('.');
+  auto period = depends.rfind('.'); // the last: a class in a module is named "Module.Class"
   if (period != std::string::npos) {
     out.className = depends.substr(0, period);
     out.propertyName = depends.substr(period + 1);
