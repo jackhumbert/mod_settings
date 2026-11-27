@@ -11,8 +11,10 @@ carrying dates and measurements.
   (the game's log has `Loaded ClaudeModSettingsModule.ClaudeModuleSettings.moduleSwitch`), and property names hold no
   period, so the split is at the last one. The value is cut off at `=` before this, so `scale=1.5` is unaffected.
 - Offline test `module_qualified_class`. The smoke test got a test mod with a class in a module and a row depending on
-  it from outside (`../cp2077_tools/mods/mod_settings/mod_settings_module.reds`); its step has not run in the game yet
-  (two launches failed while another job held the GPU), only the class's registered name was seen in the log.
+  it from outside (`../cp2077_tools/mods/mod_settings/mod_settings_module.reds`). In the game (2026-11-26, after two
+  launches had failed while another job held the GPU) the smoke test passed 16 of 16: the row hidden with the switch
+  off, listed with it on, hidden again. A launch with the v0.2.35 release's own files loaded normally too, checked
+  after a report that it closed the game at the loading screen.
 
 ## 2026-11-25 Search across every mod's settings
 
