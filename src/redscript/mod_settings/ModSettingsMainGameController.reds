@@ -1,6 +1,12 @@
 // queued by OnModVariableChangeRequested: the rows a mod lists may have changed (ModSettings.dependency)
 public class ModStngsRowsChangedEvent extends Event {}
 
+// queued while a page or the search results still have rows to spawn: the next batch, a frame later. A page shown
+// since then has its own generation, and the old page's events do nothing.
+public class ModStngsSpawnRowsEvent extends Event {
+  public let generation: Int32;
+}
+
 public class ModStngsMainGameController extends gameuiSettingsMenuGameController {
 
   private let m_scrollPanel: inkWidgetRef;
@@ -51,6 +57,25 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   private let m_ignoreNextUnfocus: Bool;
   // the lowercased words of the search, all of which a setting must match; empty when not searching
   private let m_searchTerms: array<String>;
+  // whether each setting in m_data, in order, matches the search text (group path and name alongside): reading the
+  // localized text of every setting again on each value change cost 25 ms with 2,400 settings
+  private let m_matchGroups: array<CName>;
+  private let m_matchNames: array<CName>;
+  private let m_matchFlags: array<Bool>;
+  private let m_matchWalk: Int32;
+  private let m_nextGroups: array<CName>;
+  private let m_nextNames: array<CName>;
+  private let m_nextFlags: array<Bool>;
+
+  // the rows still to spawn, in order: a header (m_pendingHeaders) where the option is null. A row costs about
+  // 0.3 ms to spawn, so a long page spawns over several frames instead of stopping one
+  private let m_pendingHeaders: array<CName>;
+  private let m_pendingOptions: array<ref<ConfigVar>>;
+  private let m_pendingNext: Int32;
+  private let m_spawnGeneration: Int32;
+  // the previous page's rows, first in the list: hidden at once and removed over the next frames, as removing 240
+  // rows at once took about 40 ms
+  private let m_staleRows: Int32;
 
   protected cb func OnInitialize() -> Void {
     ModSettings.GetInstance().isActive = true;
@@ -186,37 +211,94 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   protected cb func OnRowsChanged(evt: ref<ModStngsRowsChangedEvent>) -> Bool {
-    if this.IsSearching() {
-      let found = this.SearchKeys();
-      this.PopulateSettingsData();
-      if NotEquals(this.SearchKeys(), found) {
-        this.PopulateCategorySettingsOptions(-1);
-      }
-      return false;
-    }
     let idx = this.m_selectorCtrl.GetToggledIndex();
-    if idx < 0 || idx >= ArraySize(this.m_data) {
+    if !this.IsSearching() && (idx < 0 || idx >= ArraySize(this.m_data)) {
       return false;
     }
-    let shown = ModStngsMainGameController.RowKeys(this.m_data[idx]);
+    // the variables are read again (a hidden dependent is left out of GetVars); the rows are rebuilt only when
+    // one showed or hid. While searching, settings matched before keep their match: no localized text is read
+    let shown = this.ShownKeys(idx);
     this.PopulateSettingsData();
-    if idx < ArraySize(this.m_data) && NotEquals(ModStngsMainGameController.RowKeys(this.m_data[idx]), shown) {
-      this.PopulateCategorySettingsOptions(idx);
+    if this.IsSearching() {
+      this.ComputeSearchMatches();
+    }
+    if !ModStngsMainGameController.SameNames(this.ShownKeys(idx), shown) {
+      this.PopulateCategorySettingsOptions(this.IsSearching() ? -1 : idx);
     }
   }
 
-  // the rows a page lists, "group/name" joined, to tell whether a change showed or hid one
-  private static func RowKeys(category: SettingsCategory) -> String {
-    let out = "";
+  // the rows the page lists, group path and name in turn: mod page idx's, or the search's
+  private final func ShownKeys(idx: Int32) -> array<CName> {
+    let out: array<CName>;
+    if this.IsSearching() {
+      if ArraySize(this.m_matchNames) != ModStngsMainGameController.VarCount(this.m_data) {
+        this.ComputeSearchMatches();
+      }
+      let k = 0;
+      for mod in this.m_data {
+        for v in mod.options {
+          if this.m_matchFlags[k] && IsDefined(v) && v.IsVisible() {
+            ArrayPush(out, v.GetGroupPath());
+            ArrayPush(out, v.GetName());
+          }
+          k += 1;
+        }
+        for sub in mod.subcategories {
+          for v in sub.options {
+            if this.m_matchFlags[k] && IsDefined(v) && v.IsVisible() {
+              ArrayPush(out, v.GetGroupPath());
+              ArrayPush(out, v.GetName());
+            }
+            k += 1;
+          }
+        }
+      }
+      return out;
+    }
+    if idx < 0 || idx >= ArraySize(this.m_data) {
+      return out;
+    }
+    let category = this.m_data[idx];
     for v in category.options {
-      out += NameToString(v.GetGroupPath()) + "/" + NameToString(v.GetName()) + ";";
+      if IsDefined(v) && v.IsVisible() {
+        ArrayPush(out, v.GetGroupPath());
+        ArrayPush(out, v.GetName());
+      }
     }
     for sub in category.subcategories {
       for v in sub.options {
-        out += NameToString(v.GetGroupPath()) + "/" + NameToString(v.GetName()) + ";";
+        if IsDefined(v) && v.IsVisible() {
+          ArrayPush(out, v.GetGroupPath());
+          ArrayPush(out, v.GetName());
+        }
       }
     }
     return out;
+  }
+
+  private static func SameNames(a: array<CName>, b: array<CName>) -> Bool {
+    if ArraySize(a) != ArraySize(b) {
+      return false;
+    }
+    let i = 0;
+    while i < ArraySize(a) {
+      if NotEquals(a[i], b[i]) {
+        return false;
+      }
+      i += 1;
+    }
+    return true;
+  }
+
+  private static func VarCount(data: array<SettingsCategory>) -> Int32 {
+    let count = 0;
+    for mod in data {
+      count += ArraySize(mod.options);
+      for sub in mod.subcategories {
+        count += ArraySize(sub.options);
+      }
+    }
+    return count;
   }
 
   // public final func WarnAboutEmptyKeyBindingValue() -> Void {
@@ -512,6 +594,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
 
   protected cb func OnLocalizationChanged(evt: ref<inkLocalizationChangedEvent>) -> Bool {
     let idx: Int32 = this.m_selectorCtrl.GetToggledIndex();
+    this.ForgetSearchMatches();
     this.PopulateCategories(idx);
     this.PopulateCategorySettingsOptions(idx);
     this.PopulateHints();
@@ -655,72 +738,141 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     inkWidgetRef.SetVisible(this.m_descriptionText, false);
   }
 
+  // rows spawned in the first frame, and in each frame after until the page is complete: enough to fill the screen
+  private static func RowsPerFrame() -> Int32 = 30;
+
+  private final func QueueHeader(label: CName) -> Void {
+    ArrayPush(this.m_pendingHeaders, label);
+    ArrayPush(this.m_pendingOptions, null);
+  }
+
+  // the options a mod shows, as rows to spawn
   private final func PopulateOptions(options: array<ref<ConfigVar>>) -> Void {
-    let currentItem: wref<SettingsSelectorController>;
-    let currentSettingsItem: ref<ConfigVar>;
-    let currentSettingsItemType: ConfigVarType;
-    let size: Int32 = ArraySize(options);
-    let i: Int32 = 0;
-    //LogChannel(n"DEBUG", "Populating Options");
-    while i < size {
-      currentSettingsItem = options[i];
-      if IsDefined(currentSettingsItem) {
-        if currentSettingsItem.IsVisible() {
-          currentSettingsItemType = currentSettingsItem.GetType();
-          switch currentSettingsItemType {
-            case ConfigVarType.Bool:
-              currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorBool").GetController() as SettingsSelectorController;
-              break;
-            case ConfigVarType.Int:
-              currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorInt").GetController() as SettingsSelectorController;
-              break;
-            case ConfigVarType.Float:
-              currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorFloat").GetController() as SettingsSelectorController;
-              break;
-            case ConfigVarType.Name:
-              currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorKeyBinding").GetController() as SettingsSelectorController;
-              break;
-            case ConfigVarType.IntList:
-              currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorIntList").GetController() as SettingsSelectorController;
-              break;
-            case ConfigVarType.FloatList:
-              currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorFloatList").GetController() as SettingsSelectorController;
-              break;
-            case ConfigVarType.StringList:
-              currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorStringList").GetController() as SettingsSelectorController;
-              break;
-            case ConfigVarType.NameList:
-              currentItem = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsSelectorNameList").GetController() as SettingsSelectorController;
-              break;
-            default:
-              // LogChannel(n"DEBUG", "Cannot create UI settings drawer for " + ToString(currentSettingsItemType));
-          };
-          if IsDefined(currentItem) {
-            currentItem.Setup(currentSettingsItem, this.m_isPreGame);
-            currentItem.RegisterToCallback(n"OnHoverOver", this, n"OnSettingHoverOver");
-            currentItem.RegisterToCallback(n"OnHoverOut", this, n"OnSettingHoverOut");
-            // currentItem.Refresh();
-            ArrayPush(this.m_settingsElements, currentItem);
-          } else {
-            // LogChannel(n"DEBUG", "currentItem undefined: " + NameToString(currentSettingsItem.GetDisplayName()));
-          }
-        };
+    for option in options {
+      if IsDefined(option) && option.IsVisible() {
+        ArrayPush(this.m_pendingHeaders, n"None");
+        ArrayPush(this.m_pendingOptions, option);
       };
+    };
+  }
+
+  private final func SpawnHeader(label: CName) -> Void {
+    let categoryController = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsCategory").GetController() as SettingsCategoryController;
+    if IsDefined(categoryController) {
+      categoryController.Setup(label);
+    };
+  }
+
+  private final func SpawnOption(currentSettingsItem: ref<ConfigVar>) -> Void {
+    let currentItem: wref<SettingsSelectorController>;
+    let list = inkWidgetRef.Get(this.m_settingsOptionsList);
+    switch currentSettingsItem.GetType() {
+      case ConfigVarType.Bool:
+        currentItem = this.SpawnFromLocal(list, n"settingsSelectorBool").GetController() as SettingsSelectorController;
+        break;
+      case ConfigVarType.Int:
+        currentItem = this.SpawnFromLocal(list, n"settingsSelectorInt").GetController() as SettingsSelectorController;
+        break;
+      case ConfigVarType.Float:
+        currentItem = this.SpawnFromLocal(list, n"settingsSelectorFloat").GetController() as SettingsSelectorController;
+        break;
+      case ConfigVarType.Name:
+        currentItem = this.SpawnFromLocal(list, n"settingsSelectorKeyBinding").GetController() as SettingsSelectorController;
+        break;
+      case ConfigVarType.IntList:
+        currentItem = this.SpawnFromLocal(list, n"settingsSelectorIntList").GetController() as SettingsSelectorController;
+        break;
+      case ConfigVarType.FloatList:
+        currentItem = this.SpawnFromLocal(list, n"settingsSelectorFloatList").GetController() as SettingsSelectorController;
+        break;
+      case ConfigVarType.StringList:
+        currentItem = this.SpawnFromLocal(list, n"settingsSelectorStringList").GetController() as SettingsSelectorController;
+        break;
+      case ConfigVarType.NameList:
+        currentItem = this.SpawnFromLocal(list, n"settingsSelectorNameList").GetController() as SettingsSelectorController;
+        break;
+      default:
+    };
+    if IsDefined(currentItem) {
+      currentItem.Setup(currentSettingsItem, this.m_isPreGame);
+      currentItem.RegisterToCallback(n"OnHoverOver", this, n"OnSettingHoverOver");
+      currentItem.RegisterToCallback(n"OnHoverOut", this, n"OnSettingHoverOut");
+      ArrayPush(this.m_settingsElements, currentItem);
+    };
+  }
+
+  private static func StaleRowsPerFrame() -> Int32 = 60;
+
+  // hides every row the list holds; SpawnQueuedRows removes them a batch a frame
+  private final func HideRows() -> Void {
+    let list = inkWidgetRef.Get(this.m_settingsOptionsList) as inkCompoundWidget;
+    this.m_staleRows = list.GetNumChildren();
+    let i = 0;
+    while i < this.m_staleRows {
+      list.GetWidgetByIndex(i).SetVisible(false);
       i += 1;
     };
   }
 
+  // removes a batch of the previous page's rows, the last first, so the rows after them move least
+  private final func RemoveStaleRows() -> Void {
+    let list = inkWidgetRef.Get(this.m_settingsOptionsList) as inkCompoundWidget;
+    let n = Min(ModStngsMainGameController.StaleRowsPerFrame(), this.m_staleRows);
+    while n > 0 {
+      this.m_staleRows -= 1;
+      list.RemoveChildByIndex(this.m_staleRows);
+      n -= 1;
+    };
+  }
+
+  // spawns the next batch of queued rows (and from the second frame on removes a batch of the previous page's), and
+  // queues the batch after for the next frame
+  private final func SpawnQueuedRows() -> Void {
+    let end = Min(this.m_pendingNext + ModStngsMainGameController.RowsPerFrame(), ArraySize(this.m_pendingOptions));
+    while this.m_pendingNext < end {
+      let option = this.m_pendingOptions[this.m_pendingNext];
+      if IsDefined(option) {
+        this.SpawnOption(option);
+      } else {
+        this.SpawnHeader(this.m_pendingHeaders[this.m_pendingNext]);
+      };
+      this.m_pendingNext += 1;
+    };
+    if this.m_pendingNext < ArraySize(this.m_pendingOptions) || this.m_staleRows > 0 {
+      let evt = new ModStngsSpawnRowsEvent();
+      evt.generation = this.m_spawnGeneration;
+      this.QueueEvent(evt);
+    } else {
+      ArrayClear(this.m_pendingHeaders);
+      ArrayClear(this.m_pendingOptions);
+      this.m_pendingNext = 0;
+    };
+  }
+
+  protected cb func OnSpawnRows(evt: ref<ModStngsSpawnRowsEvent>) -> Bool {
+    if evt.generation == this.m_spawnGeneration {
+      this.RemoveStaleRows();
+      this.SpawnQueuedRows();
+    };
+  }
+
+  // whether rows are still spawning (for the test tools)
+  public final func IsSpawningRows() -> Bool = ArraySize(this.m_pendingOptions) > 0 || this.m_staleRows > 0;
+
   private final func PopulateCategorySettingsOptions(idx: Int32) -> Void {
-    let categoryController: ref<SettingsCategoryController>;
     let i: Int32;
     let settingsCategory: SettingsCategory;
-    let settingsSubCategory: SettingsCategory;
     ArrayClear(this.m_settingsElements);
-    inkCompoundRef.RemoveAllChildren(this.m_settingsOptionsList);
+    ArrayClear(this.m_pendingHeaders);
+    ArrayClear(this.m_pendingOptions);
+    this.m_pendingNext = 0;
+    this.m_spawnGeneration += 1;
+    this.HideRows();
     inkTextRef.SetText(this.m_descriptionText, "");
     inkWidgetRef.SetVisible(this.m_descriptionText, false);
     if this.IsSearching() {
       this.PopulateSearchResults();
+      this.SpawnQueuedRows();
       return;
     };
     if idx < 0 {
@@ -734,14 +886,11 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     this.PopulateOptions(settingsCategory.options);
     i = 0;
     while i < ArraySize(settingsCategory.subcategories) {
-      settingsSubCategory = settingsCategory.subcategories[i];
-      categoryController = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsCategory").GetController() as SettingsCategoryController;
-      if IsDefined(categoryController) {
-        categoryController.Setup(settingsSubCategory.label);
-      };
-      this.PopulateOptions(settingsSubCategory.options);
+      this.QueueHeader(settingsCategory.subcategories[i].label);
+      this.PopulateOptions(settingsCategory.subcategories[i].options);
       i += 1;
     };
+    this.SpawnQueuedRows();
     this.m_selectorCtrl.SetSelectedIndex(idx);
   }
 
@@ -828,6 +977,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
       return;
     };
     this.m_searchTerms = terms;
+    this.ForgetSearchMatches();
     // Defaults resets the selected mod, which is unclear while the results span several
     inkWidgetRef.SetVisible(this.m_defaultButton, !this.IsSearching());
     if NotEquals(wasSearching, this.IsSearching()) {
@@ -881,7 +1031,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   private final func Matches(v: ref<ConfigVar>, context: String) -> Bool {
-    if !IsDefined(v) || !v.IsVisible() {
+    if !IsDefined(v) {
       return false;
     };
     let description = Equals(v.GetDescription(), n"None") ? "" : ModStngsMainGameController.Shown(v.GetDescription());
@@ -894,64 +1044,117 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     return true;
   }
 
-  private final func Found(options: array<ref<ConfigVar>>, context: String) -> array<ref<ConfigVar>> {
-    let out: array<ref<ConfigVar>>;
-    for v in options {
-      if this.Matches(v, context) {
-        ArrayPush(out, v);
-      };
-    };
-    return out;
+  private final func ForgetSearchMatches() -> Void {
+    ArrayClear(this.m_matchGroups);
+    ArrayClear(this.m_matchNames);
+    ArrayClear(this.m_matchFlags);
   }
 
-  private final func AddResultsHeader(label: String) -> Void {
-    let header = this.SpawnFromLocal(inkWidgetRef.Get(this.m_settingsOptionsList), n"settingsCategory").GetController() as SettingsCategoryController;
-    if IsDefined(header) {
-      // not a localization key, so the page's SettingsCategoryController shows it as it is
-      header.Setup(StringToName(label));
-    };
-  }
-
-  private final func PopulateSearchResults() -> Void {
-    let count = 0;
+  // whether each setting in m_data matches the search text. A setting matched before keeps its result: m_data is
+  // in the same order each time it is read, with only hidden dependents left out, so the previous results are
+  // walked alongside, a short way ahead for the ones that were left out
+  private final func ComputeSearchMatches() -> Void {
+    ArrayClear(this.m_nextGroups);
+    ArrayClear(this.m_nextNames);
+    ArrayClear(this.m_nextFlags);
+    this.m_matchWalk = 0;
     for mod in this.m_data {
       let modLabel = ModStngsMainGameController.Shown(mod.label);
-      let found = this.Found(mod.options, modLabel);
-      if ArraySize(found) > 0 {
-        this.AddResultsHeader(modLabel);
-        this.PopulateOptions(found);
-        count += ArraySize(found);
+      for v in mod.options {
+        this.MatchOne(v, modLabel);
       };
       for sub in mod.subcategories {
-        let subLabel = ModStngsMainGameController.Shown(sub.label);
-        found = this.Found(sub.options, modLabel + " " + subLabel);
-        if ArraySize(found) > 0 {
-          this.AddResultsHeader(modLabel + " · " + subLabel);
-          this.PopulateOptions(found);
-          count += ArraySize(found);
+        let context = modLabel + " " + ModStngsMainGameController.Shown(sub.label);
+        for v in sub.options {
+          this.MatchOne(v, context);
         };
+      };
+    };
+    this.m_matchGroups = this.m_nextGroups;
+    this.m_matchNames = this.m_nextNames;
+    this.m_matchFlags = this.m_nextFlags;
+  }
+
+  private final func MatchOne(v: ref<ConfigVar>, context: String) -> Void {
+    let group = IsDefined(v) ? v.GetGroupPath() : n"None";
+    let name = IsDefined(v) ? v.GetName() : n"None";
+    let end = Min(this.m_matchWalk + 64, ArraySize(this.m_matchNames));
+    let j = this.m_matchWalk;
+    while j < end && !(Equals(this.m_matchNames[j], name) && Equals(this.m_matchGroups[j], group)) {
+      j += 1;
+    };
+    let matched: Bool;
+    if j < end {
+      matched = this.m_matchFlags[j];
+      this.m_matchWalk = j + 1;
+    } else {
+      matched = this.Matches(v, context);
+    };
+    ArrayPush(this.m_nextGroups, group);
+    ArrayPush(this.m_nextNames, name);
+    ArrayPush(this.m_nextFlags, matched);
+  }
+
+  // past this many results the rest are counted, not shown: spawning and clearing every row of a search that
+  // matched 2,400 settings stopped the game for over a second
+  private static func SearchRowCap() -> Int32 = 100;
+
+  private final func PopulateSearchResults() -> Void {
+    this.ComputeSearchMatches();
+    let cap = ModStngsMainGameController.SearchRowCap();
+    let count = 0;
+    let shown = 0;
+    let k = 0;
+    for mod in this.m_data {
+      let modLabel = ModStngsMainGameController.Shown(mod.label);
+      let found: array<ref<ConfigVar>>;
+      for v in mod.options {
+        if this.m_matchFlags[k] && IsDefined(v) && v.IsVisible() {
+          ArrayPush(found, v);
+        };
+        k += 1;
+      };
+      shown += this.QueueResults(modLabel, found, cap - shown);
+      count += ArraySize(found);
+      for sub in mod.subcategories {
+        ArrayClear(found);
+        for v in sub.options {
+          if this.m_matchFlags[k] && IsDefined(v) && v.IsVisible() {
+            ArrayPush(found, v);
+          };
+          k += 1;
+        };
+        shown += this.QueueResults(modLabel + " · " + ModStngsMainGameController.Shown(sub.label), found, cap - shown);
+        count += ArraySize(found);
       };
     };
     if count == 0 {
-      this.AddResultsHeader(GetLocalizedText("UI-ModSettings-NoResults"));
+      this.QueueHeader(StringToName(GetLocalizedText("UI-ModSettings-NoResults")));
+    } else if count > shown {
+      // first, where it is seen: that more match than are shown
+      let more = GetLocalizedText("UI-ModSettings-MoreResults");
+      more = StrReplace(more, "{shown}", ToString(shown));
+      more = StrReplace(more, "{total}", ToString(count));
+      ArrayInsert(this.m_pendingHeaders, 0, StringToName(more));
+      ArrayInsert(this.m_pendingOptions, 0, null);
     };
   }
 
-  // the rows the search lists, "group/name" joined, to tell whether a change showed or hid one
-  private final func SearchKeys() -> String {
-    let out = "";
-    for mod in this.m_data {
-      let modLabel = ModStngsMainGameController.Shown(mod.label);
-      for v in this.Found(mod.options, modLabel) {
-        out += NameToString(v.GetGroupPath()) + "/" + NameToString(v.GetName()) + ";";
-      };
-      for sub in mod.subcategories {
-        for v in this.Found(sub.options, modLabel + " " + ModStngsMainGameController.Shown(sub.label)) {
-          out += NameToString(v.GetGroupPath()) + "/" + NameToString(v.GetName()) + ";";
-        };
-      };
+  // queues up to room of the found settings under a header (not a localization key, so the page's
+  // SettingsCategoryController shows it as it is); how many it queued
+  private final func QueueResults(label: String, found: array<ref<ConfigVar>>, room: Int32) -> Int32 {
+    let n = Min(room, ArraySize(found));
+    if n <= 0 {
+      return 0;
     };
-    return out;
+    this.QueueHeader(StringToName(label));
+    let i = 0;
+    while i < n {
+      ArrayPush(this.m_pendingHeaders, n"None");
+      ArrayPush(this.m_pendingOptions, found[i]);
+      i += 1;
+    };
+    return n;
   }
 
 }

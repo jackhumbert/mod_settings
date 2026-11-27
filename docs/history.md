@@ -4,6 +4,37 @@ Decisions and findings, newest first. One entry per finding: what was decided, w
 that showed it, what was tried and dropped, and the commits. Code comments point here instead of
 carrying dates and measurements.
 
+## 2026-11-27 Menu and listener costs with many settings
+
+- Profiled with 2,400 settings over 30 classes (`../cp2077_tools/mods/mod_settings/stress_gen.py`, `perf.py`; the
+  longest frame from the bridge's `longest_frame_ms`). Mod Settings' C++ was 0.02% of the menu's time: the cost is
+  the page's redscript and creating and destroying row widgets, about 0.3 ms a row. Old menu code against new, the
+  plugin the same:
+
+  | | before | after |
+  |---|---|---|
+  | open a 240-setting page | 104 to 122 ms | 35 ms |
+  | search matching all 2,400 | 1,520 ms | 46 ms |
+  | narrow it to 11 results | 1,470 ms | 35 ms |
+  | clear the search | 1,260 ms | 17 ms |
+  | a value change while results show | 28 ms | 8.5 ms |
+  | a value change on a page | 1.6 ms | 1.4 ms |
+
+- Rows spawn 30 a frame (`ModStngsSpawnRowsEvent`, a generation number so a newer page cancels the rest); the
+  previous page's rows are hidden at once and removed 60 a frame, as removing 240 at once took about 40 ms.
+- The search shows the first 100 results, under a `UI-ModSettings-MoreResults` line ("Showing 100 of N matching
+  settings") when more match. Spawning and then clearing a row for every match was most of the 1.5 s.
+- A value change rebuilt nothing unless rows showed or hid, but finding out built a string of every listed row's
+  path twice and, while searching, read every setting's localized text twice. Now it compares group and name
+  CNames, and keeps each setting's earlier search match (`ComputeSearchMatches`: `GetVars` leaves out hidden
+  dependents, so the previous results are walked alongside, up to 64 ahead).
+- `ModClass::listeners` (the weak handles `RegisterListenerToClass` gives each settings class) was never pruned: a mod
+  that drops its objects without unregistering left them for good, and every accepted change still went through
+  them. Registering now drops expired entries and an earlier copy of the same instance. Accepting with 20,000 live
+  listeners takes 16 ms against 10 ms with none; after dropping them, 9 ms.
+- The smoke test passed 16 of 16 (dependent rows still show and hide); screenshots showed the capped search with its
+  line on top and a 240-setting page filling in.
+
 ## 2026-11-25 Dependencies on a class declared in a module
 
 - `ModSettings.dependency "Module.Class.prop"` never resolved (#37): the parser split class from property at the first

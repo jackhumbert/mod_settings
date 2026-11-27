@@ -184,17 +184,16 @@ IModConfigVar * ModVariable::ToConfigVar() const {
   // }
 
 void ModClass::RegisterListener(const Handle<IScriptable> &listener) {
-  // for (auto it = this->listeners.begin(); it != this->listeners.end(); ++it) {
-  //   if (!it->refCount || (int64_t)it->refCount == -1 || it->Expired()) {
-  //     this->listeners.erase(it);
-  //   }
-  // }
-
   if (!listener || !listener->ref || listener->ref.Expired())
     return;
 
   {
     std::unique_lock _(*this->listeners_lock);
+    // listeners a mod dropped without unregistering would otherwise stay here for good, and every accepted change
+    // goes through all of them; the same instance registered again is kept once
+    std::erase_if(this->listeners, [&](const WeakHandle<ISerializable> &other) {
+      return other.Expired() || other.instance == listener.instance;
+    });
     this->listeners.emplace_back(listener);
   }
 
