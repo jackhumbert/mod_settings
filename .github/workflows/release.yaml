@@ -10,7 +10,6 @@ jobs:
     name: Build & Release
     runs-on: windows-latest
     env:
-      GIT_CLIFF_VERSION: 0.10.0
       CHANGELOG_FILE: ${{ github.workspace }}-CHANGES.md
       NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
@@ -18,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 0   # git-cliff needs the full history and all tags to build the changelog
+          fetch-depth: 0   # the release notes need the full history and all tags
       - uses: ilammy/msvc-dev-cmd@v1.12.1
         with:
           arch: amd64
@@ -29,19 +28,13 @@ jobs:
       - name: Build
         run: cmake --build ${{ github.workspace }}/build --config RelWithDebInfo
 
-      - name: Install git-cliff
-        uses: Alex079/setup-custom-tool@v1
-        with:
-          archiveUrl: https://github.com/orhun/git-cliff/releases/download/v${{ env.GIT_CLIFF_VERSION }}/git-cliff-${{ env.GIT_CLIFF_VERSION }}-x86_64-pc-windows-msvc.zip
-          archiveGlob: '*'
-          toolName: git-cliff
-          toolVersion: ${{ env.GIT_CLIFF_VERSION }}
-
-      - name: Generate a changelog
-        run: |
-          git-cliff --current --strip header
-          git-cliff --current --strip header -o ${{ env.CHANGELOG_FILE }}
-          cat requirements.md >> ${{ env.CHANGELOG_FILE }}
+      # The release notes (cyberpunk_cmake scripts/release_notes.py): docs/releases/vX.Y.Z.md when it exists, else the
+      # feat, fix and perf commits since the last full release. Writes the GitHub release body, and for Nexus one
+      # plain line per change (the Changelogs tab) and the same lines as the file's description, which Nexus does
+      # not let us change after the upload.
+      - name: Release notes
+        id: nexus_changelog
+        run: python deps/cpcmake/scripts/release_notes.py --tag "${{ github.ref_name }}" --repo-url "${{ github.server_url }}/${{ github.repository }}" --github-body "${{ env.CHANGELOG_FILE }}"
 
       - name: Zipping game_dir
         run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip" --format=zip *
@@ -85,16 +78,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Read changelog for Nexus
-        id: nexus_changelog
-        shell: pwsh
-        run: |
-          $body = Get-Content -Raw "${{ env.CHANGELOG_FILE }}"
-          "changelog<<NEXUS_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
-          $body | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
-          "NEXUS_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
-          "version=$('${{ github.ref_name }}'.TrimStart('v'))" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
-
       # Nexus mod page https://www.nexusmods.com/cyberpunk2077/mods/4885. The v3 API keys mods by a global id,
       # not the game-scoped 4885 from the site URL, so resolve it first. Requires repo secret NEXUSMODS_API_KEY
       # (https://www.nexusmods.com/settings/api-keys, personal key). Skipped for prerelease tags and when unset.
@@ -120,6 +103,7 @@ jobs:
           display_name: Mod Settings ${{ github.ref_name }}${{ env.CYBERPUNK_2077_GAME_VERSION_STR }}
           category: main
           changelog: ${{ steps.nexus_changelog.outputs.changelog }}
+          description: ${{ steps.nexus_changelog.outputs.description }}
           update_mod_version: true
           archive_existing_version: false
           primary_mod_manager_download: true
